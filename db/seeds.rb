@@ -5,3 +5,12 @@
 #
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
+
+JobRunStatus.create([
+  { label: :new, name: "New" },
+  { label: :blocked, name: "Blocked on Dependencies" },
+  { label: :ready, name: "Ready to Run" },
+  { label: :running, name: "Running" },
+  { label: :success, name: "Success" },
+  { label: :error, name: "Error" },
+])
