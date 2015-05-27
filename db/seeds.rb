@@ -6,6 +6,7 @@
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
 
+JobRunStatus.delete_all
 JobRunStatus.create([
   { label: :new, name: "New" },
   { label: :blocked, name: "Blocked on Dependencies" },

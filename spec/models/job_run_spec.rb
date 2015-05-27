@@ -1,25 +1,6 @@
 require 'rails_helper'
 
-
-
-class SuccessJob < Job
-  attr_accessor :num_rows_success, :num_rows_error
-
-  def run(batch_date)
-    @num_rows_success = 34
-    @num_rows_error = 1
-  end
-end
-
-class ErrorJob < Job
-  attr_accessor :num_rows_success, :num_rows_error
-
-  def run(batch_date)
-    @num_rows_success = 10
-    @num_rows_error = 100
-  end
-end
-
+require 'etl/core'
 
 RSpec.describe JobRun, :type => :model do
 
@@ -33,25 +14,29 @@ RSpec.describe JobRun, :type => :model do
 
     expect(jr.job_id).to eq(123)
     expect(jr.status).to eq(:new)
-    expect(jr.run_start_time.strftime('%F')).to eq(DateTime.now.strftime('%F'))
+    expect(jr.run_start_time).to be_nil
     expect(jr.batch_date).to eq(batch)
   end
 
   it "runs job - success" do
-    job = SuccessJob.new
-    job.id = 123
-    batch = Date.new(2015, 3, 31)
+    Job.register("ETL::Job::Success")
 
-    jr = JobRun.create_for_job(job, batch)
-    jr.run()
+    a = 34
+    b = 1
+    m = 'congrats!'
+
+    job = ETL::Job::Success.new(a, b, m)
+    batch = Date.new(2015, 3, 31)
+    jr = job.run(batch)
 
     # check this object
-    expect(jr.job_id).to eq(123)
     expect(jr.status).to eq(:success)
     expect(jr.run_start_time.strftime('%F')).to eq(DateTime.now.strftime('%F'))
+    expect(jr.run_end_time.strftime('%F')).to eq(DateTime.now.strftime('%F'))
     expect(jr.batch_date).to eq(batch)
-    expect(jr.num_rows_success).to eq(34)
-    expect(jr.num_rows_error).to eq(1)
+    expect(jr.num_rows_success).to eq(a)
+    expect(jr.num_rows_error).to eq(b)
+    expect(jr.message).to eq(m)
   end
 
 end

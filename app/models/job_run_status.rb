@@ -2,7 +2,7 @@ class JobRunStatus < ActiveRecord::Base
 
   # Returns the status ID given the label as a symbol
   def self.id_from_label(label)
-    o = self.find_by!(label: 'new')
+    o = self.find_by!(label: label.to_s())
     if o.nil?
       return nil
     else

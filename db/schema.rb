@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150526182447) do
+ActiveRecord::Schema.define(version: 20150527180143) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -33,6 +33,7 @@ ActiveRecord::Schema.define(version: 20150526182447) do
     t.datetime "batch_date"
     t.integer  "num_rows_success"
     t.integer  "num_rows_error"
+    t.string   "message"
   end
 
   add_index "job_runs", ["job_id"], name: "index_job_runs_on_job_id", using: :btree
