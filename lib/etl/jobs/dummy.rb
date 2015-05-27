@@ -4,7 +4,7 @@ module ETL::Job
   # Caller can set up number of seconds to sleep or the exception to throw
   # (to simulate error)
   class Dummy < Base
-    attr_accessor :exception, :sleep
+    attr_accessor :exception, :sleep_time
 
     # Initialize with the values we will use for the result
     def initialize(rows_success = 0, rows_error = 0, msg = '')
@@ -14,10 +14,9 @@ module ETL::Job
     end
 
     def run_internal(batch_date)
-      r = Result.new(@rows_success, @rows_error, @msg)
-      sleep @sleep unless @sleep.nil?
+      sleep(@sleep_time) unless @sleep_time.nil?
       raise @exception unless @exception.nil?
-      return r
+      Result.new(@rows_success, @rows_error, @msg)
     end
   end
 end

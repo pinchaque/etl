@@ -31,6 +31,28 @@ RSpec.describe JobRun, :type => :model do
     expect(jr.status).to eq(:success)
     expect(jr.run_start_time.strftime('%F')).to eq(DateTime.now.strftime('%F'))
     expect(jr.run_end_time.strftime('%F')).to eq(DateTime.now.strftime('%F'))
+    expect(jr.run_end_time.to_i() - jr.run_start_time.to_i()).to be <= 1
+    expect(jr.batch_date).to eq(batch)
+    expect(jr.num_rows_success).to eq(a)
+    expect(jr.num_rows_error).to eq(b)
+    expect(jr.message).to eq(m)
+  end
+
+  it "runs job - sleep" do
+    a = 34
+    b = 1
+    m = 'congrats!'
+
+    job = ETL::Job::Dummy.new(a, b, m)
+    job.sleep_time = 3 # seconds
+    batch = Date.new(2015, 3, 31)
+    jr = job.run(batch)
+
+    # check this object
+    expect(jr.status).to eq(:success)
+    expect(jr.run_start_time.strftime('%F')).to eq(DateTime.now.strftime('%F'))
+    expect(jr.run_end_time.strftime('%F')).to eq(DateTime.now.strftime('%F'))
+    expect(jr.run_end_time.to_i() - jr.run_start_time.to_i()).to be > 1
     expect(jr.batch_date).to eq(batch)
     expect(jr.num_rows_success).to eq(a)
     expect(jr.num_rows_error).to eq(b)
