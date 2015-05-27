@@ -9,4 +9,4 @@ require 'etl/jobs/result.rb'
 require 'etl/jobs/base.rb'
 
 # Various ETL jobs
-require 'etl/jobs/success.rb'
+require 'etl/jobs/dummy.rb'

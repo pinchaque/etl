@@ -4,9 +4,9 @@ module ETL::Job
   class Result
     attr_accessor :num_rows_success, :num_rows_error, :message
 
-    def initialize(success, error, msg)
-      @num_rows_success = success
-      @num_rows_error = error
+    def initialize(rows_success = nil, rows_error = nil, msg = '')
+      @num_rows_success = rows_success
+      @num_rows_error = rows_error
       @message = msg
     end
   end

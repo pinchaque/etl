@@ -1,4 +1,6 @@
 module ETL::Job
+
+  # Base class for all ETL jobs
   class Base
     @job_model = nil
 
@@ -22,7 +24,8 @@ module ETL::Job
         result = run_internal(batch_date)
         jr.success(result)
       rescue Exception => ex
-        result = Result.new if result.nil?
+        result = Result.new
+        result.message = ex.message
         jr.error(result)
       end
 

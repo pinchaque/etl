@@ -19,13 +19,11 @@ RSpec.describe JobRun, :type => :model do
   end
 
   it "runs job - success" do
-    Job.register("ETL::Job::Success")
-
     a = 34
     b = 1
     m = 'congrats!'
 
-    job = ETL::Job::Success.new(a, b, m)
+    job = ETL::Job::Dummy.new(a, b, m)
     batch = Date.new(2015, 3, 31)
     jr = job.run(batch)
 
@@ -37,6 +35,26 @@ RSpec.describe JobRun, :type => :model do
     expect(jr.num_rows_success).to eq(a)
     expect(jr.num_rows_error).to eq(b)
     expect(jr.message).to eq(m)
+  end
+
+  it "runs job - error" do
+    a = 1
+    b = 100
+    m = 'error!'
+
+    job = ETL::Job::Dummy.new(a, b, m)
+    job.exception = 'abort!'
+    batch = Date.new(2015, 3, 31)
+    jr = job.run(batch)
+
+    # check this object
+    expect(jr.status).to eq(:error)
+    expect(jr.run_end_time.strftime('%F')).to eq(DateTime.now.strftime('%F'))
+    expect(jr.run_start_time.strftime('%F')).to eq(DateTime.now.strftime('%F'))
+    expect(jr.batch_date).to eq(batch)
+    expect(jr.num_rows_success).to be_nil
+    expect(jr.num_rows_error).to be_nil
+    expect(jr.message).to eq(job.exception)
   end
 
 end
