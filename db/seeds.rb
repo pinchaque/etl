@@ -6,12 +6,20 @@
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
 
-JobRunStatus.delete_all
-JobRunStatus.create([
+
+
+### JobRunStatus ###
+[
   { label: :new, name: "New" },
   { label: :blocked, name: "Blocked on Dependencies" },
   { label: :ready, name: "Ready to Run" },
   { label: :running, name: "Running" },
   { label: :success, name: "Success" },
   { label: :error, name: "Error" },
-])
+].each do |v|
+  jrs = JobRunStatus.find_by(label: v[:label])
+  jrs = JobRunStatus.new if jrs.nil?
+  jrs.label = v[:label]
+  jrs.name = v[:name]
+  jrs.save
+end
