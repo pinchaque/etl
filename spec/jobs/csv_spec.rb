@@ -30,7 +30,10 @@ RSpec.describe Job, :type => :job do
     expect(File.exist?(outfile)).to be false
 
     job = TestCsvCreate.new
-    batch = Date.new(2015, 3, 31)
+    batch = ETL::Job::DateBatch.new(2015, 3, 31)
+
+    expect(job.output_file(batch)).to eq(outfile)
+
     jr = job.run(batch)
 
     expect(jr.status).to eq(:success)

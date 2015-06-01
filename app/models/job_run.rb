@@ -3,12 +3,12 @@ class JobRun < ActiveRecord::Base
   attr_accessor :job
 
   # Creates JobRun object from Job and batch date
-  def self.create_for_job(job, batch_date)
+  def self.create_for_job(job, batch)
     JobRun.new do |jr|
       jr.job = job
       jr.job_id = job.id
       jr.status = :new
-      jr.batch_date = batch_date
+      jr.batch_date = batch.date
     end
   end
 

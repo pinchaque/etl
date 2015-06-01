@@ -8,6 +8,7 @@ end
 require 'etl/jobs/result.rb'
 require 'etl/jobs/base.rb'
 require 'etl/schema/table.rb'
+require 'etl/jobs/batch.rb'
 
 # Various ETL jobs
 require 'etl/jobs/dummy.rb'

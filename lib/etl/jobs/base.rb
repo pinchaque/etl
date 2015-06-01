@@ -2,6 +2,8 @@ module ETL::Job
 
   # Base class for all ETL jobs
   class Base
+    attr_accessor :feed_name, :schema, :input_file
+
     def model()
       # return the model if we already have it cached in this instance
       return @model unless @model.nil?
@@ -14,17 +16,17 @@ module ETL::Job
       Rails.logger
     end
 
-    # Runs the job for the batch_id, keeping the status updated and handling
+    # Runs the job for the batch, keeping the status updated and handling
     # exceptions.
-    def run(batch_id)
-      jr = model().create_run(batch_id)
+    def run(batch)
+      jr = model().create_run(batch)
 
-      log_prefix = "[Job=#{model().class_name} / Batch=#{batch_id}] "
+      log_prefix = "[Job=#{model().class_name} / Batch=#{batch}] "
 
       begin
         logger.info(log_prefix + "Running...")
         jr.running()
-        result = run_internal(batch_id)
+        result = run_internal(batch)
         logger.info(log_prefix + "Success! #{result.num_rows_success} rows; "\
           + "#{result.num_rows_error} errors; #{result.message}")
         jr.success(result)
