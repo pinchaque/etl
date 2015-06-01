@@ -14,17 +14,17 @@ module ETL::Job
       Rails.logger
     end
 
-    # Runs the job for the batch_date, keeping the status updated and handling
+    # Runs the job for the batch_id, keeping the status updated and handling
     # exceptions.
-    def run(batch_date)
-      jr = model().create_run(batch_date)
+    def run(batch_id)
+      jr = model().create_run(batch_id)
 
-      log_prefix = "[Job=#{model().class_name} / Batch=#{batch_date}] "
+      log_prefix = "[Job=#{model().class_name} / Batch=#{batch_id}] "
 
       begin
         logger.info(log_prefix + "Running...")
         jr.running()
-        result = run_internal(batch_date)
+        result = run_internal(batch_id)
         logger.info(log_prefix + "Success! #{result.num_rows_success} rows; "\
           + "#{result.num_rows_error} errors; #{result.message}")
         jr.success(result)
