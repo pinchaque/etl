@@ -3,11 +3,11 @@ require 'rails_helper'
 require 'etl/core'
 
 class TestCsvCreate < ETL::Job::CSV
-
   def initialize
+    super
     @feed_name = "test_1"
     @input_file = "#{Rails.root}/spec/data/simple1.csv"
-    @header_lines = 1
+    @header = true
     @schema = ETL::Schema::Table.new(
       "day" => :date,
       "condition" => :string,
