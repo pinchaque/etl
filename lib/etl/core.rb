@@ -29,3 +29,4 @@ require 'etl/jobs/batch.rb'
 # Various ETL jobs
 require 'etl/jobs/dummy.rb'
 require 'etl/jobs/csv.rb'
+require 'etl/jobs/relational_db.rb'
