@@ -22,38 +22,43 @@ require 'csv'
 
 module ETL::Job
 
+
+  # Writes to CSV files
   class CSV < File
 
     def initialize
       super
-      @header = true
-      @column_separator = ","
-      @row_separator = "\n"
-      @quote_char = '"'
     end
 
+    # File extension of output file
     def output_extension
       "csv"
     end
 
+    # Perform transformation operation on each row that is read. 
     def transform_row(row)
       row
     end
 
+    # Returns an array of header names to use for the output CSV file.
     def csv_headers
       schema.columns.keys
     end
 
+    # Hash of options to give to the input CSV reader. Options should be in
+    # the format supported by the Ruby CSV.new() method.
     def csv_input_options
       {
-        headers: @header,
+        headers: true,
         return_headers: false,
-        col_sep: @column_separator,
-        row_sep: @row_separator,
-        quote_char: @quote_char
+        col_sep: ",",
+        row_sep: "\n",
+        quote_char: '"'
       }
     end
 
+    # Hash of options to give to the output CSV writer. Options should be in
+    # the format supported by the Ruby CSV.new() method.
     def csv_output_options
       {
         headers: csv_headers,
@@ -64,6 +69,9 @@ module ETL::Job
       }
     end
 
+    # Implementation of running the CSV job
+    # Reads the input CSV file one row at a time, performs the transform
+    # operation, and writes that row to the output.
     def run_internal(batch)
 
       # Prepare output directory
@@ -81,7 +89,7 @@ module ETL::Job
 
         # Iterate through each row in input CSV file
         ::CSV.foreach(input_file, csv_input_options) do |row_in|
-
+        
           # Perform row-level transform
           row_out = transform_row(row_in)
 
