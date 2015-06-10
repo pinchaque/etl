@@ -15,13 +15,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-#!/bin/ruby
-
 # Pre-define the module so we can use simpler syntax
 module ETL
 end
 
 # Core classes
+require 'etl/logger.rb'
 require 'etl/jobs/result.rb'
 require 'etl/jobs/base.rb'
 require 'etl/schema/table.rb'

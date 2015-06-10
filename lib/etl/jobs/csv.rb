@@ -85,9 +85,11 @@ module ETL::Job
 
       # Open output CSV file for writing
       rows_success = rows_error = 0
+      logger(batch).debug("Writing to temp CSV output file #{tf.path}")
       ::CSV.open(tf.path, "w", csv_output_options) do |csv_out|
 
         # Iterate through each row in input CSV file
+        logger(batch).debug("Reading from CSV input file #{input_file}")
         ::CSV.foreach(input_file, csv_input_options) do |row_in|
         
           # Perform row-level transform
@@ -101,6 +103,7 @@ module ETL::Job
 
       # Move temporary file to final destination
       FileUtils.mv(tf.path, outf)
+      logger(batch).debug("Moving temp CSV file to final destination #{outf}")
 
       # Final result
       msg = "Wrote #{rows_success} rows to #{outf}"

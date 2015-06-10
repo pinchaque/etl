@@ -21,6 +21,7 @@ module ETL::Job
   class Base
     attr_accessor :feed_name, :schema, :input_file
 
+    # Returns the ActiveModel Job object
     def model()
       # return the model if we already have it cached in this instance
       return @model unless @model.nil?
@@ -29,8 +30,12 @@ module ETL::Job
       @model = Job.register(self.class.to_s())
     end
 
-    def logger
-      Rails.logger
+    # Initialize the logger with our job and batch info
+    def logger(batch = nil)
+      l = Rails.logger
+      l.formatter.job_name = model().class_name
+      l.formatter.batch = batch
+      l
     end
 
     # Runs the job for the batch, keeping the status updated and handling
@@ -38,19 +43,17 @@ module ETL::Job
     def run(batch)
       jr = model().create_run(batch)
 
-      log_prefix = "[Job=#{model().class_name} / Batch=#{batch}] "
-
       begin
-        logger.info(log_prefix + "Running...")
+        logger(batch).info("Running...")
         jr.running()
         result = run_internal(batch)
-        logger.info(log_prefix + "Success! #{result.num_rows_success} rows; "\
+        logger(batch).info("Success! #{result.num_rows_success} rows; "\
           + "#{result.num_rows_error} errors; #{result.message}")
         jr.success(result)
       rescue Exception => ex
-        logger.error(log_prefix + "Error: #{ex}")
+        logger(batch).error("Error: #{ex}")
         ex.backtrace.each do |x|
-          logger.error(log_prefix + "    #{x}")
+          logger(batch).error("    #{x}")
         end
         result = Result.new
         result.message = ex.message
