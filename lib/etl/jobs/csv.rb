@@ -72,24 +72,24 @@ module ETL::Job
     # Implementation of running the CSV job
     # Reads the input CSV file one row at a time, performs the transform
     # operation, and writes that row to the output.
-    def run_internal(batch)
+    def run_internal
 
       # Prepare output directory
-      outf = output_file(batch)
+      outf = output_file
       dir = ::File.dirname(outf)
       FileUtils.mkdir_p(dir) unless Dir.exists?(dir)
 
       # Temporary location to which we load data
-      tmp_id = "etl_#{feed_name}_#{batch.to_s}"
+      tmp_id = "etl_#{feed_name}_#{@batch.to_s}"
       tf = Tempfile.new(tmp_id)
 
       # Open output CSV file for writing
       rows_success = rows_error = 0
-      logger(batch).debug("Writing to temp CSV output file #{tf.path}")
+      logger.debug("Writing to temp CSV output file #{tf.path}")
       ::CSV.open(tf.path, "w", csv_output_options) do |csv_out|
 
         # Iterate through each row in input CSV file
-        logger(batch).debug("Reading from CSV input file #{input_file}")
+        logger.debug("Reading from CSV input file #{input_file}")
         ::CSV.foreach(input_file, csv_input_options) do |row_in|
         
           # Perform row-level transform
@@ -103,7 +103,7 @@ module ETL::Job
 
       # Move temporary file to final destination
       FileUtils.mv(tf.path, outf)
-      logger(batch).debug("Moving temp CSV file to final destination #{outf}")
+      logger.debug("Moving temp CSV file to final destination #{outf}")
 
       # Final result
       msg = "Wrote #{rows_success} rows to #{outf}"

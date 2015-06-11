@@ -97,9 +97,9 @@ module ETL::Job
       end
     end
 
-    # Creates a temp table for the specified batch in the specified 
+    # Creates a temp table for this batch in the specified 
     # connection transaction. Returns the name of this temp table.
-    def create_temp(conn, batch)
+    def create_temp(conn)
       # Get string representation of all our columns
       type_ary = []
       schema.columns.each do |colname, coltype|
@@ -108,21 +108,21 @@ module ETL::Job
         type_ary << "#{n} #{t}"
       end
 
-      temp_table_name = "#{feed_name}_#{batch.to_s}_#{SecureRandom.hex(8)}"
+      temp_table_name = "#{feed_name}_#{@batch.to_s}_#{SecureRandom.hex(8)}"
       temp_table_name.gsub!(/\W/, '')
       temp_table_name = conn.quote_ident(temp_table_name)
       sql = "create temp table #{temp_table_name} (#{type_ary.join(', ')});"
-      logger(batch).debug(sql)
+      logger.debug(sql)
       conn.exec(sql)
       return temp_table_name
     end
 
     # Load CSV into temp table
-    def load_temp_data(conn, batch, temp_table_name)
+    def load_temp_data(conn, temp_table_name)
 
       # Iterate through each row in input CSV file
       rows = []
-      logger(batch).debug("Reading from CSV input file #{input_file}")
+      logger.debug("Reading from CSV input file #{input_file}")
       ::CSV.foreach(input_file, csv_input_options) do |row_in|
       
         # Perform row-level transform
@@ -153,18 +153,18 @@ insert into #{temp_table_name} values
 #{rows.join(",\n")}
 ;
 SQL
-      logger(batch).debug(sql)
+      logger.debug(sql)
       conn.exec(sql)
     end
 
     # Load temp table records into destination table, returning number of
     # affected rows
-    def load_destination_table(conn, batch, temp_table_name, dest_table)
+    def load_destination_table(conn, temp_table_name, dest_table)
       sql = <<SQL
 insert into #{conn.quote_ident(dest_table)}
   select * from #{temp_table_name};
 SQL
-      logger(batch).debug(sql)
+      logger.debug(sql)
       result = conn.exec(sql)
 
       # return number of rows affected
@@ -174,7 +174,7 @@ SQL
     # Implementation of running the CSV job
     # Reads the input CSV file one row at a time, performs the transform
     # operation, and writes that row to the output.
-    def run_internal(batch)
+    def run_internal
 
       rows_success = rows_error = 0
       msg = ''
@@ -183,14 +183,14 @@ SQL
       @conn.transaction do |conn|
 
         # Create temp table to match destination table
-        temp_table_name = create_temp(conn, batch)
+        temp_table_name = create_temp(conn)
 
         # Load CSV into temp table
-        load_temp_data(conn, batch, temp_table_name)
+        load_temp_data(conn, temp_table_name)
 
         # Load temp table records into destination table
         dest_table = feed_name
-        rows_success = load_destination_table(conn, batch, temp_table_name, dest_table)
+        rows_success = load_destination_table(conn, temp_table_name, dest_table)
         msg = "Wrote #{rows_success} rows to #{dest_table}"
       end
 

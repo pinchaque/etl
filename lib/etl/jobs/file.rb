@@ -29,11 +29,11 @@ module ETL::Job
     end
 
     # Output file name for this batch
-    def output_file(batch)
+    def output_file
       [
         output_root,
         feed_name,
-        batch.to_s() + "." + output_extension
+        @batch.to_s() + "." + output_extension
       ].join("/")
     end
   end

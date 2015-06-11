@@ -75,10 +75,10 @@ RSpec.describe Job, :type => :job do
     job = TestCsvCreate1.new
     batch = ETL::Job::DateBatch.new(2015, 3, 31)
 
-    expect(job.output_file(batch)).to eq(outfile)
 
     jr = job.run(batch)
 
+    expect(job.output_file).to eq(outfile)
     expect(jr.status).to eq(:success)
     expect(jr.num_rows_success).to eq(3)
     expect(jr.num_rows_error).to eq(0)
@@ -106,10 +106,9 @@ END
     job = TestCsvCreate2.new
     batch = ETL::Job::DateBatch.new(2015, 3, 31)
 
-    expect(job.output_file(batch)).to eq(outfile)
-
     jr = job.run(batch)
 
+    expect(job.output_file).to eq(outfile)
     expect(jr.status).to eq(:success)
     expect(jr.num_rows_success).to eq(3)
     expect(jr.num_rows_error).to eq(0)

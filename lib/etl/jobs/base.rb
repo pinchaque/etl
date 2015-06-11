@@ -31,29 +31,30 @@ module ETL::Job
     end
 
     # Initialize the logger with our job and batch info
-    def logger(batch = nil)
+    def logger
       l = Rails.logger
       l.formatter.job_name = model().class_name
-      l.formatter.batch = batch
+      l.formatter.batch = @batch
       l
     end
 
     # Runs the job for the batch, keeping the status updated and handling
     # exceptions.
     def run(batch)
-      jr = model().create_run(batch)
+      @batch = batch
+      jr = model().create_run(@batch)
 
       begin
-        logger(batch).info("Running...")
+        logger.info("Running...")
         jr.running()
-        result = run_internal(batch)
-        logger(batch).info("Success! #{result.num_rows_success} rows; "\
+        result = run_internal()
+        logger.info("Success! #{result.num_rows_success} rows; "\
           + "#{result.num_rows_error} errors; #{result.message}")
         jr.success(result)
       rescue Exception => ex
-        logger(batch).error("Error: #{ex}")
+        logger.error("Error: #{ex}")
         ex.backtrace.each do |x|
-          logger(batch).error("    #{x}")
+          logger.error("    #{x}")
         end
         result = Result.new
         result.message = ex.message

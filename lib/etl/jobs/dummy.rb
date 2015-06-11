@@ -30,7 +30,7 @@ module ETL::Job
       @msg = msg
     end
 
-    def run_internal(batch_date)
+    def run_internal
       sleep(@sleep_time) unless @sleep_time.nil?
       raise @exception unless @exception.nil?
       Result.new(@rows_success, @rows_error, @msg)
