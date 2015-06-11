@@ -67,5 +67,15 @@ SQL
     expect(jr.status).to eq(:success)
     expect(jr.num_rows_success).to eq(3)
     expect(jr.num_rows_error).to eq(0)
+
+    result = conn.exec("select * from test_1 order by day asc")
+    v = result.values
+    expect(v.length).to eq(3)
+    expect(v[0][0]).to eq('2015-04-01 00:00:00')
+    expect(v[1][0]).to eq('2015-04-02 00:00:00')
+    expect(v[2][0]).to eq('2015-04-03 00:00:00')
+    expect(v[0][1]).to eq('rain')
+    expect(v[1][1]).to eq('snow')
+    expect(v[2][1]).to eq('sun')
   end
 end
