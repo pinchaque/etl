@@ -31,6 +31,7 @@ module ETL::Job
     def initialize(conn)
       super()
       @conn = conn
+      @type_map = PG::BasicTypeMapForQueries.new(@conn)
     end
 
     # File extension of output file
@@ -53,40 +54,6 @@ module ETL::Job
         row_sep: "\n",
         quote_char: '"'
       }
-    end
-
-    # Creates a temporary CSV file that we can later use to load into 
-    # the DB. Returns path to the file.
-   def create_tmp_csv(batch)
-      # Temporary location to which we load data
-      tmp_id = "etl_#{feed_name}_#{batch.to_s}"
-      tf = Tempfile.new(tmp_id)
-
-      # Output options need to match how the DB will load this file
-      csv_output_options = {
-        write_headers: false,
-        col_sep: ",",
-        row_sep: "\n",
-        quote_char: '"'
-      }
-
-      # Open output CSV file for writing
-      logger(batch).debug("Writing to temp CSV output file #{tf.path}")
-      ::CSV.open(tf.path, "w", csv_output_options) do |csv_out|
-
-        # Iterate through each row in input CSV file
-        logger(batch).debug("Reading from CSV input file #{input_file}")
-        ::CSV.foreach(input_file, csv_input_options) do |row_in|
-        
-          # Perform row-level transform
-          row_out = transform_row(row_in)
-
-          # Write row to output
-          csv_out << row_out
-        end
-      end
-
-      tf.path
     end
 
     # Returns string that can be used as the database type given the 
@@ -117,20 +84,33 @@ module ETL::Job
       end
     end
 
+    def value_to_pg_str(type, value)
+      case type.type
+        when :int
+          "#{value}"
+        when :float
+          "#{value}"
+        when :numeric
+          "#{value}"
+        else
+          "'#{value}'"
+      end
+    end
+
     # Creates a temp table for the specified batch in the specified 
     # connection transaction. Returns the name of this temp table.
     def create_temp(conn, batch)
       # Get string representation of all our columns
       type_ary = []
       schema.columns.each do |colname, coltype|
-        n = conn.escape_string(colname)
+        n = conn.quote_ident(colname)
         t = conn.escape_string(col_type_str(coltype))
         type_ary << "#{n} #{t}"
       end
 
       temp_table_name = "#{feed_name}_#{batch.to_s}_#{SecureRandom.hex(8)}"
       temp_table_name.gsub!(/\W/, '')
-      temp_table_name = conn.escape_string(temp_table_name)
+      temp_table_name = conn.quote_ident(temp_table_name)
       sql = "create temp table #{temp_table_name} (#{type_ary.join(', ')});"
       logger(batch).debug(sql)
       conn.exec(sql)
@@ -138,24 +118,57 @@ module ETL::Job
     end
 
     # Load CSV into temp table
-    def load_temp_data(conn, batch, filename, temp_table_name)
+    def load_temp_data(conn, batch, temp_table_name)
+
+      # Iterate through each row in input CSV file
+      rows = []
+      logger(batch).debug("Reading from CSV input file #{input_file}")
+      ::CSV.foreach(input_file, csv_input_options) do |row_in|
+      
+        # Perform row-level transform
+        row_out = transform_row(row_in)
+        values = row_out.fields
+
+        # Now we need to put each value into the SQL string in a format
+        # PG will recognize. That means single quotes around strings, etc.
+        # To do this we rely on the column types.
+
+        if schema.columns.length != values.length
+          raise 'Number of values in row does not match expected schema' 
+        end
+
+        # Convert each value to its string representation
+        str_values = []
+        (0...values.length).to_a.each do |i|
+          type = schema.columns.values[i]
+          str_values << value_to_pg_str(type, conn.escape_string(values[i]))
+        end
+
+        # string representation of values for this row
+        rows << "(" + str_values.join(", ") + ")"
+      end
+
       sql = <<SQL
-copy #{temp_table_name} 
-from '#{conn.escape_string(filename)}' 
-with (format csv);
+insert into #{temp_table_name} values
+#{rows.join(",\n")}
+;
 SQL
       logger(batch).debug(sql)
       conn.exec(sql)
     end
 
-    # Load temp table records into destination table
+    # Load temp table records into destination table, returning number of
+    # affected rows
     def load_destination_table(conn, batch, temp_table_name, dest_table)
       sql = <<SQL
-insert into #{conn.escape_string(dest_table)}
+insert into #{conn.quote_ident(dest_table)}
   select * from #{temp_table_name};
 SQL
       logger(batch).debug(sql)
-      conn.exec(sql)
+      result = conn.exec(sql)
+
+      # return number of rows affected
+      result.cmd_tuples
     end
 
     # Implementation of running the CSV job
@@ -164,9 +177,7 @@ SQL
     def run_internal(batch)
 
       rows_success = rows_error = 0
-
-      # Copy input into temp CSV file
-      filename = create_tmp_csv(batch)
+      msg = ''
 
       # Perform all steps within a transaction
       @conn.transaction do |conn|
@@ -175,7 +186,7 @@ SQL
         temp_table_name = create_temp(conn, batch)
 
         # Load CSV into temp table
-        load_temp_data(conn, batch, filename, temp_table_name)
+        load_temp_data(conn, batch, temp_table_name)
 
         # Load temp table records into destination table
         dest_table = feed_name
@@ -186,6 +197,5 @@ SQL
       # Final result
       Result.new(rows_success, rows_error, msg)
     end
-
   end
 end

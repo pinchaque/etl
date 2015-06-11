@@ -38,17 +38,29 @@ end
 RSpec.describe Job, :type => :job do
 
   it "postgres - insert" do
-
+    dbconfig = Rails.configuration.database_configuration[Rails.env]
     conn = PGconn.open(
-        :dbname => 'dw_test', 
-        :user => 'dw', 
-        :password => 'toOlY7oLVFCOL4XudzmJ',
-        :host => '127.0.0.1'
+        :dbname => dbconfig["database"],
+        :user => dbconfig["username"],
+        :password => dbconfig["password"],
+        :host => dbconfig["host"]
         )
+
+    # Create destination table
+    sql = <<SQL
+drop table if exists test_1;
+create table test_1 (
+  day timestamp, 
+  condition varchar, 
+  value_int int, 
+  value_num numeric(10, 1), 
+  value_float float);
+SQL
+    conn.exec(sql)
+
 
     job = TestPgCreate1.new(conn)
     batch = ETL::Job::DateBatch.new(2015, 3, 31)
-
 
     jr = job.run(batch)
 
