@@ -34,11 +34,6 @@ module ETL::Job
       @type_map = PG::BasicTypeMapForQueries.new(@conn)
     end
 
-    # File extension of output file
-    def output_extension
-      "csv"
-    end
-
     # Perform transformation operation on each row that is read. 
     def transform_row(row)
       row
