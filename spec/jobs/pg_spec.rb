@@ -20,7 +20,7 @@ require 'rails_helper'
 require 'etl/core'
 
 # Test loading into postgres
-class TestPgCreate1 < ETL::Job::RelationalDB
+class TestPgCreate1 < ETL::Job::PostgreSQL
   def initialize(input, conn)
     super(input, conn)
     @feed_name = "test_1"

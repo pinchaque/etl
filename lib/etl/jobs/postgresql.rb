@@ -15,22 +15,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-# Pre-define the module so we can use simpler syntax
-module ETL
+require 'pg'
+require 'securerandom'
+require 'etl/jobs/relational_db.rb'
+
+module ETL::Job
+
+
+  # Contains postgres-specific logic for ETLs
+  class PostgreSQL < RelationalDB
+  end
 end
-
-# Core classes
-require 'etl/logger.rb'
-require 'etl/jobs/result.rb'
-require 'etl/jobs/base.rb'
-require 'etl/schema/table.rb'
-require 'etl/jobs/batch.rb'
-
-# Various ETL jobs
-require 'etl/jobs/dummy.rb'
-require 'etl/jobs/csv.rb'
-require 'etl/jobs/postgresql.rb'
-
-# Input data readers
-require 'etl/input/base.rb'
-require 'etl/input/csv.rb'

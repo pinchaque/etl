@@ -24,14 +24,14 @@ require 'securerandom'
 module ETL::Job
 
 
-  # Writes to Relational Databases
+  # Class that contains shared logic for writing to relational DBs. DB-specific
+  # logic should be minimized and put into subclasses.
   class RelationalDB < Base
 
     # Initialize given a connection to the database
     def initialize(input, conn)
       super(input)
       @conn = conn
-      @type_map = PG::BasicTypeMapForQueries.new(@conn)
     end
 
     # Perform transformation operation on each row that is read. 
@@ -67,7 +67,7 @@ module ETL::Job
       end
     end
 
-    def value_to_pg_str(type, value)
+    def value_to_db_str(type, value)
       case type.type
         when :int
           "#{value}"
@@ -124,7 +124,7 @@ module ETL::Job
         str_values = []
         (0...values.length).to_a.each do |i|
           type = schema.columns.values[i]
-          str_values << value_to_pg_str(type, conn.escape_string(values[i]))
+          str_values << value_to_db_str(type, conn.escape_string(values[i]))
         end
 
         # string representation of values for this row
