@@ -15,25 +15,33 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-# Pre-define the module so we can use simpler syntax
-module ETL
+
+module ETL::Schema
+
+  # Class representing a single column including width and precision
+  class Column
+    attr_accessor :type, :width, :precision
+
+    def initialize(type, width = nil, precision = nil)
+      @type = type.to_sym()
+      @width = width
+      @precision = precision
+    end
+
+    def to_s
+      s = type.to_s()
+      if not width.nil? or not precision.nil?
+        s += "("
+        s += width.nil? ? "0" : width.to_s()
+        if not precision.nil?
+          s += ", #{precision}"
+        end
+        s += ")"
+      end
+      return s
+    end
+
+    def input_field(name)
+    end
+  end
 end
-
-# Core classes
-require 'etl/logger.rb'
-require 'etl/jobs/result.rb'
-require 'etl/jobs/base.rb'
-require 'etl/jobs/batch.rb'
-
-# Schema management
-require 'etl/schema/table.rb'
-require 'etl/schema/column.rb'
-
-# Various ETL jobs
-require 'etl/jobs/dummy.rb'
-require 'etl/jobs/csv.rb'
-require 'etl/jobs/postgresql.rb'
-
-# Input data readers
-require 'etl/input/base.rb'
-require 'etl/input/csv.rb'

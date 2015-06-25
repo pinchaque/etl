@@ -24,13 +24,16 @@ class TestCsvCreate1 < ETL::Job::CSV
   def initialize(reader)
     super
     @feed_name = "test_1"
-    @schema = ETL::Schema::Table.new(
-      "day" => :date,
-      "condition" => :string,
-      "value_int" => :int,
-      "value_num" => ETL::Schema::Type.new(:numeric, 10, 1),
-      "value_float" => :float
-    )
+
+    define_schema do |s|
+      s.date("day")
+      s.string("condition") do |col|
+        col.input_field("attribute")
+      end
+      s.int("value_int")
+      s.numeric("value_num", 10, 1)
+      s.float("value_float")
+    end
   end
 end
 
@@ -40,13 +43,15 @@ class TestCsvCreate2 < ETL::Job::CSV
   def initialize(reader)
     super
     @feed_name = "test_2"
-    @schema = ETL::Schema::Table.new(
-      "day" => :date,
-      "condition" => :string,
-      "value_int" => :int,
-      "value_num" => ETL::Schema::Type.new(:numeric, 10, 1),
-      "value_float" => :float
-    )
+    define_schema do |s|
+      s.date("day")
+      s.string("condition") do |col|
+        col.input_field("attribute")
+      end
+      s.int("value_int")
+      s.numeric("value_num", 10, 1)
+      s.float("value_float")
+    end
   end
 
   def csv_output_options

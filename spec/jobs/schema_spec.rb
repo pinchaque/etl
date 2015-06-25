@@ -22,17 +22,18 @@ require 'etl/core'
 RSpec.describe Job, :type => :job do
 
   it "schema constructor" do
-    
-    schema = ETL::Schema::Table.new({
-      "day" => :date,
-      "condition" => :string,
-      "int" => :int,
-      "num1" => ETL::Schema::Type.new(:numeric, 10, 1),
-      "num2" => [:numeric, 10, 1],
-      "num3" => { type: :numeric, precision: 2 },
-      "float" => :float
-    })
 
+    s = ETL::Schema::Table.new
+    s.date("day")
+    s.string("condition") do |col|
+      col.input_field("attribute")
+    end
+    s.int("int")
+    s.numeric("num1", 10, 1)
+    s.numeric("num2", 10, 1)
+    s.numeric("num3", nil, 2)
+    s.float("float")
+    
     # expected values based on above constructor
     exp_arr = [
       {name: "day", type: :date, width: nil, precision: nil},
@@ -44,7 +45,7 @@ RSpec.describe Job, :type => :job do
       {name: "float", type: :float, width: nil, precision: nil},
     ]
 
-    c = schema.columns
+    c = s.columns
     a = c.keys
     expect(a.length).to eq(exp_arr.length)
 
@@ -53,7 +54,7 @@ RSpec.describe Job, :type => :job do
       name = exp[:name]
       expect(a[i]).to eq(name)
 
-      ct = schema.columns[name]
+      ct = s.columns[name]
 
       expect(ct.type).to eq(exp[:type])
 
@@ -82,19 +83,20 @@ RSpec.describe Job, :type => :job do
       [:numeric, 250] => "numeric(250)",
       [:numeric, nil, 10] => "numeric(0, 10)",
     }.each do |k, v|
-      t = ETL::Schema::Type.new(k[0], k.at(1), k.at(2))
+      t = ETL::Schema::Column.new(k[0], k.at(1), k.at(2))
       expect(t.to_s()).to eq(v)
     end
     
-    schema = ETL::Schema::Table.new({
-      "day" => :date,
-      "condition" => :string,
-      "int" => :int,
-      "num1" => ETL::Schema::Type.new(:numeric, 10, 1),
-      "num2" => [:numeric, 10, 1],
-      "num3" => { type: :numeric, precision: 2 },
-      "float" => :float
-    })
+    s = ETL::Schema::Table.new
+    s.date("day")
+    s.string("condition") do |col|
+      col.input_field("attribute")
+    end
+    s.int("int")
+    s.numeric("num1", 10, 1)
+    s.numeric("num2", 10, 1)
+    s.numeric("num3", nil, 2)
+    s.float("float")
 
     out = <<END
 (
@@ -108,6 +110,6 @@ RSpec.describe Job, :type => :job do
 )
 END
 
-    expect(schema.to_s()).to eq(out)
+    expect(s.to_s()).to eq(out)
   end
 end

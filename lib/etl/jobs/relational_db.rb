@@ -42,9 +42,9 @@ module ETL::Job
     end
 
     # Returns string that can be used as the database type given the 
-    # ETL::Schema::Type object
-    def col_type_str(type)
-      case type.type
+    # ETL::Schema::Column object
+    def col_type_str(col)
+      case col.type
         when :string
           "varchar"
         when :date
@@ -55,11 +55,11 @@ module ETL::Job
           "float"
         when :numeric
           s = "numeric"
-          if not type.width.nil? or not type.precision.nil?
+          if not col.width.nil? or not col.precision.nil?
             s += "("
-            s += type.width.nil? ? "0" : type.width.to_s()
-            if not type.precision.nil?
-              s += ", #{type.precision}"
+            s += col.width.nil? ? "0" : col.width.to_s()
+            if not col.precision.nil?
+              s += ", #{col.precision}"
             end
             s += ")"
           end
@@ -69,8 +69,8 @@ module ETL::Job
       end
     end
 
-    def value_to_db_str(type, value)
-      case type.type
+    def value_to_db_str(col, value)
+      case col.type
         when :int
           "#{value}"
         when :float
@@ -87,9 +87,9 @@ module ETL::Job
     def create_temp(conn)
       # Get string representation of all our columns
       type_ary = []
-      schema.columns.each do |colname, coltype|
-        n = conn.quote_ident(colname)
-        t = conn.escape_string(col_type_str(coltype))
+      schema.columns.each do |name, column|
+        n = conn.quote_ident(name)
+        t = conn.escape_string(col_type_str(column))
         type_ary << "#{n} #{t}"
       end
 

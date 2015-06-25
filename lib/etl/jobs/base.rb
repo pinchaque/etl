@@ -23,6 +23,7 @@ module ETL::Job
 
     def initialize(reader)
       @reader = reader
+      @schema = nil
     end
 
     # Returns the ActiveModel Job object
@@ -66,6 +67,12 @@ module ETL::Job
       end
 
       return jr
+    end
+
+    # Helper function for output schema definition DSL
+    def define_schema
+      @schema = ETL::Schema::Table.new if @schema.nil?
+      yield @schema if block_given?
     end
   end
 end
