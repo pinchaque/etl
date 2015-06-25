@@ -27,11 +27,9 @@ class TestPgCreate1 < ETL::Job::PostgreSQL
 
     define_schema do |s|
       s.date("day")
-      s.string("condition") do |col|
-        col.input_field("attribute")
-      end
+      s.string("condition", "attribute")
       s.int("value_int")
-      s.numeric("value_num", 10, 1)
+      s.numeric("value_num", 10, 1, "value_numeric")
       s.float("value_float")
     end
   end

@@ -74,5 +74,20 @@ module ETL::Job
       @schema = ETL::Schema::Table.new if @schema.nil?
       yield @schema if block_given?
     end
+
+    # Processes a row read from the input stream and returns a row that
+    # has all the columns from schema
+    def read_input_row(row)
+      row_out = {}
+      schema.columns.each do |name, col|
+        input_key = col.input_name.nil? ? name : col.input_name
+        if not row.has_key?(input_key)
+          raise "Input row is missing value for input key #{input_key}: " +
+            row.to_s
+        end
+        row_out[name] = row[input_key]
+      end
+      row_out 
+    end
   end
 end

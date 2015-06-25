@@ -79,8 +79,11 @@ module ETL::Job
         # Iterate through each row in input
         reader.each_row do |row_in|
 
+          # Read our input row into a hash containing all schema columns
+          row_out = read_input_row(row_in) 
+          
           # Perform row-level transform
-          row_out = transform_row(row_in)
+          row_out = transform_row(row_out)
 
           # Write row to output
           csv_out << row_out

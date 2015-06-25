@@ -57,8 +57,28 @@ module ETL::Input
     def each_row
       Rails.logger.debug("Reading from CSV input file #{@file_name}")
       ::CSV.foreach(@file_name, @options) do |row_in|
+
+        # Hashes are in the right format
+        if row_in.respond_to?(:to_hash)
+          yield row_in.to_hash
+
+        # if the CSV row is an array then that means we don't have headers
+        # for it and we should turn it into a hash using array indexes
+        # as the keys
+        elsif row_in.respond_to?(:to_a)
+          h = {}
+          ary = row_in.to_a
+          ary.each_index do |i|
+            h[i] = ary[i]
+          end
+          yield h
+
+        # Unrecognized format
+        else
+          raise "Input row class #{row_in.class} needs to be a hash or array"
+        end
+
         @rows_processed += 1
-        yield row_in
       end
     end
   end

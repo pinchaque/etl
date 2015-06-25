@@ -104,35 +104,32 @@ module ETL::Job
 
     # Load CSV into temp table in batches
     def load_temp_data(conn, temp_table_name)
-      logger.debug("Loading temp table #{temp_table_name} in batches of #{@row_batch_size} rows")
+      logger.debug("Loading temp table #{temp_table_name} in batches " + 
+        "of #{@row_batch_size} rows")
       reader.each_row_batch(@row_batch_size) do |rows|
         load_temp_data_batch(conn, temp_table_name, rows)
       end
     end
-
     # Load a single batch of rows (passed in as array) into the temp table
     def load_temp_data_batch(conn, temp_table_name, input_rows)
       logger.debug("Processing batch size #{input_rows.length}")
       rows = []
       input_rows.each do |row_in|
-      
+        # Read our input row into a hash containing all schema columns
+        row_out = read_input_row(row_in) 
+        
         # Perform row-level transform
-        row_out = transform_row(row_in)
-        values = row_out.fields
-
+        row_out = transform_row(row_out)
+        
         # Now we need to put each value into the SQL string in a format
         # PG will recognize. That means single quotes around strings, etc.
         # To do this we rely on the column types.
 
-        if schema.columns.length != values.length
-          raise 'Number of values in row does not match expected schema' 
-        end
-
         # Convert each value to its string representation
         str_values = []
-        (0...values.length).to_a.each do |i|
-          type = schema.columns.values[i]
-          str_values << value_to_db_str(type, conn.escape_string(values[i]))
+        row_out.each do |name, value|
+          type = schema.columns[name]
+          str_values << value_to_db_str(type, conn.escape_string(value))
         end
 
         # string representation of values for this row

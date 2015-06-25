@@ -28,10 +28,12 @@ class TestCsvCreate1 < ETL::Job::CSV
     define_schema do |s|
       s.date("day")
       s.string("condition") do |col|
-        col.input_field("attribute")
+        col.input_name = "attribute"
       end
       s.int("value_int")
-      s.numeric("value_num", 10, 1)
+      s.numeric("value_num", 10, 1) do |col|
+        col.input_name = "value_numeric"
+      end
       s.float("value_float")
     end
   end
@@ -44,13 +46,15 @@ class TestCsvCreate2 < ETL::Job::CSV
     super
     @feed_name = "test_2"
     define_schema do |s|
-      s.date("day")
+      s.date("day", 0)
       s.string("condition") do |col|
-        col.input_field("attribute")
+        col.input_name = 1
       end
-      s.int("value_int")
-      s.numeric("value_num", 10, 1)
-      s.float("value_float")
+      s.int("value_int", 2)
+      s.numeric("value_num", 10, 1) do |col|
+        col.input_name = 3
+      end
+      s.float("value_float", 4)
     end
   end
 
