@@ -21,10 +21,9 @@ require 'etl/core'
 
 # Test loading into postgres
 class TestPgCreate1 < ETL::Job::RelationalDB
-  def initialize(conn)
-    super(conn)
+  def initialize(input, conn)
+    super(input, conn)
     @feed_name = "test_1"
-    @input_file = "#{Rails.root}/spec/data/simple1.csv"
     @schema = ETL::Schema::Table.new(
       "day" => :date,
       "condition" => :string,
@@ -59,8 +58,9 @@ SQL
     conn.exec(sql)
 
 
-    job = TestPgCreate1.new(conn)
     batch = ETL::Job::DateBatch.new(2015, 3, 31)
+    input = ETL::Input::CSV.new("#{Rails.root}/spec/data/simple1.csv")
+    job = TestPgCreate1.new(input, conn)
 
     jr = job.run(batch)
 

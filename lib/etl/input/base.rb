@@ -15,22 +15,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-# Pre-define the module so we can use simpler syntax
-module ETL
+module ETL::Input
+  class Base
+
+    attr_accessor :rows_processed
+
+    def initialize
+      @rows_processed = 0
+    end
+  end
 end
-
-# Core classes
-require 'etl/logger.rb'
-require 'etl/jobs/result.rb'
-require 'etl/jobs/base.rb'
-require 'etl/schema/table.rb'
-require 'etl/jobs/batch.rb'
-
-# Various ETL jobs
-require 'etl/jobs/dummy.rb'
-require 'etl/jobs/csv.rb'
-require 'etl/jobs/relational_db.rb'
-
-# Input data readers
-require 'etl/input/base.rb'
-require 'etl/input/csv.rb'

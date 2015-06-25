@@ -21,10 +21,9 @@ require 'etl/core'
 
 # Test reading and writing basic CSV file
 class TestCsvCreate1 < ETL::Job::CSV
-  def initialize
+  def initialize(reader)
     super
     @feed_name = "test_1"
-    @input_file = "#{Rails.root}/spec/data/simple1.csv"
     @schema = ETL::Schema::Table.new(
       "day" => :date,
       "condition" => :string,
@@ -38,10 +37,9 @@ end
 
 # Test reading in pipe-separated file and outputting @ separated
 class TestCsvCreate2 < ETL::Job::CSV
-  def initialize
+  def initialize(reader)
     super
     @feed_name = "test_2"
-    @input_file = "#{Rails.root}/spec/data/simple1.psv"
     @schema = ETL::Schema::Table.new(
       "day" => :date,
       "condition" => :string,
@@ -49,11 +47,6 @@ class TestCsvCreate2 < ETL::Job::CSV
       "value_num" => ETL::Schema::Type.new(:numeric, 10, 1),
       "value_float" => :float
     )
-  end
-
-  def csv_input_options
-    # file does not have headers
-    return super.merge({headers: false, col_sep: '|'})
   end
 
   def csv_output_options
@@ -72,7 +65,8 @@ RSpec.describe Job, :type => :job do
     File.delete(outfile) if File.exist?(outfile)
     expect(File.exist?(outfile)).to be false
 
-    job = TestCsvCreate1.new
+    input = ETL::Input::CSV.new("#{Rails.root}/spec/data/simple1.csv")
+    job = TestCsvCreate1.new(input)
     batch = ETL::Job::DateBatch.new(2015, 3, 31)
 
 
@@ -102,8 +96,11 @@ END
     outfile = "/var/tmp/etl_test_output/test_2/2015-03-31.csv"
     File.delete(outfile) if File.exist?(outfile)
     expect(File.exist?(outfile)).to be false
+    # file does not have headers
 
-    job = TestCsvCreate2.new
+    input = ETL::Input::CSV.new("#{Rails.root}/spec/data/simple1.psv",
+      {headers: false, col_sep: '|'})
+    job = TestCsvCreate2.new(input)
     batch = ETL::Job::DateBatch.new(2015, 3, 31)
 
     jr = job.run(batch)

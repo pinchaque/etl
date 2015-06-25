@@ -26,7 +26,7 @@ module ETL::Job
   # Writes to CSV files
   class CSV < File
 
-    def initialize
+    def initialize(reader)
       super
     end
 
@@ -43,18 +43,6 @@ module ETL::Job
     # Returns an array of header names to use for the output CSV file.
     def csv_headers
       schema.columns.keys
-    end
-
-    # Hash of options to give to the input CSV reader. Options should be in
-    # the format supported by the Ruby CSV.new() method.
-    def csv_input_options
-      {
-        headers: true,
-        return_headers: false,
-        col_sep: ",",
-        row_sep: "\n",
-        quote_char: '"'
-      }
     end
 
     # Hash of options to give to the output CSV writer. Options should be in
@@ -88,10 +76,9 @@ module ETL::Job
       logger.debug("Writing to temp CSV output file #{tf.path}")
       ::CSV.open(tf.path, "w", csv_output_options) do |csv_out|
 
-        # Iterate through each row in input CSV file
-        logger.debug("Reading from CSV input file #{input_file}")
-        ::CSV.foreach(input_file, csv_input_options) do |row_in|
-        
+        # Iterate through each row in input
+        reader.each_row do |row_in|
+
           # Perform row-level transform
           row_out = transform_row(row_in)
 

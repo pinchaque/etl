@@ -19,7 +19,11 @@ module ETL::Job
 
   # Base class for all ETL jobs
   class Base
-    attr_accessor :feed_name, :schema, :input_file
+    attr_accessor :feed_name, :schema, :reader
+
+    def initialize(reader)
+      @reader = reader
+    end
 
     # Returns the ActiveModel Job object
     def model()
