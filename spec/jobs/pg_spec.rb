@@ -61,6 +61,7 @@ SQL
     batch = ETL::Job::DateBatch.new(2015, 3, 31)
     input = ETL::Input::CSV.new("#{Rails.root}/spec/data/simple1.csv")
     job = TestPgCreate1.new(input, conn)
+    job.row_batch_size = 2 # test batching of rows loaded to tmp
 
     jr = job.run(batch)
 

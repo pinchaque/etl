@@ -27,11 +27,13 @@ module ETL::Job
   # Class that contains shared logic for writing to relational DBs. DB-specific
   # logic should be minimized and put into subclasses.
   class RelationalDB < Base
+    attr_accessor :row_batch_size
 
     # Initialize given a connection to the database
     def initialize(input, conn)
       super(input)
       @conn = conn
+      @row_batch_size = 100
     end
 
     # Perform transformation operation on each row that is read. 
@@ -100,13 +102,17 @@ module ETL::Job
       return temp_table_name
     end
 
-    # Load CSV into temp table
+    # Load CSV into temp table in batches
     def load_temp_data(conn, temp_table_name)
+      reader.each_row_batch(@row_batch_size) do |rows|
+        load_temp_data_batch(conn, temp_table_name, rows)
+      end
+    end
 
-      # Iterate through each row in input CSV file
+    # Load a single batch of rows (passed in as array) into the temp table
+    def load_temp_data_batch(conn, temp_table_name, input_rows)
       rows = []
-      # Iterate through each row in input
-      reader.each_row do |row_in|
+      input_rows.each do |row_in|
       
         # Perform row-level transform
         row_out = transform_row(row_in)
