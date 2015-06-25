@@ -104,6 +104,7 @@ module ETL::Job
 
     # Load CSV into temp table in batches
     def load_temp_data(conn, temp_table_name)
+      logger.debug("Loading temp table #{temp_table_name} in batches of #{@row_batch_size} rows")
       reader.each_row_batch(@row_batch_size) do |rows|
         load_temp_data_batch(conn, temp_table_name, rows)
       end
@@ -111,6 +112,7 @@ module ETL::Job
 
     # Load a single batch of rows (passed in as array) into the temp table
     def load_temp_data_batch(conn, temp_table_name, input_rows)
+      logger.debug("Processing batch size #{input_rows.length}")
       rows = []
       input_rows.each do |row_in|
       
