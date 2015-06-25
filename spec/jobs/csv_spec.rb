@@ -78,6 +78,7 @@ RSpec.describe Job, :type => :job do
     expect(jr.num_rows_error).to eq(0)
     expect(jr.message).to include(outfile)
     expect(File.exist?(outfile)).to be true
+    expect(input.rows_processed).to eq(3)
 
     contents = IO.read(outfile)
     expect_contents = <<END
@@ -105,6 +106,7 @@ END
 
     jr = job.run(batch)
 
+    expect(input.rows_processed).to eq(3)
     expect(job.output_file).to eq(outfile)
     expect(jr.status).to eq(:success)
     expect(jr.num_rows_success).to eq(3)

@@ -64,6 +64,7 @@ SQL
 
     jr = job.run(batch)
 
+    expect(input.rows_processed).to eq(3)
     expect(jr.status).to eq(:success)
     expect(jr.num_rows_success).to eq(3)
     expect(jr.num_rows_error).to eq(0)
