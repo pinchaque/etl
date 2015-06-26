@@ -160,7 +160,22 @@ SQL
       col_names.collect! { |x| conn.quote_ident(x) }
       col_name_str = col_names.join(", ")
 
-      sql = <<SQL
+      sql = ""
+
+      # delete existing rows based on load strategy
+      case load_strategy
+      when :insert_append
+        # don't delete anything
+      when :insert_table
+        # clear out existing table
+        sql += <<SQL
+delete from #{conn.quote_ident(dest_table)};
+SQL
+      else
+        raise "Invalid load strategy '#{load_strategy}'"
+      end
+
+      sql += <<SQL
 insert into #{conn.quote_ident(dest_table)}
   (#{col_name_str})
   select #{col_name_str}

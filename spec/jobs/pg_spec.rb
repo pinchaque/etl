@@ -33,7 +33,7 @@ class TestPgCreate1 < ETL::Job::PostgreSQL
       s.float("value_float")
     end
 
-    load_strategy = :insert_append
+    @load_strategy = :insert_append
   end
 end
 
@@ -103,11 +103,8 @@ SQL
     expect(v[2][1]).to eq('sun')
   end
 
-
-
-
-  it "postgres - insert append" do
-    table_name = "test_2"
+  # Helper to initialize database connection and create table
+  def init_conn_table(table_name)
     dbconfig = Rails.configuration.database_configuration[Rails.env]
     conn = PGconn.open(
         :dbname => dbconfig["database"],
@@ -126,7 +123,25 @@ create table #{table_name} (
   );
 SQL
     conn.exec(sql)
+    return conn
+  end
 
+
+  # helper function for comparing expected and actual results from PG
+  def compare_pg_results(e, a)
+    expect(a.length).to eq(e.length)
+    (0...e.length).each do |i|
+      expect(a[i].length).to eq(e[i].length)
+      (0...e[i].length).each do |j|
+        expect(a[i][j]).to eq(e[i][j])
+      end
+    end
+  end
+
+
+  it "postgres - insert append" do
+    table_name = "test_2"
+    conn = init_conn_table(table_name)
 
     batch = ETL::Job::DateBatch.new(2015, 4, 3)
     data = [
@@ -176,15 +191,52 @@ SQL
     compare_pg_results(exp_values, result.values)
   end
 
+  it "postgres - insert table" do
+    table_name = "test_2"
+    conn = init_conn_table(table_name)
 
-  # helper function for comparing expected and actual results from PG
-  def compare_pg_results(e, a)
-    expect(a.length).to eq(e.length)
-    (0...e.length).each do |i|
-      expect(a[i].length).to eq(e[i].length)
-      (0...e[i].length).each do |j|
-        expect(a[i][j]).to eq(e[i][j])
-      end
-    end
+    batch = ETL::Job::DateBatch.new(2015, 4, 3)
+    data = [
+      { "day" => "2015-04-01", "id" => 10, "value" => 1},
+      { "day" => "2015-04-02", "id" => 11, "value" => 2},
+      { "day" => "2015-04-03", "id" => 12, "value" => 3},
+    ]
+    input = ETL::Input::Array.new(data)
+    job = TestPgLoad1.new(input, conn, table_name)
+    job.load_strategy = :insert_table
+    jr = job.run(batch)
+    expect(input.rows_processed).to eq(3)
+    expect(jr.status).to eq(:success)
+    expect(jr.num_rows_success).to eq(3)
+    expect(jr.num_rows_error).to eq(0)
+
+    data = [
+      { "day" => "2015-04-02", "id" => 11, "value" => 4},
+      { "day" => "2015-04-02", "id" => 13, "value" => 5},
+    ]
+    input = ETL::Input::Array.new(data)
+    job = TestPgLoad1.new(input, conn, table_name)
+    job.load_strategy = :insert_table
+    jr = job.run(batch)
+    expect(input.rows_processed).to eq(2)
+    expect(jr.status).to eq(:success)
+    expect(jr.num_rows_success).to eq(2)
+    expect(jr.num_rows_error).to eq(0)
+
+
+
+    result = conn.exec(<<SQL
+select day, id, value 
+from #{table_name} 
+order by day, id, value;
+SQL
+    )
+
+    exp_values = [
+      ["2015-04-02 00:00:00", "11", "4"],
+      ["2015-04-02 00:00:00", "13", "5"],
+    ]
+
+    compare_pg_results(exp_values, result.values)
   end
 end
