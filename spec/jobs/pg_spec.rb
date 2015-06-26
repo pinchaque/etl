@@ -47,6 +47,7 @@ class TestPgLoad1 < ETL::Job::PostgreSQL
       s.date("day")
       s.int("id")
       s.int("value")
+      s.partition_column = "day"
     end
   end
 end
@@ -191,6 +192,7 @@ SQL
     compare_pg_results(exp_values, result.values)
   end
 
+
   it "postgres - insert table" do
     table_name = "test_2"
     conn = init_conn_table(table_name)
@@ -235,6 +237,60 @@ SQL
     exp_values = [
       ["2015-04-02 00:00:00", "11", "4"],
       ["2015-04-02 00:00:00", "13", "5"],
+    ]
+
+    compare_pg_results(exp_values, result.values)
+  end
+
+
+  it "postgres - insert partition" do
+    table_name = "test_2"
+    conn = init_conn_table(table_name)
+
+    batch = ETL::Job::DateBatch.new(2015, 4, 2)
+    data = [
+      { "day" => "2015-04-01", "id" => 10, "value" => 1},
+      { "day" => "2015-04-02", "id" => 11, "value" => 2},
+      { "day" => "2015-04-03", "id" => 12, "value" => 3},
+    ]
+    input = ETL::Input::Array.new(data)
+    job = TestPgLoad1.new(input, conn, table_name)
+    job.load_strategy = :insert_partition
+    jr = job.run(batch)
+    expect(input.rows_processed).to eq(3)
+    expect(jr.status).to eq(:success)
+    expect(jr.num_rows_success).to eq(3)
+    expect(jr.num_rows_error).to eq(0)
+
+    data = [
+      { "day" => "2015-04-02", "id" => 11, "value" => 4},
+      { "day" => "2015-04-02", "id" => 13, "value" => 5},
+      { "day" => "2015-04-03", "id" => 12, "value" => 6},
+    ]
+    input = ETL::Input::Array.new(data)
+    job = TestPgLoad1.new(input, conn, table_name)
+    job.load_strategy = :insert_partition
+    jr = job.run(batch)
+    expect(input.rows_processed).to eq(3)
+    expect(jr.status).to eq(:success)
+    expect(jr.num_rows_success).to eq(3)
+    expect(jr.num_rows_error).to eq(0)
+
+
+
+    result = conn.exec(<<SQL
+select day, id, value 
+from #{table_name} 
+order by day, id, value;
+SQL
+    )
+
+    exp_values = [
+      ["2015-04-01 00:00:00", "10", "1"],
+      ["2015-04-02 00:00:00", "11", "4"],
+      ["2015-04-02 00:00:00", "13", "5"],
+      ["2015-04-03 00:00:00", "12", "3"],
+      ["2015-04-03 00:00:00", "12", "6"],
     ]
 
     compare_pg_results(exp_values, result.values)

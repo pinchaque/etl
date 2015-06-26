@@ -21,7 +21,7 @@ module ETL::Schema
   # Represents single data table including an ordered set of columns with
   # names and types.
   class Table
-    attr_accessor :columns
+    attr_accessor :columns, :partition_column
 
     def initialize
       @columns = Hash.new
@@ -60,5 +60,5 @@ module ETL::Schema
     def numeric(name, width, precision, &block)
       add_column(name, :numeric, width, precision, &block)
     end
-   end
+  end
 end

@@ -171,16 +171,35 @@ SQL
         sql += <<SQL
 delete from #{conn.quote_ident(dest_table)};
 SQL
+      when :insert_partition
+        # clear out records for the partition associated with this batch
+        name = schema.partition_column
+        if name.nil? or name.empty?
+          raise "Schema must have partition column specified"
+        end
+
+        value = conn.escape_string(@batch.to_s())
+        type = schema.columns[name]
+
+        sql += <<SQL
+delete from #{conn.quote_ident(dest_table)}
+where #{conn.quote_ident(name)} = #{value_to_db_str(type, value)}
+;
+
+SQL
       else
         raise "Invalid load strategy '#{load_strategy}'"
       end
 
+      # Insert data from temp
       sql += <<SQL
 insert into #{conn.quote_ident(dest_table)}
   (#{col_name_str})
   select #{col_name_str}
   from #{temp_table_name};
 SQL
+
+      # run the commands
       logger.debug(sql)
       result = conn.exec(sql)
 
@@ -190,7 +209,6 @@ SQL
 
     # Runs the ETL job
     def run_internal
-
       rows_success = rows_error = 0
       msg = ''
 
