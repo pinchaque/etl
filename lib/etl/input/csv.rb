@@ -71,10 +71,9 @@ module ETL::Input
             row = row_in.to_hash
           # We have an array - use numbers as the keys
           elsif  row_in.respond_to?(:to_a)
-            h = {}
             ary = row_in.to_a
             ary.each_index do |i|
-              h[i] = ary[i]
+              row[i] = ary[i]
             end
           # Error out since we don't know how to process this
           else
