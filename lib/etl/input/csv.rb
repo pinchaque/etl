@@ -24,6 +24,8 @@ module ETL::Input
 
   class CSV < Base
 
+    attr_accessor :headers, :headers_map
+
     # Default options to use for CSV reading
     def default_options
       {
@@ -50,6 +52,8 @@ module ETL::Input
 
       @file_name = file_name
       @options = default_options.merge(options).merge(force_options)
+      @headers = nil
+      @headers_map = {}
     end
 
     # Reads each row from the input file and passes it to the specified
@@ -57,29 +61,57 @@ module ETL::Input
     def each_row
       Rails.logger.debug("Reading from CSV input file #{@file_name}")
       ::CSV.foreach(@file_name, @options) do |row_in|
+        # Row that maps name => value
+        row = {}
 
-        # Hashes are in the right format
-        if row_in.respond_to?(:to_hash)
-          yield row_in.to_hash
-
-        # if the CSV row is an array then that means we don't have headers
-        # for it and we should turn it into a hash using array indexes
-        # as the keys
-        elsif row_in.respond_to?(:to_a)
-          h = {}
-          ary = row_in.to_a
-          ary.each_index do |i|
-            h[i] = ary[i]
+        # If we weren't given headers then we use what's in the file
+        if headers.nil?
+          # We have a hash - OK we'll use it
+          if row_in.respond_to?(:to_hash)
+            row = row_in.to_hash
+          # We have an array - use numbers as the keys
+          elsif  row_in.respond_to?(:to_a)
+            h = {}
+            ary = row_in.to_a
+            ary.each_index do |i|
+              h[i] = ary[i]
+            end
+          # Error out since we don't know how to process this
+          else
+            raise "Input row class #{row_in.class} needs to be a hash or array"
           end
-          yield h
-
-        # Unrecognized format
+        # if we were given the headers to use then we just need to grab the
+        # values out of whatever we have
         else
-          raise "Input row class #{row_in.class} needs to be a hash or array"
+          values = row_in.kind_of?(::CSV::Row) ? row_in.fields : row_in.to_a
+
+          if headers.length != values.length
+            raise "Must have the same number of headers #{headers.length} " + 
+              "and values #{values.length}"
+          end
+
+          # match up headers and values
+          (0...headers.length).each do |i|
+            row[headers[i]] = values[i]
+          end
         end
 
+        # now we apply our header map if we have one
+        @headers_map.each do |name, new_name|
+          if row.has_key?(name)
+            # remap old name to new name
+            row[new_name] = row[name]
+            row.delete(name)
+          else
+            raise "Input row does not have expected column '#{name}'"
+          end
+        end
+
+        yield row
         @rows_processed += 1
       end
     end
+
+
   end
 end
