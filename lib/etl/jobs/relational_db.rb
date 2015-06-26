@@ -112,7 +112,8 @@ module ETL::Job
     # Load a single batch of rows (passed in as array) into the temp table
     def load_temp_data_batch(conn, temp_table_name, input_rows)
       logger.debug("Processing batch size #{input_rows.length}")
-      rows = []
+      rows = [] # rows we're writing
+      cols = {} # columns we're writing
       input_rows.each do |row_in|
         # Read our input row into a hash containing all schema columns
         row_out = read_input_row(row_in) 
@@ -127,6 +128,7 @@ module ETL::Job
         # Convert each value to its string representation
         str_values = []
         row_out.each do |name, value|
+          cols[name] = true
           type = schema.columns[name]
           esc_string = value.is_a?(String) ? conn.escape_string(value) : value
           str_values << value_to_db_str(type, esc_string)
@@ -136,9 +138,14 @@ module ETL::Job
         rows << "(" + str_values.join(", ") + ")"
       end
 
+      # build array of quoted column names
+      col_names = cols.keys
+      col_names.collect! { |x| conn.quote_ident(x) }
+
       sql = <<SQL
-insert into #{temp_table_name} values
-#{rows.join(",\n")}
+insert into #{temp_table_name} 
+  (#{col_names.join(", ")})
+values #{rows.join(",\n  ")}
 ;
 SQL
       logger.debug(sql)
@@ -148,9 +155,16 @@ SQL
     # Load temp table records into destination table, returning number of
     # affected rows
     def load_destination_table(conn, temp_table_name, dest_table)
+      # build array of quoted column names
+      col_names = schema.columns.keys
+      col_names.collect! { |x| conn.quote_ident(x) }
+      col_name_str = col_names.join(", ")
+
       sql = <<SQL
 insert into #{conn.quote_ident(dest_table)}
-  select * from #{temp_table_name};
+  (#{col_name_str})
+  select #{col_name_str}
+  from #{temp_table_name};
 SQL
       logger.debug(sql)
       result = conn.exec(sql)
