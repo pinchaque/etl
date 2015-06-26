@@ -35,31 +35,30 @@ module ETL::Schema
       "(\n  " + a.join(",\n  ") + "\n)\n"
     end
 
-    def add_column(name, type, width, precision, input_name, &block)
+    def add_column(name, type, width, precision, &block)
       t = Column.new(type, width, precision)
-      t.input_name = input_name
       @columns[name] = t
       yield t if block_given?
     end
 
-    def date(name, input_name = nil, &block)
-      add_column(name, :date, nil, nil, input_name, &block)
+    def date(name, &block)
+      add_column(name, :date, nil, nil, &block)
     end
 
-    def string(name, input_name = nil, &block)
-      add_column(name, :string, nil, nil, input_name, &block)
+    def string(name, &block)
+      add_column(name, :string, nil, nil, &block)
     end
 
-    def int(name, input_name = nil, &block)
-      add_column(name, :int, nil, nil, input_name, &block)
+    def int(name, &block)
+      add_column(name, :int, nil, nil, &block)
     end
 
-    def float(name, input_name = nil, &block)
-      add_column(name, :float, nil, nil, input_name, &block)
+    def float(name, &block)
+      add_column(name, :float, nil, nil, &block)
     end
 
-    def numeric(name, width, precision, input_name = nil, &block)
-      add_column(name, :numeric, width, precision, input_name, &block)
+    def numeric(name, width, precision, &block)
+      add_column(name, :numeric, width, precision, &block)
     end
    end
 end

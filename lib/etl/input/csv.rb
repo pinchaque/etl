@@ -70,7 +70,7 @@ module ETL::Input
           if row_in.respond_to?(:to_hash)
             row = row_in.to_hash
           # We have an array - use numbers as the keys
-          elsif  row_in.respond_to?(:to_a)
+          elsif row_in.respond_to?(:to_a)
             ary = row_in.to_a
             ary.each_index do |i|
               row[i] = ary[i]
@@ -110,7 +110,5 @@ module ETL::Input
         @rows_processed += 1
       end
     end
-
-
   end
 end

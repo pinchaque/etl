@@ -27,13 +27,9 @@ class TestCsvCreate1 < ETL::Job::CSV
 
     define_schema do |s|
       s.date("day")
-      s.string("condition") do |col|
-        col.input_name = "attribute"
-      end
+      s.string("condition")
       s.int("value_int")
-      s.numeric("value_num", 10, 1) do |col|
-        col.input_name = "value_numeric"
-      end
+      s.numeric("value_num", 10, 1)
       s.float("value_float")
     end
   end
@@ -46,15 +42,11 @@ class TestCsvCreate2 < ETL::Job::CSV
     super
     @feed_name = "test_2"
     define_schema do |s|
-      s.date("day", 0)
-      s.string("condition") do |col|
-        col.input_name = 1
-      end
-      s.int("value_int", 2)
-      s.numeric("value_num", 10, 1) do |col|
-        col.input_name = 3
-      end
-      s.float("value_float", 4)
+      s.date("day")
+      s.string("condition")
+      s.int("value_int")
+      s.numeric("value_num", 10, 1)
+      s.float("value_float")
     end
   end
 
@@ -75,6 +67,10 @@ RSpec.describe Job, :type => :job do
     expect(File.exist?(outfile)).to be false
 
     input = ETL::Input::CSV.new("#{Rails.root}/spec/data/simple1.csv")
+    input.headers_map = {
+        "attribute" => "condition", 
+        "value_numeric" => "value_num"
+    }
     job = TestCsvCreate1.new(input)
     batch = ETL::Job::DateBatch.new(2015, 3, 31)
 
@@ -110,6 +106,7 @@ END
 
     input = ETL::Input::CSV.new("#{Rails.root}/spec/data/simple1.psv",
       {headers: false, col_sep: '|'})
+    input.headers = %w{day condition value_int value_num value_float}
     job = TestCsvCreate2.new(input)
     batch = ETL::Job::DateBatch.new(2015, 3, 31)
 

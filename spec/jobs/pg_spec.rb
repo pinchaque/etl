@@ -27,9 +27,9 @@ class TestPgCreate1 < ETL::Job::PostgreSQL
 
     define_schema do |s|
       s.date("day")
-      s.string("condition", "attribute")
+      s.string("condition")
       s.int("value_int")
-      s.numeric("value_num", 10, 1, "value_numeric")
+      s.numeric("value_num", 10, 1)
       s.float("value_float")
     end
   end
@@ -61,6 +61,10 @@ SQL
 
     batch = ETL::Job::DateBatch.new(2015, 3, 31)
     input = ETL::Input::CSV.new("#{Rails.root}/spec/data/simple1.csv")
+    input.headers_map = {
+        "attribute" => "condition", 
+        "value_numeric" => "value_num"
+    }
     job = TestPgCreate1.new(input, conn)
     job.row_batch_size = 2 # test batching of rows loaded to tmp
 

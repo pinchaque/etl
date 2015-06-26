@@ -25,9 +25,7 @@ RSpec.describe Job, :type => :job do
 
     s = ETL::Schema::Table.new
     s.date("day")
-    s.string("condition") do |col|
-      col.input_name = "attribute"
-    end
+    s.string("condition")
     s.int("int")
     s.numeric("num1", 10, 1)
     s.numeric("num2", 10, 1)
@@ -89,9 +87,7 @@ RSpec.describe Job, :type => :job do
     
     s = ETL::Schema::Table.new
     s.date("day")
-    s.string("condition") do |col|
-      col.input_name = "attribute"
-    end
+    s.string("condition")
     s.int("int")
     s.numeric("num1", 10, 1)
     s.numeric("num2", 10, 1)
