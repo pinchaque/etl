@@ -32,12 +32,29 @@ class TestPgCreate1 < ETL::Job::PostgreSQL
       s.numeric("value_num", 10, 1)
       s.float("value_float")
     end
+
+    load_strategy = :insert_append
   end
 end
 
+
+
+class TestPgLoad1 < ETL::Job::PostgreSQL
+  def initialize(input, conn, table_name)
+    super(input, conn)
+    @feed_name = table_name
+    define_schema do |s|
+      s.date("day")
+      s.int("id")
+      s.int("value")
+    end
+  end
+end
+
+
 RSpec.describe Job, :type => :job do
 
-  it "postgres - insert" do
+  it "postgres - insert from csv" do
     dbconfig = Rails.configuration.database_configuration[Rails.env]
     conn = PGconn.open(
         :dbname => dbconfig["database"],
@@ -84,5 +101,90 @@ SQL
     expect(v[0][1]).to eq('rain')
     expect(v[1][1]).to eq('snow')
     expect(v[2][1]).to eq('sun')
+  end
+
+
+
+
+  it "postgres - insert append" do
+    table_name = "test_2"
+    dbconfig = Rails.configuration.database_configuration[Rails.env]
+    conn = PGconn.open(
+        :dbname => dbconfig["database"],
+        :user => dbconfig["username"],
+        :password => dbconfig["password"],
+        :host => dbconfig["host"]
+        )
+
+    # Create destination table
+    sql = <<SQL
+drop table if exists #{table_name};
+create table #{table_name} (
+  day timestamp, 
+  id int,
+  value int
+  );
+SQL
+    conn.exec(sql)
+
+
+    batch = ETL::Job::DateBatch.new(2015, 4, 3)
+    data = [
+      { "day" => "2015-04-01", "id" => 10, "value" => 1},
+      { "day" => "2015-04-02", "id" => 11, "value" => 2},
+      { "day" => "2015-04-03", "id" => 12, "value" => 3},
+    ]
+    input = ETL::Input::Array.new(data)
+    job = TestPgLoad1.new(input, conn, table_name)
+    job.load_strategy = :insert_append
+    jr = job.run(batch)
+    expect(input.rows_processed).to eq(3)
+    expect(jr.status).to eq(:success)
+    expect(jr.num_rows_success).to eq(3)
+    expect(jr.num_rows_error).to eq(0)
+
+    data = [
+      { "day" => "2015-04-02", "id" => 11, "value" => 4},
+      { "day" => "2015-04-02", "id" => 13, "value" => 5},
+    ]
+    input = ETL::Input::Array.new(data)
+    job = TestPgLoad1.new(input, conn, table_name)
+    job.load_strategy = :insert_append
+    jr = job.run(batch)
+    expect(input.rows_processed).to eq(2)
+    expect(jr.status).to eq(:success)
+    expect(jr.num_rows_success).to eq(2)
+    expect(jr.num_rows_error).to eq(0)
+
+
+
+    result = conn.exec(<<SQL
+select day, id, value 
+from #{table_name} 
+order by day, id, value;
+SQL
+    )
+
+    exp_values = [
+      ["2015-04-01 00:00:00", "10", "1"],
+      ["2015-04-02 00:00:00", "11", "2"],
+      ["2015-04-02 00:00:00", "11", "4"],
+      ["2015-04-02 00:00:00", "13", "5"],
+      ["2015-04-03 00:00:00", "12", "3"],
+    ]
+
+    compare_pg_results(exp_values, result.values)
+  end
+
+
+  # helper function for comparing expected and actual results from PG
+  def compare_pg_results(e, a)
+    expect(a.length).to eq(e.length)
+    (0...e.length).each do |i|
+      expect(a[i].length).to eq(e[i].length)
+      (0...e[i].length).each do |j|
+        expect(a[i][j]).to eq(e[i][j])
+      end
+    end
   end
 end

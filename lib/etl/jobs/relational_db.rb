@@ -16,8 +16,6 @@
 ###############################################################################
 
 require 'tempfile'
-require 'fileutils'
-require 'csv'
 require 'pg'
 require 'securerandom'
 
@@ -102,7 +100,7 @@ module ETL::Job
       return temp_table_name
     end
 
-    # Load CSV into temp table in batches
+    # Load data into temp table in batches
     def load_temp_data(conn, temp_table_name)
       logger.debug("Loading temp table #{temp_table_name} in batches " + 
         "of #{@row_batch_size} rows")
@@ -110,6 +108,7 @@ module ETL::Job
         load_temp_data_batch(conn, temp_table_name, rows)
       end
     end
+
     # Load a single batch of rows (passed in as array) into the temp table
     def load_temp_data_batch(conn, temp_table_name, input_rows)
       logger.debug("Processing batch size #{input_rows.length}")
@@ -129,7 +128,8 @@ module ETL::Job
         str_values = []
         row_out.each do |name, value|
           type = schema.columns[name]
-          str_values << value_to_db_str(type, conn.escape_string(value))
+          esc_string = value.is_a?(String) ? conn.escape_string(value) : value
+          str_values << value_to_db_str(type, esc_string)
         end
 
         # string representation of values for this row
@@ -159,9 +159,7 @@ SQL
       result.cmd_tuples
     end
 
-    # Implementation of running the CSV job
-    # Reads the input CSV file one row at a time, performs the transform
-    # operation, and writes that row to the output.
+    # Runs the ETL job
     def run_internal
 
       rows_success = rows_error = 0
@@ -173,7 +171,7 @@ SQL
         # Create temp table to match destination table
         temp_table_name = create_temp(conn)
 
-        # Load CSV into temp table
+        # Load data into temp table
         load_temp_data(conn, temp_table_name)
 
         # Load temp table records into destination table

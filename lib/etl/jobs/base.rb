@@ -19,7 +19,7 @@ module ETL::Job
 
   # Base class for all ETL jobs
   class Base
-    attr_accessor :feed_name, :schema, :reader
+    attr_accessor :feed_name, :schema, :reader, :load_strategy
 
     def initialize(reader)
       @reader = reader
