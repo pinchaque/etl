@@ -155,25 +155,32 @@ SQL
     # Load temp table records into destination table, returning number of
     # affected rows
     def load_destination_table(conn, temp_table_name, dest_table)
+
       # build array of quoted column names
       col_names = schema.columns.keys
       col_names.collect! { |x| conn.quote_ident(x) }
       col_name_str = col_names.join(", ")
 
-      sql = ""
+      q_dest_table = conn.quote_ident(dest_table)
 
       # delete existing rows based on load strategy
       case load_strategy
+      when :update
+        # don't delete anything
+      when :upsert
+        # don't delete anything
       when :insert_append
         # don't delete anything
       when :insert_table
         # clear out existing table
-        sql += <<SQL
-delete from #{conn.quote_ident(dest_table)};
+        sql = <<SQL
+delete from #{q_dest_table};
 SQL
+        logger.debug(sql)
+        conn.exec(sql)
       when :insert_partition
         # clear out records for the partition associated with this batch
-        name = schema.partition_column
+        name = schema.partition_column.to_s
         if name.nil? or name.empty?
           raise "Schema must have partition column specified"
         end
@@ -181,30 +188,77 @@ SQL
         value = conn.escape_string(@batch.to_s())
         type = schema.columns[name]
 
-        sql += <<SQL
-delete from #{conn.quote_ident(dest_table)}
+        sql = <<SQL
+delete from #{q_dest_table}
 where #{conn.quote_ident(name)} = #{value_to_db_str(type, value)}
 ;
 
 SQL
+        logger.debug(sql)
+        conn.exec(sql)
       else
         raise "Invalid load strategy '#{load_strategy}'"
       end
 
-      # Insert data from temp
-      sql += <<SQL
-insert into #{conn.quote_ident(dest_table)}
+      # handle insert/upsert/update
+      if [:update, :upsert].include?(load_strategy)
+        pk = schema.primary_key.to_s
+        if pk.nil? or pk.empty?
+          raise "Schema must have prmiary key specified for update/upsert"
+        end
+        q_pk = conn.quote_ident(pk)
+
+        # build sql string for updating columns
+        update_cols = schema.columns.keys
+        update_cols.delete(pk) # don't need to update pk
+        update_cols.collect! do |x|
+          q_x = conn.quote_ident(x)
+          "#{q_x} = #{temp_table_name}.#{q_x}"
+        end
+
+        rows_changed = 0
+
+        # Update records that already exist
+        sql = <<SQL
+update #{q_dest_table}
+set #{update_cols.join(", ")}
+from #{temp_table_name}
+where #{temp_table_name}.#{q_pk} = #{q_dest_table}.#{q_pk}
+;
+SQL
+        logger.debug(sql)
+        result = conn.exec(sql)
+        rows_changed += result.cmd_tuples
+
+        # for upsert we also insert records that don't exist yet
+        if load_strategy == :upsert
+          sql = <<SQL
+insert into #{q_dest_table}
+  (#{col_name_str})
+  select #{col_name_str}
+  from #{temp_table_name}
+  where #{q_pk} not in (
+    select #{q_pk} from #{q_dest_table}
+  );
+SQL
+          logger.debug(sql)
+          result = conn.exec(sql)
+          rows_changed += result.cmd_tuples
+        end
+        rows_changed
+
+      # else this is just a standard insert of entire temp table
+      else
+        sql = <<SQL
+insert into #{q_dest_table}
   (#{col_name_str})
   select #{col_name_str}
   from #{temp_table_name};
 SQL
-
-      # run the commands
-      logger.debug(sql)
-      result = conn.exec(sql)
-
-      # return number of rows affected
-      result.cmd_tuples
+        logger.debug(sql)
+        result = conn.exec(sql)
+        result.cmd_tuples # number of rows affected
+      end
     end
 
     # Runs the ETL job
