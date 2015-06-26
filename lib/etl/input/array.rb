@@ -15,26 +15,24 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-# Pre-define the module so we can use simpler syntax
-module ETL
-end
-
-# Core classes
-require 'etl/logger.rb'
-require 'etl/jobs/result.rb'
-require 'etl/jobs/base.rb'
-require 'etl/jobs/batch.rb'
-
-# Schema management
-require 'etl/schema/table.rb'
-require 'etl/schema/column.rb'
-
-# Various ETL jobs
-require 'etl/jobs/dummy.rb'
-require 'etl/jobs/csv.rb'
-require 'etl/jobs/postgresql.rb'
-
-# Input data readers
 require 'etl/input/base.rb'
-require 'etl/input/csv.rb'
-require 'etl/input/array.rb'
+
+module ETL::Input
+
+  class Array < Base
+
+    # Construct reader with array of hashes that we feed back
+    def initialize(data)
+      super()
+      @data = data
+    end
+
+    # Regurgitates data from array passed on construction
+    def each_row
+      @data.each do |h|
+        yield h
+        @rows_processed += 1
+      end
+    end
+  end
+end
