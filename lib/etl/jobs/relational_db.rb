@@ -68,15 +68,19 @@ module ETL::Job
     end
 
     def value_to_db_str(col, value)
-      case col.type
-        when :int
-          "#{value}"
-        when :float
-          "#{value}"
-        when :numeric
-          "#{value}"
-        else
-          "'#{value}'"
+      if value.nil?
+        "null"
+      else
+        case col.type
+          when :int
+            "#{value}"
+          when :float
+            "#{value}"
+          when :numeric
+            "#{value}"
+          else
+            "'#{value}'"
+        end
       end
     end
 
@@ -150,6 +154,12 @@ values #{rows.join(",\n  ")}
 SQL
       logger.debug(sql)
       conn.exec(sql)
+    end
+
+    # Perform table transformations on the temporary table before final
+    # load. This function is givgen the names of the temporary and final
+    # tables but it should only modify the temp one.
+    def transform_table(conn, temp_table_name, dest_table)
     end
 
     # Load temp table records into destination table, returning number of
@@ -275,8 +285,11 @@ SQL
         # Load data into temp table
         load_temp_data(conn, temp_table_name)
 
-        # Load temp table records into destination table
+        # Perform full table transformation on the temp table
         dest_table = feed_name
+        transform_table(conn, temp_table_name, dest_table)
+
+        # Load temp table records into destination table
         rows_success = load_destination_table(conn, temp_table_name, dest_table)
         msg = "Wrote #{rows_success} rows to #{dest_table}"
       end

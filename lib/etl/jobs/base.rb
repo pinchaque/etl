@@ -80,11 +80,8 @@ module ETL::Job
     def read_input_row(row)
       row_out = {}
       schema.columns.each do |name, col|
-        if not row.has_key?(name)
-          raise "Input row is missing value for input key #{name}: " +
-            row.to_s
-        end
-        row_out[name] = row[name]
+        # use nil if row doesn't exist in input
+        row_out[name] = row.fetch(name, nil)
       end
       row_out 
     end

@@ -47,6 +47,8 @@ class TestPgLoad1 < ETL::Job::PostgreSQL
       s.date(:day)
       s.int(:id)
       s.int(:value)
+      s.date(:dw_created)
+      s.date(:dw_updated)
       s.partition_column = :day
       s.primary_key = :id
     end
@@ -121,7 +123,9 @@ drop table if exists #{table_name};
 create table #{table_name} (
   day timestamp, 
   id int,
-  value int
+  value int,
+  dw_created timestamp,
+  dw_updated timestamp
   );
 SQL
     conn.exec(sql)
