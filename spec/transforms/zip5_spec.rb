@@ -15,32 +15,32 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-# Pre-define the module so we can use simpler syntax
-module ETL
+require 'rails_helper'
+
+require 'etl/core'
+
+RSpec.describe Job, :type => :transform do
+
+  it "zip codes" do
+
+    # array of inputs and expected outputs
+    d = [
+      ["92101", "92101"],
+      ["501", "00501"],
+      ["92101-3437", "92101"],
+      ["921013437", "92101"],
+      ["abcd", nil],
+      ["", nil],
+    ]
+
+    t = ETL::Transform::Zip5.new
+    d.each do |a|
+      expect(a.length).to eq(2)
+      if a[1].nil?
+        expect(t.transform(a[0])).to be_nil
+      else
+        expect(t.transform(a[0])).to eq(a[1])
+      end
+    end
+  end
 end
-
-# Core classes
-require 'etl/logger.rb'
-require 'etl/jobs/result.rb'
-require 'etl/jobs/base.rb'
-require 'etl/jobs/batch.rb'
-
-# Schema management
-require 'etl/schema/table.rb'
-require 'etl/schema/column.rb'
-
-# Various ETL jobs
-require 'etl/jobs/dummy.rb'
-require 'etl/jobs/csv.rb'
-require 'etl/jobs/postgresql.rb'
-
-# Input data readers
-require 'etl/input/base.rb'
-require 'etl/input/csv.rb'
-require 'etl/input/array.rb'
-
-# Row transforms
-require 'etl/transform/base.rb'
-require 'etl/transform/date_trunc.rb'
-require 'etl/transform/map_to_nil.rb'
-require 'etl/transform/zip5.rb'

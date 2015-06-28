@@ -18,10 +18,13 @@
 module ETL::Input
   class Base
 
-    attr_accessor :rows_processed
+    attr_accessor :rows_processed, :transforms, :pre_transform, :post_transform
 
     def initialize
       @rows_processed = 0
+      @transforms = {}
+      @pre_transform = nil
+      @post_transform = nil
     end
 
     # Reads each row from the input file and passes it to the specified
@@ -45,6 +48,19 @@ module ETL::Input
         end
       end
       yield batch if batch.length > 0
+    end
+
+    # Runs all our defined transforms on rows
+    def transform_row(row)
+      @transforms.each do |name, xform|
+        val = row[name]
+        val = @pre_transform.transform(val) unless @pre_transform.nil?
+        if not row.has_key?(name)
+          val = xform.transform(val)
+        end
+        val = @post_transform.transform(val) unless @post_transform.nil?
+        row[name] = val
+      end
     end
   end
 end

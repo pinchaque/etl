@@ -15,32 +15,24 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-# Pre-define the module so we can use simpler syntax
-module ETL
-end
-
-# Core classes
-require 'etl/logger.rb'
-require 'etl/jobs/result.rb'
-require 'etl/jobs/base.rb'
-require 'etl/jobs/batch.rb'
-
-# Schema management
-require 'etl/schema/table.rb'
-require 'etl/schema/column.rb'
-
-# Various ETL jobs
-require 'etl/jobs/dummy.rb'
-require 'etl/jobs/csv.rb'
-require 'etl/jobs/postgresql.rb'
-
-# Input data readers
-require 'etl/input/base.rb'
-require 'etl/input/csv.rb'
-require 'etl/input/array.rb'
-
-# Row transforms
 require 'etl/transform/base.rb'
-require 'etl/transform/date_trunc.rb'
-require 'etl/transform/map_to_nil.rb'
-require 'etl/transform/zip5.rb'
+
+module ETL::Transform
+
+  # Maps the specified values to nil, which is useful for input sources
+  # such as CSV files that don't natively support nil.
+  class MapToNil < Base
+
+    def initialize(*values)
+      super()
+      @values = {}
+      values.to_a.each do |v|
+        @values[v] = 1
+      end
+    end
+
+    def transform(value)
+      @values.has_key?(value) ? nil : value
+    end
+  end
+end

@@ -15,32 +15,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-# Pre-define the module so we can use simpler syntax
-module ETL
-end
-
-# Core classes
-require 'etl/logger.rb'
-require 'etl/jobs/result.rb'
-require 'etl/jobs/base.rb'
-require 'etl/jobs/batch.rb'
-
-# Schema management
-require 'etl/schema/table.rb'
-require 'etl/schema/column.rb'
-
-# Various ETL jobs
-require 'etl/jobs/dummy.rb'
-require 'etl/jobs/csv.rb'
-require 'etl/jobs/postgresql.rb'
-
-# Input data readers
-require 'etl/input/base.rb'
-require 'etl/input/csv.rb'
-require 'etl/input/array.rb'
-
-# Row transforms
 require 'etl/transform/base.rb'
-require 'etl/transform/date_trunc.rb'
-require 'etl/transform/map_to_nil.rb'
-require 'etl/transform/zip5.rb'
+
+module ETL::Transform
+
+  class Zip5 < Base
+
+    # Validates that the specified value is a well-formatted 5-digit zip code
+    def initialize
+      super()
+    end
+
+    # Truncates the date
+    def transform(value)
+      value.lpad(5, "0").left(5)
+    end
+  end
+end
