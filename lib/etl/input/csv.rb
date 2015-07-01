@@ -106,6 +106,7 @@ module ETL::Input
           end
         end
 
+        transform_row!(row)
         yield row
         @rows_processed += 1
       end

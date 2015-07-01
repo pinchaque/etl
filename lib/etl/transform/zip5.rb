@@ -28,6 +28,8 @@ module ETL::Transform
 
     # Truncates the date
     def transform(value)
+      return nil if value.nil?
+
       v = value.clone
 
       # clean out leading/trailing whitespace

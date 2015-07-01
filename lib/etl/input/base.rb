@@ -51,12 +51,11 @@ module ETL::Input
     end
 
     # Runs all our defined transforms on rows
-    def transform_row(row)
-      @transforms.each do |name, xform|
-        val = row[name]
+    def transform_row!(row)
+      row.each do |name, val|
         val = @pre_transform.transform(val) unless @pre_transform.nil?
-        if not row.has_key?(name)
-          val = xform.transform(val)
+        if @transforms.has_key?(name)
+          val = @transforms[name].transform(val)
         end
         val = @post_transform.transform(val) unless @post_transform.nil?
         row[name] = val
