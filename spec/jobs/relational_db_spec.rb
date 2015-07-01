@@ -20,7 +20,7 @@ require 'rails_helper'
 require 'etl/core'
 
 
-class TestPgLoad1 < ETL::Job::PostgreSQL
+class RelDb1 < ETL::Job::PostgreSQL
   def initialize(input, conn, table_name)
     super(input, conn)
     @feed_name = table_name
@@ -37,7 +37,7 @@ RSpec.describe Job, :type => :job do
   # test out our formatting of values
   it "value formatting" do
     input = ETL::Input::Array.new([])
-    job = TestPgLoad1.new(input, nil, "xxx")
+    job = RelDb1.new(input, nil, "xxx")
 
     d = [
       {type: :int, value: 1, expected: "1"},
