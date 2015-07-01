@@ -28,7 +28,23 @@ module ETL::Transform
 
     # Truncates the date
     def transform(value)
-      value.lpad(5, "0").left(5)
+      v = value.clone
+
+      # clean out leading/trailing whitespace
+      v.strip!
+
+      # We expect the string to just be digits and hyphen, otherwise this
+      # isn't a zip code
+      return nil unless v =~ /^\d+(-\d*)?+$/
+
+      # Chop everything off from hyphen onwards
+      v.gsub!(/-.*$/, "")
+
+      # Pad left with "0" if needed
+      v = v.rjust(5, "0")
+
+      # Return first 5 chars
+      v[0..4]
     end
   end
 end
