@@ -164,6 +164,10 @@ SQL
     expect(jr.num_rows_success).to eq(3)
     expect(jr.num_rows_error).to eq(0)
 
+    d1 = "2015-02-03 12:34:56"
+    d2 = "2015-02-04 01:23:45"
+    conn.exec("update #{table_name} set dw_created = '#{d1}', dw_updated = '#{d2}';")
+
     data = [
       { "day" => "2015-04-02", "id" => 11, "value" => 4},
       { "day" => "2015-04-02", "id" => 13, "value" => 5},
@@ -177,23 +181,26 @@ SQL
     expect(jr.num_rows_success).to eq(2)
     expect(jr.num_rows_error).to eq(0)
 
-
-
     result = conn.exec(<<SQL
-select day, id, value 
+select day
+  , id
+  , value
+  , to_char(dw_created, 'YYYY-MM-DD HH24:MI:SS')
+  , to_char(dw_updated, 'YYYY-MM-DD HH24:MI:SS')
 from #{table_name} 
 order by day, id, value;
 SQL
     )
 
-    exp_values = [
-      ["2015-04-01 00:00:00", "10", "1"],
-      ["2015-04-02 00:00:00", "11", "2"],
-      ["2015-04-02 00:00:00", "11", "4"],
-      ["2015-04-02 00:00:00", "13", "5"],
-      ["2015-04-03 00:00:00", "12", "3"],
-    ]
+    today = DateTime.now.strftime("%F %T")
 
+    exp_values = [
+      ["2015-04-01 00:00:00", "10", "1", d1, d2],
+      ["2015-04-02 00:00:00", "11", "2", d1, d2],
+      ["2015-04-02 00:00:00", "11", "4", today, today],
+      ["2015-04-02 00:00:00", "13", "5", today, today],
+      ["2015-04-03 00:00:00", "12", "3", d1, d2],
+    ]
     compare_pg_results(exp_values, result.values)
   end
 
@@ -217,6 +224,10 @@ SQL
     expect(jr.num_rows_success).to eq(3)
     expect(jr.num_rows_error).to eq(0)
 
+    d1 = "2015-02-03 12:34:56"
+    d2 = "2015-02-04 01:23:45"
+    conn.exec("update #{table_name} set dw_created = '#{d1}', dw_updated = '#{d2}';")
+
     data = [
       { "day" => "2015-04-02", "id" => 11, "value" => 4},
       { "day" => "2015-04-02", "id" => 13, "value" => 5},
@@ -233,15 +244,20 @@ SQL
 
 
     result = conn.exec(<<SQL
-select day, id, value 
+select day
+  , id
+  , value
+  , to_char(dw_created, 'YYYY-MM-DD HH24:MI:SS')
+  , to_char(dw_updated, 'YYYY-MM-DD HH24:MI:SS')
 from #{table_name} 
 order by day, id, value;
 SQL
     )
 
+    today = DateTime.now.strftime("%F %T")
     exp_values = [
-      ["2015-04-02 00:00:00", "11", "4"],
-      ["2015-04-02 00:00:00", "13", "5"],
+      ["2015-04-02 00:00:00", "11", "4", today, today],
+      ["2015-04-02 00:00:00", "13", "5", today, today],
     ]
 
     compare_pg_results(exp_values, result.values)
@@ -267,6 +283,10 @@ SQL
     expect(jr.num_rows_success).to eq(3)
     expect(jr.num_rows_error).to eq(0)
 
+    d1 = "2015-02-03 12:34:56"
+    d2 = "2015-02-04 01:23:45"
+    conn.exec("update #{table_name} set dw_created = '#{d1}', dw_updated = '#{d2}';")
+
     data = [
       { "day" => "2015-04-02", "id" => 11, "value" => 4},
       { "day" => "2015-04-02", "id" => 13, "value" => 5},
@@ -281,21 +301,24 @@ SQL
     expect(jr.num_rows_success).to eq(3)
     expect(jr.num_rows_error).to eq(0)
 
-
-
     result = conn.exec(<<SQL
-select day, id, value 
+select day
+  , id
+  , value
+  , to_char(dw_created, 'YYYY-MM-DD HH24:MI:SS')
+  , to_char(dw_updated, 'YYYY-MM-DD HH24:MI:SS')
 from #{table_name} 
 order by day, id, value;
 SQL
     )
 
+    today = DateTime.now.strftime("%F %T")
     exp_values = [
-      ["2015-04-01 00:00:00", "10", "1"],
-      ["2015-04-02 00:00:00", "11", "4"],
-      ["2015-04-02 00:00:00", "13", "5"],
-      ["2015-04-03 00:00:00", "12", "3"],
-      ["2015-04-03 00:00:00", "12", "6"],
+      ["2015-04-01 00:00:00", "10", "1", d1, d2],
+      ["2015-04-02 00:00:00", "11", "4", today, today],
+      ["2015-04-02 00:00:00", "13", "5", today, today],
+      ["2015-04-03 00:00:00", "12", "3", d1, d2],
+      ["2015-04-03 00:00:00", "12", "6", today, today],
     ]
 
     compare_pg_results(exp_values, result.values)
@@ -321,6 +344,10 @@ SQL
     expect(jr.num_rows_success).to eq(3)
     expect(jr.num_rows_error).to eq(0)
 
+    d1 = "2015-02-03 12:34:56"
+    d2 = "2015-02-04 01:23:45"
+    conn.exec("update #{table_name} set dw_created = '#{d1}', dw_updated = '#{d2}';")
+
     data = [
       { "day" => "2015-04-02", "id" => 11, "value" => 4},
       { "day" => "2015-04-02", "id" => 13, "value" => 5},
@@ -336,16 +363,21 @@ SQL
     expect(jr.num_rows_error).to eq(0)
 
     result = conn.exec(<<SQL
-select day, id, value 
+select day
+  , id
+  , value
+  , to_char(dw_created, 'YYYY-MM-DD HH24:MI:SS')
+  , to_char(dw_updated, 'YYYY-MM-DD HH24:MI:SS')
 from #{table_name} 
 order by day, id, value;
 SQL
     )
 
+    today = DateTime.now.strftime("%F %T")
     exp_values = [
-      ["2015-04-01 00:00:00", "10", "1"],
-      ["2015-04-02 00:00:00", "11", "4"],
-      ["2015-04-05 00:00:00", "12", "6"],
+      ["2015-04-01 00:00:00", "10", "1", d1, d2],
+      ["2015-04-02 00:00:00", "11", "4", d1, today],
+      ["2015-04-05 00:00:00", "12", "6", d1, today],
     ]
 
     compare_pg_results(exp_values, result.values)
@@ -371,6 +403,10 @@ SQL
     expect(jr.num_rows_success).to eq(3)
     expect(jr.num_rows_error).to eq(0)
 
+    d1 = "2015-02-03 12:34:56"
+    d2 = "2015-02-04 01:23:45"
+    conn.exec("update #{table_name} set dw_created = '#{d1}', dw_updated = '#{d2}';")
+
     data = [
       { "day" => "2015-04-02", "id" => 11, "value" => 4},
       { "day" => "2015-04-02", "id" => 13, "value" => 5},
@@ -386,17 +422,22 @@ SQL
     expect(jr.num_rows_error).to eq(0)
 
     result = conn.exec(<<SQL
-select day, id, value 
+select day
+  , id
+  , value
+  , to_char(dw_created, 'YYYY-MM-DD HH24:MI:SS')
+  , to_char(dw_updated, 'YYYY-MM-DD HH24:MI:SS')
 from #{table_name} 
 order by id, day, value
 SQL
     )
 
+    today = DateTime.now.strftime("%F %T")
     exp_values = [
-      ["2015-04-01 00:00:00", "10", "1"],
-      ["2015-04-02 00:00:00", "11", "4"],
-      ["2015-04-05 00:00:00", "12", "6"],
-      ["2015-04-02 00:00:00", "13", "5"],
+      ["2015-04-01 00:00:00", "10", "1", d1, d2],
+      ["2015-04-02 00:00:00", "11", "4", d1, today],
+      ["2015-04-05 00:00:00", "12", "6", d1, today],
+      ["2015-04-02 00:00:00", "13", "5", today, today],
     ]
 
     compare_pg_results(exp_values, result.values)

@@ -25,13 +25,15 @@ module ETL::Job
   # Class that contains shared logic for writing to relational DBs. DB-specific
   # logic should be minimized and put into subclasses.
   class RelationalDB < Base
-    attr_accessor :row_batch_size
+    attr_accessor :row_batch_size, :col_name_updated, :col_name_created
 
     # Initialize given a connection to the database
     def initialize(input, conn)
       super(input)
       @conn = conn
       @row_batch_size = 100
+      @col_name_updated = "dw_updated"
+      @col_name_created = "dw_created"
     end
 
     # Perform transformation operation on each row that is read. 
@@ -157,9 +159,20 @@ SQL
     end
 
     # Perform table transformations on the temporary table before final
-    # load. This function is givgen the names of the temporary and final
+    # load. This function is given the names of the temporary and final
     # tables but it should only modify the temp one.
     def transform_table(conn, temp_table_name, dest_table)
+      q_dest_table = conn.quote_ident(dest_table)
+
+      [@col_name_updated, @col_name_created].each do |col_name|
+        if schema.columns.has_key?(col_name)
+          sql = <<SQL
+update #{temp_table_name} set #{conn.quote_ident(col_name.to_s)} = now();
+SQL
+          logger.debug(sql)
+          result = conn.exec(sql)
+        end
+      end
     end
 
     # Load temp table records into destination table, returning number of
@@ -214,13 +227,14 @@ SQL
       if [:update, :upsert].include?(load_strategy)
         pk = schema.primary_key.to_s
         if pk.nil? or pk.empty?
-          raise "Schema must have prmiary key specified for update/upsert"
+          raise "Schema must have primary key specified for update/upsert"
         end
         q_pk = conn.quote_ident(pk)
 
         # build sql string for updating columns
         update_cols = schema.columns.keys
         update_cols.delete(pk) # don't need to update pk
+        update_cols.delete(@col_name_created) # also don't update created
         update_cols.collect! do |x|
           q_x = conn.quote_ident(x)
           "#{q_x} = #{temp_table_name}.#{q_x}"
@@ -278,7 +292,6 @@ SQL
 
       # Perform all steps within a transaction
       @conn.transaction do |conn|
-
         # Create temp table to match destination table
         temp_table_name = create_temp(conn)
 
