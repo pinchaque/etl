@@ -48,6 +48,8 @@ class TestCsvCreate2 < ETL::Job::CSV
       s.numeric("value_num", 10, 1)
       s.float("value_float")
     end
+
+    @load_strategy = :insert_table
   end
 
   def csv_output_options
@@ -59,7 +61,7 @@ end
 
 RSpec.describe Job, :type => :job do
 
-  it "csv - simple overwrite" do
+  it "csv - overwrite" do
 
     # remove old file
     outfile = "/var/tmp/etl_test_output/test_1/2015-03-31.csv"
@@ -71,10 +73,68 @@ RSpec.describe Job, :type => :job do
         "attribute" => "condition", 
         "value_numeric" => "value_num"
     }
-    job = TestCsvCreate1.new(input)
     batch = ETL::Job::DateBatch.new(2015, 3, 31)
 
+    job = TestCsvCreate1.new(input)
+    job.load_strategy = :insert_table
+    jr = job.run(batch)
+    expect(job.output_file).to eq(outfile)
+    expect(jr.status).to eq(:success)
+    expect(jr.num_rows_success).to eq(3)
+    expect(jr.num_rows_error).to eq(0)
+    expect(jr.message).to include(outfile)
+    expect(File.exist?(outfile)).to be true
+    expect(input.rows_processed).to eq(3)
 
+    contents = IO.read(outfile)
+    expect_contents = <<END
+day,condition,value_int,value_num,value_float
+2015-04-01,rain,0,12.3,59.3899
+2015-04-02,snow,1,13.1,60.2934
+2015-04-03,sun,-1,0.4,-12.83
+END
+    expect(contents).to eq(expect_contents)
+
+    # run a second time
+    job = TestCsvCreate1.new(input)
+    job.load_strategy = :insert_table
+    jr = job.run(batch)
+    expect(job.output_file).to eq(outfile)
+    expect(jr.status).to eq(:success)
+    expect(jr.num_rows_success).to eq(3)
+    expect(jr.num_rows_error).to eq(0)
+    expect(jr.message).to include(outfile)
+    expect(File.exist?(outfile)).to be true
+    expect(input.rows_processed).to eq(3)
+
+    contents = IO.read(outfile)
+    expect_contents = <<END
+day,condition,value_int,value_num,value_float
+2015-04-01,rain,0,12.3,59.3899
+2015-04-02,snow,1,13.1,60.2934
+2015-04-03,sun,-1,0.4,-12.83
+END
+    expect(contents).to eq(expect_contents)
+
+  end
+
+
+  it "csv - append" do
+
+    # remove old file
+    outfile = "/var/tmp/etl_test_output/test_1/2015-03-31.csv"
+    File.delete(outfile) if File.exist?(outfile)
+    expect(File.exist?(outfile)).to be false
+
+    input = ETL::Input::CSV.new("#{Rails.root}/spec/data/simple1.csv")
+    input.headers_map = {
+        "attribute" => "condition", 
+        "value_numeric" => "value_num"
+    }
+    batch = ETL::Job::DateBatch.new(2015, 3, 31)
+
+    job = TestCsvCreate1.new(input)
+    job.load_strategy = :insert_append
     jr = job.run(batch)
 
     expect(job.output_file).to eq(outfile)
@@ -93,10 +153,35 @@ day,condition,value_int,value_num,value_float
 2015-04-03,sun,-1,0.4,-12.83
 END
     expect(contents).to eq(expect_contents)
+
+    # run a second time
+    job = TestCsvCreate1.new(input)
+    job.load_strategy = :insert_append
+    jr = job.run(batch)
+    expect(job.output_file).to eq(outfile)
+    expect(jr.status).to eq(:success)
+    expect(jr.num_rows_success).to eq(3)
+    expect(jr.num_rows_error).to eq(0)
+    expect(jr.message).to include(outfile)
+    expect(File.exist?(outfile)).to be true
+    expect(input.rows_processed).to eq(3)
+
+    contents = IO.read(outfile)
+    expect_contents = <<END
+day,condition,value_int,value_num,value_float
+2015-04-01,rain,0,12.3,59.3899
+2015-04-02,snow,1,13.1,60.2934
+2015-04-03,sun,-1,0.4,-12.83
+2015-04-01,rain,0,12.3,59.3899
+2015-04-02,snow,1,13.1,60.2934
+2015-04-03,sun,-1,0.4,-12.83
+END
+    expect(contents).to eq(expect_contents)
+
   end
 
 
-  it "psv - simple overwrite" do
+  it "psv - overwrite" do
 
     # remove old file
     outfile = "/var/tmp/etl_test_output/test_2/2015-03-31.csv"

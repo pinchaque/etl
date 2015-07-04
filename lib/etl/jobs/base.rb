@@ -24,6 +24,7 @@ module ETL::Job
     def initialize(reader)
       @reader = reader
       @schema = nil
+      @load_strategy = :unknown
     end
 
     # Returns the ActiveModel Job object
