@@ -45,9 +45,26 @@ RSpec.describe Job, :type => :input do
       end
       i += 1
     end
-
     expect(input.rows_processed).to eq(3)
-  end
+
+    # test second iteration through the file
+    input.each_row do |row|
+      case i
+      when 0 then
+        expect(row['day']).to eq('2015-04-01')
+        expect(row['attribute']).to eq('rain')
+      when 1 then
+        expect(row['day']).to eq('2015-04-02')
+        expect(row['attribute']).to eq('snow')
+      when 2 then
+        expect(row['day']).to eq('2015-04-03')
+        expect(row['attribute']).to eq('sun')
+      else
+      end
+      i += 1
+    end
+    expect(input.rows_processed).to eq(3)
+   end
 
   it "csv input batch 1" do
     # day,attribute,value_int,value_num,value_float

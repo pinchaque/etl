@@ -60,6 +60,7 @@ module ETL::Input
     # block.
     def each_row
       Rails.logger.debug("Reading from CSV input file #{@file_name}")
+      @rows_processed = 0
       ::CSV.foreach(@file_name, @options) do |row_in|
         # Row that maps name => value
         row = {}

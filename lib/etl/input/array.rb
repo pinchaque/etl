@@ -29,6 +29,7 @@ module ETL::Input
 
     # Regurgitates data from array passed on construction
     def each_row
+      @rows_processed = 0
       @data.each do |h|
         h = h.clone
         transform_row!(h)
