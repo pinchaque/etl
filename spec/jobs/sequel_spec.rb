@@ -65,6 +65,22 @@ class TestSequelLoad1 < ETL::Job::Sequel
   end
 end
 
+
+# tests multi-column partitions
+class TestSequelPartition1 < ETL::Job::Sequel
+  def initialize(input, conn, table_name)
+    super(input, conn)
+    @feed_name = table_name
+    define_schema do |s|
+      s.date(:day)
+      s.string(:city_name)
+      s.int(:value)
+      s.partition_columns = {"day" => "day", "city" => "city_name" }
+    end
+  end
+end
+
+
 RSpec.describe Job, :type => :job do
   def get_conn
     dbconfig = Rails.configuration.database_configuration[Rails.env]
@@ -77,14 +93,17 @@ RSpec.describe Job, :type => :job do
   end
   
   # helper function for comparing expected and actual results from PG
-  def compare_db_results(e, sequel_result)
+  def compare_db_results(e, sequel_result, debug = false)
     results = sequel_result.all
-    #puts("Expected:")
-    #puts(e.length)
-    #p(e)
-    #puts("Actual:")
-    #puts(results.length)
-    #p(results)
+    
+    if (debug)
+      puts("Expected:")
+      puts(e.length)
+      p(e)
+      puts("Actual:")
+      puts(results.length)
+      p(results)
+    end
     expect(results.length).to eq(e.length)
     (0...e.length).each do |i|
       a = results[i].values
@@ -121,7 +140,7 @@ RSpec.describe Job, :type => :job do
     end
   end
   
-  it "postgres - insert from csv", foo: true do
+  it "postgres - insert from csv" do
     conn = get_conn()
     
     # Create destination table
@@ -479,6 +498,95 @@ SQL
       ["2015-04-02 00:00:00", 13, 5, today, today],
     ]
 
+    compare_db_results(exp_values, result)
+  end
+
+  it "postgres - insert partition multi-column" do
+    table_name = "test_3"
+
+    conn = get_conn()
+    # Create destination table
+    sql = <<SQL
+drop table if exists #{table_name};
+create table #{table_name} (day timestamp, city_name varchar, value int);
+SQL
+    conn.run(sql)
+
+    # Initial data fill
+    batch = { :day => "2015-04-02", :city => "Seattle" }
+    data = [
+      { "day" => "2015-04-01", "city_name" => "Seattle", "value" => 1},
+      { "day" => "2015-04-02", "city_name" => "Portland", "value" => 2},
+      { "day" => "2015-04-03", "city_name" => "Seattle", "value" => 3},
+    ]
+    input = ETL::Input::Array.new(data)
+    job = TestSequelPartition1.new(input, conn, table_name)
+    job.load_strategy = :insert_partition
+    jr = job.run(batch)
+    expect(input.rows_processed).to eq(3)
+    expect(jr.status).to eq(:success)
+    # XXX expect(jr.num_rows_success).to eq(3)
+    expect(jr.num_rows_error).to eq(0)
+
+    # run with partition 2014-04-02, Portland
+    batch = { :day => "2015-04-02", :city => "Portland" }
+    data = [
+      { "day" => "2015-04-02", "city_name" => "Seattle", "value" => 4},
+      { "day" => "2015-04-02", "city_name" => "Portland", "value" => 5},
+    ]
+    input = ETL::Input::Array.new(data)
+    job = TestSequelPartition1.new(input, conn, table_name)
+    job.load_strategy = :insert_partition
+    jr = job.run(batch)
+    expect(input.rows_processed).to eq(2)
+    expect(jr.status).to eq(:success)
+    # XXX expect(jr.num_rows_success).to eq(3)
+    expect(jr.num_rows_error).to eq(0)
+
+    result = conn.fetch(<<SQL
+select to_char(day, 'YYYY-MM-DD HH24:MI:SS') as day, city_name as city, value
+from #{table_name} 
+order by day, city, value;
+SQL
+    )
+
+    exp_values = [
+      ["2015-04-01 00:00:00", "Seattle", 1],
+      ["2015-04-02 00:00:00", "Portland", 5],
+      ["2015-04-02 00:00:00", "Seattle", 4],
+      ["2015-04-03 00:00:00", "Seattle", 3],
+    ]
+    compare_db_results(exp_values, result)
+    
+    # run with partition 2014-04-01, Seattle
+    batch = { :day => "2015-04-01", :city => "Seattle" }
+    data = [
+      { "day" => "2015-04-01", "city_name" => "Seattle", "value" => 4},
+      { "day" => "2015-04-01", "city_name" => "Seattle", "value" => 5},
+    ]
+    input = ETL::Input::Array.new(data)
+    job = TestSequelPartition1.new(input, conn, table_name)
+    job.load_strategy = :insert_partition
+    jr = job.run(batch)
+    expect(input.rows_processed).to eq(2)
+    expect(jr.status).to eq(:success)
+    # XXX expect(jr.num_rows_success).to eq(3)
+    expect(jr.num_rows_error).to eq(0)
+
+    result = conn.fetch(<<SQL
+select to_char(day, 'YYYY-MM-DD HH24:MI:SS') as day, city_name as city, value
+from #{table_name} 
+order by day, city, value;
+SQL
+    )
+
+    exp_values = [
+      ["2015-04-01 00:00:00", "Seattle", 4],
+      ["2015-04-01 00:00:00", "Seattle", 5],
+      ["2015-04-02 00:00:00", "Portland", 5],
+      ["2015-04-02 00:00:00", "Seattle", 4],
+      ["2015-04-03 00:00:00", "Seattle", 3],
+    ]
     compare_db_results(exp_values, result)
   end
 end
