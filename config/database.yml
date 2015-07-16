@@ -1,16 +1,3 @@
-development: &development
-  adapter: postgresql
-  encoding: utf8
-  reconnect: false
-  database: dw_dev
-  pool: 5
-  username: dw
-  password: 'toOlY7oLVFCOL4XudzmJ'
-  host: 127.0.0.1
-
-# Warning: The database defined as "test" will be erased and
-# re-generated from your development database when you run "rake".
-# Do not set this db to the same as development or production.
 test:
   adapter: postgresql
   encoding: utf8
@@ -32,11 +19,21 @@ test_mysql:
   host: 127.0.0.1
 
 dev:
-  <<: *development
+  adapter: postgresql
+  encoding: utf8
+  reconnect: false
   database: dw_dev
-  host: 
+  pool: 5
+  username: dw
+  password: 'toOlY7oLVFCOL4XudzmJ'
+  host: 127.0.0.1
 
 production:
-  <<: *development
+  adapter: postgresql
+  encoding: utf8
+  reconnect: false
   database: dw
-  host: 
+  pool: 5
+  username: dw
+  password: 'toOlY7oLVFCOL4XudzmJ'
+  host: 127.0.0.1

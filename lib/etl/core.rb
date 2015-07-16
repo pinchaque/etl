@@ -19,10 +19,17 @@
 module ETL
 end
 
+
 # Core classes
 require 'etl/logger.rb'
 require 'etl/jobs/result.rb'
 require 'etl/jobs/base.rb'
+
+# Models
+Sequel::Model.plugin :timestamps
+require 'etl/models/job_run_status.rb'
+require 'etl/models/job.rb'
+require 'etl/models/job_run.rb'
 
 # Schema management
 require 'etl/schema/table.rb'
@@ -44,3 +51,9 @@ require 'etl/transform/base.rb'
 require 'etl/transform/date_trunc.rb'
 require 'etl/transform/map_to_nil.rb'
 require 'etl/transform/zip5.rb'
+
+module ETL
+  def ETL.logger
+    return ETL::Logger.new(ETL.log_file)
+  end
+end  

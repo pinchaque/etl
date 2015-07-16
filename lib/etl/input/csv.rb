@@ -59,7 +59,7 @@ module ETL::Input
     # Reads each row from the input file and passes it to the specified
     # block.
     def each_row
-      Rails.logger.debug("Reading from CSV input file #{@file_name}")
+      ETL.logger.debug("Reading from CSV input file #{@file_name}")
       @rows_processed = 0
       ::CSV.foreach(@file_name, @options) do |row_in|
         # Row that maps name => value

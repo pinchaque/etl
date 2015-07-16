@@ -16,6 +16,7 @@
 ###############################################################################
 
 require 'time'
+require 'logger'
 
 module ETL
 
@@ -24,7 +25,7 @@ module ETL
     attr_accessor :formatter
 
     def initialize(*args)
-      super
+      super(*args)
       @formatter = Formatter.new
     end
 

@@ -15,19 +15,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-require 'rails_helper'
 
 require 'etl/core'
 
-RSpec.describe JobRun, :type => :model do
+RSpec.describe "models" do
+  
+  before(:each) do
+    ETL::Model::JobRun.dataset.delete
+  end
 
   it "creates runs for job" do
-    job = Job.new
+    job = ETL::Model::Job.new
     job.id = 123
 
     batch = { :day => "2015-03-31" }
 
-    jr = JobRun.create_for_job(job, batch)
+    jr = ETL::Model::JobRun.create_for_job(job, batch)
 
     expect(jr.job_id).to eq(123)
     expect(jr.status).to eq(:new)
@@ -35,7 +38,7 @@ RSpec.describe JobRun, :type => :model do
     expect(jr.batch).to eq(batch.to_json)
   end
 
-  it "runs job - success" do
+  it "runs job - success", foo: true do
     a = 34
     b = 1
     m = 'congrats!'
@@ -56,7 +59,7 @@ RSpec.describe JobRun, :type => :model do
     expect(jr.message).to eq(m)
 
     # now check what's in the db
-    runs = JobRun.where(job_id: job.model.id)
+    runs = ETL::Model::JobRun.where(job_id: job.model.id).all
     expect(runs.count).to eq(1)
     jr = runs[0]
     expect(jr.job_id).to eq(job.model.id)
@@ -92,7 +95,7 @@ RSpec.describe JobRun, :type => :model do
     expect(jr.message).to eq(m)
     
     # now check what's in the db
-    runs = JobRun.where(job_id: job.model.id)
+    runs = ETL::Model::JobRun.where(job_id: job.model.id).all
     expect(runs.count).to eq(1)
     jr = runs[0]
     expect(jr.job_id).to eq(job.model.id)
@@ -127,7 +130,7 @@ RSpec.describe JobRun, :type => :model do
     expect(jr.message).to eq(job.exception)
     
     # now check what's in the db
-    runs = JobRun.where(job_id: job.model.id)
+    runs = ETL::Model::JobRun.where(Sequel.expr(job_id: job.model.id)).all
     expect(runs.count).to eq(1)
     jr = runs[0]
     expect(jr.job_id).to eq(job.model.id)

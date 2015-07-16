@@ -15,24 +15,23 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-class Job < ActiveRecord::Base
-  has_many :job_runs
+require 'sequel'
 
-  # Register specified class as a job if it doesn't already exist
-  def self.register(class_name)
-    r = self.find_by(class_name: class_name)
-    if r.nil?
-        r = Job.new
-        r.class_name = class_name
-        r.save()
+module ETL::Model
+  class JobRunStatus < ::Sequel::Model
+
+    # Returns the status ID given the label as a symbol
+    def self.id_from_label(label)
+      o = self.first(:label => label.to_s())
+      o.nil? ? nil : o.id
     end
-    return r
+
+    # Returns the status label as a symbol given an ID
+    def self.label_from_id(id)
+      o = self.first(:id => id)
+      o.nil? ? nil : o.label.to_sym()
+    end
   end
 
-  # Creates JobRun object for this Job and specified batch
-  def create_run(batch)
-    jr = JobRun.create_for_job(self, batch)
-    jr.save
-    jr
-  end
+  JobRunStatus.plugin :timestamps, :create => :created_at, :update => :updated_at, :update_on_create => true
 end

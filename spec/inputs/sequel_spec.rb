@@ -15,16 +15,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-require 'rails_helper'
 require 'mysql2'
 
 require 'etl/core'
 
 
-RSpec.describe Job, :type => :input do
+RSpec.describe "inputs" do
   it "mysql input each" do
     # add data to the test db
-    dbconfig = Rails.configuration.database_configuration['test_mysql']
+    dbconfig = ETL.db_config['test_mysql']
     client = Mysql2::Client.new(
       :host => dbconfig["host"],
       :database => dbconfig["database"],

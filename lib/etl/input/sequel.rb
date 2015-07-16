@@ -36,7 +36,7 @@ module ETL::Input
 
     # Reads each row from the query and passes it to the specified block.
     def each_row
-      Rails.logger.debug("Executing Sequel query #{@sql} with params #{@params.join(", ")}")
+      ETL.logger.debug("Executing Sequel query #{@sql} with params #{@params.join(", ")}")
       @rows_processed = 0
       @conn.fetch(@sql, *@params) do |row_in|
         row = {}

@@ -33,12 +33,12 @@ module ETL::Job
       return @model unless @model.nil?
 
       # get the model out of the DB
-      @model = Job.register(self.class.to_s())
+      @model = ETL::Model::Job.register(self.class.to_s())
     end
 
     # Initialize the logger with our job and batch info
     def logger
-      l = Rails.logger
+      l = ETL.logger
       l.formatter.job_name = model().class_name
       l.formatter.batch = @batch
       l

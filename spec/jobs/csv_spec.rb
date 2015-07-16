@@ -15,7 +15,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-require 'rails_helper'
 
 require 'etl/core'
 
@@ -59,7 +58,7 @@ end
 
 
 
-RSpec.describe Job, :type => :job do
+RSpec.describe "jobs" do
 
   it "csv - overwrite" do
 
@@ -68,7 +67,7 @@ RSpec.describe Job, :type => :job do
     File.delete(outfile) if File.exist?(outfile)
     expect(File.exist?(outfile)).to be false
 
-    input = ETL::Input::CSV.new("#{Rails.root}/spec/data/simple1.csv")
+    input = ETL::Input::CSV.new("#{ETL.root}/spec/data/simple1.csv")
     input.headers_map = {
         "attribute" => "condition", 
         "value_numeric" => "value_num"
@@ -126,7 +125,7 @@ END
     File.delete(outfile) if File.exist?(outfile)
     expect(File.exist?(outfile)).to be false
 
-    input = ETL::Input::CSV.new("#{Rails.root}/spec/data/simple1.csv")
+    input = ETL::Input::CSV.new("#{ETL.root}/spec/data/simple1.csv")
     input.headers_map = {
         "attribute" => "condition", 
         "value_numeric" => "value_num"
@@ -189,7 +188,7 @@ END
     expect(File.exist?(outfile)).to be false
     # file does not have headers
 
-    input = ETL::Input::CSV.new("#{Rails.root}/spec/data/simple1.psv",
+    input = ETL::Input::CSV.new("#{ETL.root}/spec/data/simple1.psv",
       {headers: false, col_sep: '|'})
     input.headers = %w{day condition value_int value_num value_float}
     job = TestCsvCreate2.new(input)

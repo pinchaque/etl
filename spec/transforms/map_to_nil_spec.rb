@@ -15,11 +15,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-require 'rails_helper'
 
 require 'etl/core'
 
-RSpec.describe Job, :type => :transform do
+RSpec.describe "transforms" do
 
   it "map to nil" do
     t = ETL::Transform::MapToNil.new("", "[NULL]", -1)

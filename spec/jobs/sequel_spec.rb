@@ -15,7 +15,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-require 'rails_helper'
 
 require 'etl/core'
 
@@ -81,9 +80,9 @@ class TestSequelPartition1 < ETL::Job::Sequel
 end
 
 
-RSpec.describe Job, :type => :job do
+RSpec.describe "jobs" do
   def get_conn
-    dbconfig = Rails.configuration.database_configuration[Rails.env]
+    dbconfig = ETL.db_config['test']
     conn = Sequel.postgres(
         :database => dbconfig["database"],
         :user => dbconfig["username"],
@@ -157,7 +156,7 @@ SQL
 
 
     batch = { :day => "2015-03-31" }
-    input = ETL::Input::CSV.new("#{Rails.root}/spec/data/simple1.csv")
+    input = ETL::Input::CSV.new("#{ETL.root}/spec/data/simple1.csv")
     input.headers_map = {
         "attribute" => "condition", 
         "value_numeric" => "value_num"
