@@ -29,7 +29,7 @@ class Job < ActiveRecord::Base
     return r
   end
 
-  # Creates JobRun object for this Job and specified batch_date
+  # Creates JobRun object for this Job and specified batch
   def create_run(batch)
     jr = JobRun.create_for_job(self, batch)
     jr.save

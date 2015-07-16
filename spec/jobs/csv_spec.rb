@@ -64,7 +64,7 @@ RSpec.describe Job, :type => :job do
   it "csv - overwrite" do
 
     # remove old file
-    outfile = "/var/tmp/etl_test_output/test_1/2015-03-31.csv"
+    outfile = "/var/tmp/etl_test_output/test_1/20150331.csv"
     File.delete(outfile) if File.exist?(outfile)
     expect(File.exist?(outfile)).to be false
 
@@ -73,7 +73,7 @@ RSpec.describe Job, :type => :job do
         "attribute" => "condition", 
         "value_numeric" => "value_num"
     }
-    batch = ETL::Job::DateBatch.new(2015, 3, 31)
+    batch = { :day => "2015-03-31" }
 
     job = TestCsvCreate1.new(input)
     job.load_strategy = :insert_table
@@ -122,7 +122,7 @@ END
   it "csv - append" do
 
     # remove old file
-    outfile = "/var/tmp/etl_test_output/test_1/2015-03-31.csv"
+    outfile = "/var/tmp/etl_test_output/test_1/20150331.csv"
     File.delete(outfile) if File.exist?(outfile)
     expect(File.exist?(outfile)).to be false
 
@@ -131,7 +131,7 @@ END
         "attribute" => "condition", 
         "value_numeric" => "value_num"
     }
-    batch = ETL::Job::DateBatch.new(2015, 3, 31)
+    batch = { :day => "2015-03-31" }
 
     job = TestCsvCreate1.new(input)
     job.load_strategy = :insert_append
@@ -184,7 +184,7 @@ END
   it "psv - overwrite" do
 
     # remove old file
-    outfile = "/var/tmp/etl_test_output/test_2/2015-03-31.csv"
+    outfile = "/var/tmp/etl_test_output/test_2/20150331.csv"
     File.delete(outfile) if File.exist?(outfile)
     expect(File.exist?(outfile)).to be false
     # file does not have headers
@@ -193,7 +193,7 @@ END
       {headers: false, col_sep: '|'})
     input.headers = %w{day condition value_int value_num value_float}
     job = TestCsvCreate2.new(input)
-    batch = ETL::Job::DateBatch.new(2015, 3, 31)
+    batch = { :day => "2015-03-31" }
 
     jr = job.run(batch)
 

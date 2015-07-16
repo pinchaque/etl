@@ -60,12 +60,10 @@ class TestSequelLoad1 < ETL::Job::Sequel
       s.int(:value)
       s.date(:dw_created)
       s.date(:dw_updated)
-      s.partition_column = :day
       s.primary_key = :id
     end
   end
 end
-
 
 RSpec.describe Job, :type => :job do
   def get_conn
@@ -139,7 +137,7 @@ SQL
     conn.run(sql)
 
 
-    batch = ETL::Job::DateBatch.new(2015, 3, 31)
+    batch = { :day => "2015-03-31" }
     input = ETL::Input::CSV.new("#{Rails.root}/spec/data/simple1.csv")
     input.headers_map = {
         "attribute" => "condition", 
@@ -190,7 +188,7 @@ SQL
     table_name = "test_2"
     conn = init_conn_table(table_name)
 
-    batch = ETL::Job::DateBatch.new(2015, 4, 3)
+    batch = { :day => "2015-04-03" }
     data = [
       { "day" => "2015-04-01", "id" => 10, "value" => 1},
       { "day" => "2015-04-02", "id" => 11, "value" => 2},
@@ -250,7 +248,7 @@ SQL
     table_name = "test_2"
     conn = init_conn_table(table_name)
 
-    batch = ETL::Job::DateBatch.new(2015, 4, 3)
+    batch = { :day => "2015-04-03" }
     data = [
       { "day" => "2015-04-01", "id" => 10, "value" => 1},
       { "day" => "2015-04-02", "id" => 11, "value" => 2},
@@ -309,7 +307,7 @@ SQL
     table_name = "test_2"
     conn = init_conn_table(table_name)
 
-    batch = ETL::Job::DateBatch.new(2015, 4, 2)
+    batch = { :day => "2015-04-02" }
     data = [
       { "day" => "2015-04-01", "id" => 10, "value" => 1},
       { "day" => "2015-04-02", "id" => 11, "value" => 2},
@@ -370,7 +368,7 @@ SQL
     table_name = "test_2"
     conn = init_conn_table(table_name)
 
-    batch = ETL::Job::DateBatch.new(2015, 4, 2)
+    batch = { :day => "2015-04-02" }
     data = [
       { "day" => "2015-04-01", "id" => 10, "value" => 1},
       { "day" => "2015-04-02", "id" => 11, "value" => 2},
@@ -429,7 +427,7 @@ SQL
     table_name = "test_2"
     conn = init_conn_table(table_name)
 
-    batch = ETL::Job::DateBatch.new(2015, 4, 2)
+    batch = { :day => "2015-04-02" }
     data = [
       { "day" => "2015-04-01", "id" => 10, "value" => 1},
       { "day" => "2015-04-02", "id" => 11, "value" => 2},

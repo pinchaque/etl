@@ -20,11 +20,18 @@ module ETL::Schema
 
   # Represents single data table including an ordered set of columns with
   # names and types.
+  # columns: Hash of column name to ETL::Schema::Column objects
+  # partition_columns: Hash of batch identifier to column name that is used
+  #   for that partition; used for partition loads
+  # primary_key: Array of columns that are primary keys; used for upsert
+  #   and update loads
   class Table
-    attr_accessor :columns, :partition_column, :primary_key
+    attr_accessor :columns, :partition_columns, :primary_key
 
     def initialize
-      @columns = Hash.new
+      @columns = {}
+      @partition_columns = {}
+      @primary_key = []
     end
 
     def to_s

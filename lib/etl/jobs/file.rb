@@ -33,7 +33,7 @@ module ETL::Job
       [
         output_root,
         feed_name,
-        @batch.to_s() + "." + output_extension
+        batch_id + "." + output_extension
       ].join("/")
     end
   end

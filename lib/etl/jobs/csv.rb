@@ -67,7 +67,7 @@ module ETL::Job
       FileUtils.mkdir_p(dir) unless Dir.exists?(dir)
 
       # Temporary location to which we load data
-      tmp_id = "etl_#{feed_name}_#{@batch.to_s}"
+      tmp_id = "etl_#{feed_name}_#{batch_id}"
       tf = Tempfile.new(tmp_id)
 
       # Open temp output file based on our load strategy

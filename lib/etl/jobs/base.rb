@@ -19,9 +19,9 @@ module ETL::Job
 
   # Base class for all ETL jobs
   class Base
-    attr_accessor :feed_name, :schema, :reader, :load_strategy
+    attr_accessor :feed_name, :schema, :reader, :load_strategy, :batch
 
-    def initialize(reader)
+    def initialize(reader = nil)
       @reader = reader
       @schema = nil
       @load_strategy = :unknown
@@ -44,10 +44,29 @@ module ETL::Job
       l
     end
 
+    # Returns string representation of batch suitable as an identifier
+    # Concatenates batch data members separated by underscores. Sorts
+    # keys before concatenation so we have deterministic batch ID regardless
+    # of order keys were added to hash.
+    def batch_id
+      return nil if @batch.nil?
+      
+      # get batch values sorted by keys
+      values = @batch.sort.collect { |x| x[1] }
+      
+      # clean up each value
+      values.collect! do |x|
+        x.downcase.gsub(/[^a-z\d]/, "")
+      end
+      
+      # separate by underscores
+      values.join("_")
+    end
+
     # Runs the job for the batch, keeping the status updated and handling
     # exceptions.
-    def run(batch)
-      @batch = batch
+    def run(b)
+      @batch = b
       jr = model().create_run(@batch)
 
       begin

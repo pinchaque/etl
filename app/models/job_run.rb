@@ -15,6 +15,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
+require 'json'
+
 class JobRun < ActiveRecord::Base
   belongs_to :job
   attr_accessor :job
@@ -25,7 +27,7 @@ class JobRun < ActiveRecord::Base
       jr.job = job
       jr.job_id = job.id
       jr.status = :new
-      jr.batch_date = batch.date
+      jr.batch = batch.to_json
     end
   end
 

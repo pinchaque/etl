@@ -23,7 +23,6 @@ end
 require 'etl/logger.rb'
 require 'etl/jobs/result.rb'
 require 'etl/jobs/base.rb'
-require 'etl/jobs/batch.rb'
 
 # Schema management
 require 'etl/schema/table.rb'

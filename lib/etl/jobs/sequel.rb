@@ -101,7 +101,7 @@ module ETL::Job
         type_ary << "#{n} #{t}"
       end
 
-      temp_table_name = "#{feed_name}_#{@batch.to_s}_#{SecureRandom.hex(8)}"
+      temp_table_name = "#{feed_name}_#{batch_id}_#{SecureRandom.hex(8)}"
       temp_table_name.gsub!(/\W/, '')
       temp_table_name = quote_ident(temp_table_name)
       sql = "create temp table #{temp_table_name} (#{type_ary.join(', ')});"
@@ -208,21 +208,18 @@ SQL
         conn.run(sql)
       when :insert_partition
         # clear out records for the partition associated with this batch
-        name = schema.partition_column.to_s
-        if name.nil? or name.empty?
-          raise "Schema must have partition column specified"
+        clauses = @batch.keys.collect do |bn|
+          name = schema.partition_columns.fetch(bn.to_s, bn).to_s
+          
+          unless schema.columns.has_key?(name)
+            raise "Schema does not have partition column '#{name}'"
+          end
+          
+          "#{quote_ident(name)} = ?"          
         end
-
-        type = schema.columns[name]
-
-        sql = <<SQL
-delete from #{q_dest_table}
-where #{quote_ident(name)} = ?
-;
-
-SQL
+        sql = "delete from #{q_dest_table} where " + clauses.join(" and ")
         logger.debug(sql)
-        conn.fetch(sql, @batch.to_s).all
+        conn.fetch(sql, *(@batch.values)).all
       else
         raise "Invalid load strategy '#{load_strategy}'"
       end
