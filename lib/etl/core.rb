@@ -32,7 +32,7 @@ require 'etl/schema/column.rb'
 # Various ETL jobs
 require 'etl/jobs/dummy.rb'
 require 'etl/jobs/csv.rb'
-require 'etl/jobs/postgresql.rb'
+require 'etl/jobs/sequel.rb'
 
 # Input data readers
 require 'etl/input/base.rb'
