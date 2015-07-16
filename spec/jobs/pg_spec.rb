@@ -57,8 +57,7 @@ end
 
 
 RSpec.describe Job, :type => :job do
-
-  it "postgres - insert from csv" do
+  def get_conn
     dbconfig = Rails.configuration.database_configuration[Rails.env]
     conn = PGconn.open(
         :dbname => dbconfig["database"],
@@ -66,7 +65,11 @@ RSpec.describe Job, :type => :job do
         :password => dbconfig["password"],
         :host => dbconfig["host"]
         )
-
+  end
+  
+  it "postgres - insert from csv" do
+    conn = get_conn()
+    
     # Create destination table
     sql = <<SQL
 drop table if exists test_1;
@@ -109,13 +112,7 @@ SQL
 
   # Helper to initialize database connection and create table
   def init_conn_table(table_name)
-    dbconfig = Rails.configuration.database_configuration[Rails.env]
-    conn = PGconn.open(
-        :dbname => dbconfig["database"],
-        :user => dbconfig["username"],
-        :password => dbconfig["password"],
-        :host => dbconfig["host"]
-        )
+    conn = get_conn()
 
     # Create destination table
     sql = <<SQL
