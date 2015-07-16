@@ -38,7 +38,7 @@ require 'etl/jobs/postgresql.rb'
 require 'etl/input/base.rb'
 require 'etl/input/csv.rb'
 require 'etl/input/array.rb'
-require 'etl/input/mysql.rb'
+require 'etl/input/sequel.rb'
 
 # Row transforms
 require 'etl/transform/base.rb'

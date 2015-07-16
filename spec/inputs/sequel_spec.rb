@@ -43,11 +43,14 @@ insert into #{table_name} (day, attribute) values
   ('2015-04-03', 'sun');
 SQL
     client.query(insert_sql)
-    while client.next_result
-      result = client.store_result
-    end
+    client.store_result while client.next_result
 
-    input = ETL::Input::MySQL.new(client, <<SQL)
+
+    conn = Sequel.mysql2(dbconfig["database"],
+      :user => dbconfig["username"],
+      :password => dbconfig["password"], 
+      :host => dbconfig["host"])
+    input = ETL::Input::Sequel.new(conn, <<SQL)
 select day, attribute
 from test_table
 order by day asc

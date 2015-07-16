@@ -16,26 +16,36 @@
 ###############################################################################
 
 require 'etl/input/base.rb'
-require 'mysql2'
+require 'sequel'
 
 
 module ETL::Input
 
-  class MySQL < Base
+  # Input class that uses Sequel connection for accessing data. Currently it
+  # just supports raw SQL with query param replacement.
+  # https://github.com/jeremyevans/sequel
+  class Sequel < Base
 
-    # Construct reader based on query to run
-    def initialize(client, sql)
+    # Construct reader based on Sequel connection and SQL query
+    def initialize(conn, sql, params = [])
       super()
-      @client = client
+      @conn = conn
       @sql = sql
+      @params = params
     end
 
     # Reads each row from the query and passes it to the specified block.
     def each_row
-      Rails.logger.debug("Executing MySQL query #{@sql}")
+      Rails.logger.debug("Executing Sequel query #{@sql} with params #{@params.join(", ")}")
       @rows_processed = 0
-      @client.query(@sql).each do |row_in|
-        row = row_in.clone
+      @conn.fetch(@sql, *@params) do |row_in|
+        row = {}
+        
+        # Sequel returns columns as symbols so we need to translate to strings
+        row_in.each do |k, v|
+          row[k.to_s] = v
+        end
+        
         transform_row!(row)
         yield row
         @rows_processed += 1
