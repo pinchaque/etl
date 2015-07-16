@@ -15,33 +15,31 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-# Pre-define the module so we can use simpler syntax
-module ETL
-end
-
-# Core classes
-require 'etl/logger.rb'
-require 'etl/jobs/result.rb'
-require 'etl/jobs/base.rb'
-require 'etl/jobs/batch.rb'
-
-# Schema management
-require 'etl/schema/table.rb'
-require 'etl/schema/column.rb'
-
-# Various ETL jobs
-require 'etl/jobs/dummy.rb'
-require 'etl/jobs/csv.rb'
-require 'etl/jobs/postgresql.rb'
-
-# Input data readers
 require 'etl/input/base.rb'
-require 'etl/input/csv.rb'
-require 'etl/input/array.rb'
-require 'etl/input/mysql.rb'
+require 'mysql2'
 
-# Row transforms
-require 'etl/transform/base.rb'
-require 'etl/transform/date_trunc.rb'
-require 'etl/transform/map_to_nil.rb'
-require 'etl/transform/zip5.rb'
+
+module ETL::Input
+
+  class MySQL < Base
+
+    # Construct reader based on query to run
+    def initialize(client, sql)
+      super()
+      @client = client
+      @sql = sql
+    end
+
+    # Reads each row from the query and passes it to the specified block.
+    def each_row
+      Rails.logger.debug("Executing MySQL query #{@sql}")
+      @rows_processed = 0
+      @client.query(@sql).each do |row_in|
+        row = row_in.clone
+        transform_row!(row)
+        yield row
+        @rows_processed += 1
+      end
+    end
+  end
+end
