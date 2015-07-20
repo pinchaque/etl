@@ -15,36 +15,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
+# Set environment to test (overrides default of "development")
 ENV["ETL_ENV"] ||= 'test'
-
-require 'psych'
-
-module ETL
-  def ETL.root
-    File.expand_path('../..', __FILE__)
-  end
-  
-  def ETL.log_file
-    "#{ETL.root}/log/test.log"
-  end
-  
-  # returns array of DBs parsed from config file
-  def ETL.db_config
-    fname = "#{ETL.root}/config/database.yml"
-    Psych.load_file(fname)
-  end
-end
-
-require 'sequel'
-
-dbconfig = ETL.db_config['test']
-Sequel::Model.db = Sequel.postgres(
-    :database => dbconfig["database"],
-    :user => dbconfig["username"],
-    :password => dbconfig["password"],
-    :host => dbconfig["host"]
-    )
-
+require 'etl'
 
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate

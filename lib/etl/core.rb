@@ -19,6 +19,7 @@
 module ETL
 end
 
+require 'sequel'
 
 # Core classes
 require 'etl/logger.rb'
