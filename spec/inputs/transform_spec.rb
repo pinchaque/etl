@@ -30,11 +30,16 @@ RSpec.describe "inputs" do
 
     input = ETL::Input::Array.new(data)
 
-    input.pre_transform = ETL::Transform::MapToNil.new("")
-
+    input.row_transform = Proc.new do |row|
+      t = ETL::Transform::MapToNil.new("")
+      row.each do |k, v|
+        row[k] = t.transform(v)
+      end
+    end
+    
     # We can use lambda functions to transform
     # or chain together transform classes
-    input.transforms = {
+    input.col_transforms = {
       "day" => ETL::Transform::DateTrunc.new(:day),
       "zip_code" => ETL::Transform::Zip5.new,
     }

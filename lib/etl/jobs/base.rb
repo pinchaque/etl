@@ -23,8 +23,14 @@ module ETL::Job
 
     def initialize(reader = nil)
       @reader = reader
-      @schema = nil
+      @schema = default_schema
       @load_strategy = :unknown
+    end
+    
+    # Returns the default schema for this job. Some derived jobs may be able
+    # to determine a default schema based on the destination.
+    def default_schema
+      nil
     end
 
     # Returns the ActiveModel Job object

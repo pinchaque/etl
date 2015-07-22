@@ -41,8 +41,34 @@ RSpec.describe "jobs" do
       {name: "num3", type: :numeric, width: nil, precision: 2},
       {name: "float", type: :float, width: nil, precision: nil},
     ]
+    
+    expect_schema(s, exp_arr)
+  end
 
-    c = s.columns
+  it "schema construct from sequel" do
+    
+    ss = [
+      [:id, {:allow_null => true, :db_type => 'integer', :primary_key => true, :type => :integer}],
+      [:day, {:allow_null => true, :db_type => 'datetime', :primary_key => false, :type => :datetime}],
+      [:condition, {:allow_null => true, :db_type => 'varchar(255)', :primary_key => false, :type => :string}],
+      [:float, {:allow_null => true, :db_type => 'float', :primary_key => false, :type => :float}]
+    ]
+
+    s = ETL::Schema::Table.from_sequel_schema(ss)
+    
+    # expected values based on above constructor
+    exp_arr = [
+      {name: "id", type: :int, width: nil, precision: nil},
+      {name: "day", type: :date, width: nil, precision: nil},
+      {name: "condition", type: :string, width: nil, precision: nil},
+      {name: "float", type: :float, width: nil, precision: nil},
+    ]
+    
+    expect_schema(s, exp_arr)
+  end
+  
+  def expect_schema(schema, exp_arr)
+    c = schema.columns
     a = c.keys
     expect(a.length).to eq(exp_arr.length)
 
@@ -51,7 +77,7 @@ RSpec.describe "jobs" do
       name = exp[:name]
       expect(a[i]).to eq(name)
 
-      ct = s.columns[name]
+      ct = c[name]
 
       expect(ct.type).to eq(exp[:type])
 

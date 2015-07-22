@@ -33,6 +33,28 @@ module ETL::Schema
       @partition_columns = {}
       @primary_key = []
     end
+    
+    def self.from_sequel_schema(schema)
+      t = Table.new
+      schema.each do |col|
+        col_name = col[0]
+        col_opts = col[1]
+        
+        # translate the database type from Sequel to our types
+        type = case col_opts[:type]
+        when :integer 
+          :int
+        when :datetime
+          :date
+        else
+          col_opts[:type]
+        end
+        
+        # TODO need to handle width and precision properly
+        t.add_column(col_name, type, nil, nil)
+      end
+      return t
+    end
 
     def to_s
       a = Array.new

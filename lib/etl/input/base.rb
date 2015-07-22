@@ -18,13 +18,12 @@
 module ETL::Input
   class Base
 
-    attr_accessor :rows_processed, :transforms, :pre_transform, :post_transform
+    attr_accessor :rows_processed, :row_transform, :col_transforms
 
     def initialize
       @rows_processed = 0
-      @transforms = {}
-      @pre_transform = nil
-      @post_transform = nil
+      @row_transform = nil
+      @col_transforms = {}
     end
 
     # Reads each row from the input file and passes it to the specified
@@ -52,13 +51,14 @@ module ETL::Input
 
     # Runs all our defined transforms on rows
     def transform_row!(row)
-      row.each do |name, val|
-        val = @pre_transform.transform(val) unless @pre_transform.nil?
-        if @transforms.has_key?(name)
-          val = @transforms[name].transform(val)
+      @row_transform.call(row) unless @row_transform.nil?
+      @col_transforms.each do |name, func|
+        next unless row.has_key?(name)
+        if func.respond_to?(:transform)
+          row[name] = func.transform(row[name])
+        else
+          row[name] = func.call(row[name])
         end
-        val = @post_transform.transform(val) unless @post_transform.nil?
-        row[name] = val
       end
     end
   end

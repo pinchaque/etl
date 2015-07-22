@@ -30,7 +30,7 @@ module ETL::Transform
     def transform(value)
       return nil if value.nil?
 
-      v = value.clone
+      v = value.dup
 
       # clean out leading/trailing whitespace
       v.strip!

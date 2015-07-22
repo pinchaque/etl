@@ -29,11 +29,11 @@ module ETL::Job
 
     # Initialize given a connection to the database
     def initialize(input, conn)
-      super(input)
       @conn = conn
       @row_batch_size = 100
       @col_name_updated = "dw_updated"
       @col_name_created = "dw_created"
+      super(input)
     end
 
     # Perform transformation operation on each row that is read. 
@@ -41,12 +41,19 @@ module ETL::Job
       row
     end
 
+    # Returns the default schema based on the table in the destination db
+    def default_schema
+      return nil unless @feed_name
+      sequel_schema = @conn.schema(@feed_name)
+      ETL::Schema::Table.from_sequel_schema(sequel_schema)
+    end
+
     # Returns string that can be used as the database type given the 
     # ETL::Schema::Column object
     def col_type_str(col)
       case col.type
         when :string
-          "varchar"
+          "varchar(1024)"
         when :date
           "timestamp"
         when :int
@@ -87,7 +94,9 @@ module ETL::Job
     end
     
     def quote_ident(ident)
-      '"' + ident + '"'
+      #XXX postgres supports quoting but not mysql so we need to generalize this
+      #'"' + ident + '"'
+      ident
     end
     
     # Creates a temp table for this batch in the specified 
@@ -98,13 +107,12 @@ module ETL::Job
       schema.columns.each do |name, column|
         n = quote_ident(name)
         t = col_type_str(column)
-        type_ary << "#{n} #{t}"
+        type_ary << "#{name} #{t}"
       end
 
       temp_table_name = "#{feed_name}_#{batch_id}_#{SecureRandom.hex(8)}"
       temp_table_name.gsub!(/\W/, '')
-      temp_table_name = quote_ident(temp_table_name)
-      sql = "create temp table #{temp_table_name} (#{type_ary.join(', ')});"
+      sql = "create temporary table #{temp_table_name} (#{type_ary.join(', ')});"
       logger.debug(sql)
       conn.run(sql)
       return temp_table_name
@@ -167,8 +175,6 @@ SQL
     # load. This function is given the names of the temporary and final
     # tables but it should only modify the temp one.
     def transform_table(conn, temp_table_name, dest_table)
-      q_dest_table = quote_ident(dest_table)
-
       [@col_name_updated, @col_name_created].each do |col_name|
         if schema.columns.has_key?(col_name)
           sql = <<SQL
@@ -189,8 +195,6 @@ SQL
       col_names.collect! { |x| quote_ident(x) }
       col_name_str = col_names.join(", ")
 
-      q_dest_table = quote_ident(dest_table)
-
       # delete existing rows based on load strategy
       case load_strategy
       when :update
@@ -202,7 +206,7 @@ SQL
       when :insert_table
         # clear out existing table
         sql = <<SQL
-delete from #{q_dest_table};
+delete from #{dest_table};
 SQL
         logger.debug(sql)
         conn.run(sql)
@@ -215,10 +219,18 @@ SQL
             raise "Schema does not have partition column '#{name}'"
           end
           
-          "#{quote_ident(name)} = ?"          
+          # XXX Hack that lets us handle day columns. We need to generalize the
+          # config to allow specification of transformations on partition cols
+          # prior to comparison
+          if name.end_with?("_at")
+            "date(#{quote_ident(name)}) = ?"
+          else
+            "#{quote_ident(name)} = ?"
+          end
         end
-        sql = "delete from #{q_dest_table} where " + clauses.join(" and ")
+        sql = "delete from #{dest_table} where " + clauses.join(" and ")
         logger.debug(sql)
+        logger.debug(@batch.values)
         conn.fetch(sql, *(@batch.values)).all
       else
         raise "Invalid load strategy '#{load_strategy}'"
@@ -243,10 +255,10 @@ SQL
 
         # Update records that already exist
         sql = <<SQL
-update #{q_dest_table}
+update #{dest_table}
 set #{update_cols.join(", ")}
 from #{temp_table_name}
-where #{temp_table_name}.#{q_pk} = #{q_dest_table}.#{q_pk}
+where #{temp_table_name}.#{q_pk} = #{dest_table}.#{q_pk}
 ;
 SQL
         logger.debug(sql)
@@ -256,12 +268,12 @@ SQL
         # for upsert we also insert records that don't exist yet
         if load_strategy == :upsert
           sql = <<SQL
-insert into #{q_dest_table}
+insert into #{dest_table}
   (#{col_name_str})
   select #{col_name_str}
   from #{temp_table_name}
   where #{q_pk} not in (
-    select #{q_pk} from #{q_dest_table}
+    select #{q_pk} from #{dest_table}
   );
 SQL
           logger.debug(sql)
@@ -273,7 +285,7 @@ SQL
       # else this is just a standard insert of entire temp table
       else
         sql = <<SQL
-insert into #{q_dest_table}
+insert into #{dest_table}
   (#{col_name_str})
   select #{col_name_str}
   from #{temp_table_name};
