@@ -24,7 +24,7 @@ module ETL::Job
     def initialize(reader = nil)
       @reader = reader
       @schema = default_schema
-      @load_strategy = :unknown
+      @load_strategy = :unknown if @load_strategy.nil?
     end
     
     # Returns the default schema for this job. Some derived jobs may be able

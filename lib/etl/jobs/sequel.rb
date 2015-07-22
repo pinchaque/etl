@@ -53,13 +53,9 @@ module ETL::Job
     def col_type_str(col)
       case col.type
         when :string
-          "varchar(1024)"
+          "varchar(255)"
         when :date
           "timestamp"
-        when :int
-          "int"
-        when :float
-          "float"
         when :numeric
           s = "numeric"
           if not col.width.nil? or not col.precision.nil?
@@ -72,7 +68,10 @@ module ETL::Job
           end
           s
         else
-          "unknown"
+          # Allow other types to just flow through, which gives us a simple
+          # way of supporting columns that are coming in through db reflection
+          # even if we don't know what they are.
+          col.type.to_s
       end
     end
 
@@ -94,9 +93,10 @@ module ETL::Job
     end
     
     def quote_ident(ident)
-      #XXX postgres supports quoting but not mysql so we need to generalize this
-      #'"' + ident + '"'
-      ident
+      # XXX postgres supports quoting with double-quotes but mysql uses backticks
+      # I need to generalize this
+      # Postgres: '"' + ident + '"'
+      '`' + ident.to_s + '`'
     end
     
     # Creates a temp table for this batch in the specified 
@@ -107,7 +107,7 @@ module ETL::Job
       schema.columns.each do |name, column|
         n = quote_ident(name)
         t = col_type_str(column)
-        type_ary << "#{name} #{t}"
+        type_ary << "#{n} #{t}"
       end
 
       temp_table_name = "#{feed_name}_#{batch_id}_#{SecureRandom.hex(8)}"
@@ -189,6 +189,7 @@ SQL
     # Load temp table records into destination table, returning number of
     # affected rows
     def load_destination_table(conn, temp_table_name, dest_table)
+      q_dest_table = quote_ident(dest_table)
       rows_changed = 0
       # build array of quoted column names
       col_names = schema.columns.keys
@@ -206,7 +207,7 @@ SQL
       when :insert_table
         # clear out existing table
         sql = <<SQL
-delete from #{dest_table};
+delete from #{q_dest_table};
 SQL
         logger.debug(sql)
         conn.run(sql)
@@ -228,7 +229,7 @@ SQL
             "#{quote_ident(name)} = ?"
           end
         end
-        sql = "delete from #{dest_table} where " + clauses.join(" and ")
+        sql = "delete from #{q_dest_table} where " + clauses.join(" and ")
         logger.debug(sql)
         logger.debug(@batch.values)
         conn.fetch(sql, *(@batch.values)).all
@@ -255,10 +256,10 @@ SQL
 
         # Update records that already exist
         sql = <<SQL
-update #{dest_table}
+update #{q_dest_table}
 set #{update_cols.join(", ")}
 from #{temp_table_name}
-where #{temp_table_name}.#{q_pk} = #{dest_table}.#{q_pk}
+where #{temp_table_name}.#{q_pk} = #{q_dest_table}.#{q_pk}
 ;
 SQL
         logger.debug(sql)
@@ -268,12 +269,12 @@ SQL
         # for upsert we also insert records that don't exist yet
         if load_strategy == :upsert
           sql = <<SQL
-insert into #{dest_table}
+insert into #{q_dest_table}
   (#{col_name_str})
   select #{col_name_str}
   from #{temp_table_name}
   where #{q_pk} not in (
-    select #{q_pk} from #{dest_table}
+    select #{q_pk} from #{q_dest_table}
   );
 SQL
           logger.debug(sql)
@@ -285,7 +286,7 @@ SQL
       # else this is just a standard insert of entire temp table
       else
         sql = <<SQL
-insert into #{dest_table}
+insert into #{q_dest_table}
   (#{col_name_str})
   select #{col_name_str}
   from #{temp_table_name};

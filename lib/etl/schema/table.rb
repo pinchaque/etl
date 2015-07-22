@@ -39,13 +39,15 @@ module ETL::Schema
       schema.each do |col|
         col_name = col[0]
         col_opts = col[1]
-        
+
         # translate the database type from Sequel to our types
         type = case col_opts[:type]
         when :integer 
           :int
         when :datetime
           :date
+        when nil
+          :string
         else
           col_opts[:type]
         end
@@ -65,6 +67,7 @@ module ETL::Schema
     end
 
     def add_column(name, type, width, precision, &block)
+      raise "Invalid nil type for column '#{name}'" if type.nil?
       t = Column.new(type, width, precision)
       @columns[name.to_s] = t
       yield t if block_given?

@@ -58,6 +58,10 @@ module ETL::Model
     def error(result)
       final_state(:error, result)
     end
+    
+    def success?
+      self.status == :success
+    end
 
     private
     def final_state(state, result)
