@@ -30,8 +30,12 @@ module ETL
     end
     
     def exception(ex, severity = Logger::ERROR)
-      msg = "#{ex.class}: #{ex.message}:\n    " +
-        ex.backtrace.join("    \n")
+      msg = "#{ex.class}: #{ex.message}:\n    "
+      if ex.backtrace
+        msg += ex.backtrace.join("    \n")
+      else
+        msg += "<no backtrace available>"
+      end
       add(severity) { msg }
     end
     
