@@ -28,7 +28,13 @@ module ETL
       super(*args)
       @formatter = Formatter.new
     end
-
+    
+    def exception(ex, severity = Logger::ERROR)
+      msg = "#{ex.class}: #{ex.message}:\n    " +
+        ex.backtrace.join("    \n")
+      add(severity) { msg }
+    end
+    
     # Formatter that includes time stamp and severity. Also provides ability
     # to add job name and batch ID
     class Formatter < ::Logger::Formatter
