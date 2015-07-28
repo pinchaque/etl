@@ -5,7 +5,7 @@ gem 'mysql2'
 gem 'bunny'
 
 group :development, :test do
-  gem 'pg'
+  #gem 'pg'
   gem 'factory_girl_rails'
   gem 'forgery'
   gem 'rspec-core'
