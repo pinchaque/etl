@@ -440,7 +440,6 @@ SQL
     compare_db_results(exp_values, result)
   end
 
-
   it "postgres - upsert" do
     table_name = "test_2"
     conn = init_conn_table(table_name)
@@ -499,6 +498,70 @@ SQL
 
     compare_db_results(exp_values, result)
   end
+
+  it "postgres - upsert with multiple PK" do
+    table_name = "test_2"
+    conn = init_conn_table(table_name)
+
+    batch = { :day => "2015-04-02" }
+    data = [
+      { "day" => "2015-04-01", "id" => 10, "value" => 1},
+      { "day" => "2015-04-01", "id" => 11, "value" => 2},
+      { "day" => "2015-04-02", "id" => 11, "value" => 3},
+      { "day" => "2015-04-02", "id" => 12, "value" => 4},
+      { "day" => "2015-04-02", "id" => 13, "value" => 5},
+      { "day" => "2015-04-03", "id" => 10, "value" => 6},
+    ]
+    input = ETL::Input::Array.new(data)
+    job = TestSequelLoad1.new(input, conn, table_name)
+    job.load_strategy = :upsert
+    job.schema.primary_key = [:day, :id]
+    jr = job.run(batch)
+    expect(input.rows_processed).to eq(6)
+    expect(jr.status).to eq(:success)
+    # XXX expect(jr.num_rows_success).to eq(3)
+    expect(jr.num_rows_error).to eq(0)
+
+    data = [
+      { "day" => "2015-04-02", "id" => 11, "value" => 10},
+      { "day" => "2015-04-02", "id" => 14, "value" => 11},
+      { "day" => "2015-04-03", "id" => 11, "value" => 12},
+      { "day" => "2015-04-04", "id" => 11, "value" => 13},
+    ]
+    input = ETL::Input::Array.new(data)
+    job = TestSequelLoad1.new(input, conn, table_name)
+    job.load_strategy = :upsert
+    job.schema.primary_key = [:day, :id]
+    jr = job.run(batch)
+    expect(input.rows_processed).to eq(4)
+    expect(jr.status).to eq(:success)
+    # XXX expect(jr.num_rows_success).to eq(3)
+    expect(jr.num_rows_error).to eq(0)
+
+    result = conn.fetch(<<SQL
+select to_char(day, 'YYYY-MM-DD HH24:MI:SS') as day
+  , id
+  , value
+from #{table_name} 
+order by day, id, value
+SQL
+    )
+
+    exp_values = [
+      ["2015-04-01 00:00:00", 10, 1],
+      ["2015-04-01 00:00:00", 11, 2],
+      ["2015-04-02 00:00:00", 11, 10],
+      ["2015-04-02 00:00:00", 12, 4],
+      ["2015-04-02 00:00:00", 13, 5],
+      ["2015-04-02 00:00:00", 14, 11],
+      ["2015-04-03 00:00:00", 10, 6],
+      ["2015-04-03 00:00:00", 11, 12],
+      ["2015-04-04 00:00:00", 11, 13],
+    ]
+
+    compare_db_results(exp_values, result)
+  end
+  
 
   it "postgres - insert partition multi-column" do
     table_name = "test_3"

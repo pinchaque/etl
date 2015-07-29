@@ -4,8 +4,8 @@ gem 'sequel'
 gem 'mysql2'
 gem 'bunny'
 
-group :development, :test do
-  #gem 'pg'
+group :test do
+  gem 'pg'
   gem 'factory_girl_rails'
   gem 'forgery'
   gem 'rspec-core'

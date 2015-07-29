@@ -93,10 +93,10 @@ module ETL::Job
     end
     
     def quote_ident(ident)
-      # XXX postgres supports quoting with double-quotes but mysql uses backticks
-      # I need to generalize this
+      #puts("database_type: #{@conn.database_type}")
       # Postgres: '"' + ident + '"'
-      '`' + ident.to_s + '`'
+      # Mysql: '`' + ident.to_s + '`'
+      @conn.quote_identifier(ident.to_s)
     end
     
     # Creates a temp table for this batch in the specified 
@@ -195,6 +195,7 @@ SQL
       col_names = schema.columns.keys
       col_names.collect! { |x| quote_ident(x) }
       col_name_str = col_names.join(", ")
+      col_name_str_temp = col_names.collect{ |x| "#{temp_table_name}.#{x}"}.join(", ")
 
       # delete existing rows based on load strategy
       case load_strategy
@@ -238,20 +239,31 @@ SQL
       end
 
       # handle insert/upsert/update
-      if [:update, :upsert].include?(load_strategy)
-        pk = schema.primary_key.to_s
-        if pk.nil? or pk.empty?
+      if [:update, :upsert].include?(load_strategy)        
+        # Handle primary keys from schema file
+        pks = schema.primary_key
+        if pks.nil? or pks.empty?
           raise "Schema must have primary key specified for update/upsert"
+        elsif not pks.is_a?(Array)
+          # convert to array
+          pks = [pks]
         end
-        q_pk = quote_ident(pk)
 
         # build sql string for updating columns
         update_cols = schema.columns.keys
-        update_cols.delete(pk) # don't need to update pk
+        pks.each do |pk| # don't need to update pk
+          update_cols.delete(pk) 
+        end
         update_cols.delete(@col_name_created) # also don't update created
         update_cols.collect! do |x|
           q_x = quote_ident(x)
           "#{q_x} = #{temp_table_name}.#{q_x}"
+        end
+        
+        # build the WHERE clause based on all the PKs
+        where_clauses = []
+        pks.collect{ |v| quote_ident(v)}.each do |pk|
+            where_clauses << "#{temp_table_name}.#{pk} = #{q_dest_table}.#{pk}"
         end
 
         # Update records that already exist
@@ -259,7 +271,7 @@ SQL
 update #{q_dest_table}
 set #{update_cols.join(", ")}
 from #{temp_table_name}
-where #{temp_table_name}.#{q_pk} = #{q_dest_table}.#{q_pk}
+where #{where_clauses.join(" and ")}
 ;
 SQL
         logger.debug(sql)
@@ -271,11 +283,10 @@ SQL
           sql = <<SQL
 insert into #{q_dest_table}
   (#{col_name_str})
-  select #{col_name_str}
+  select #{col_name_str_temp}
   from #{temp_table_name}
-  where #{q_pk} not in (
-    select #{q_pk} from #{q_dest_table}
-  );
+  left outer join #{q_dest_table} on #{where_clauses.join(" and ")}
+  where #{q_dest_table}.#{quote_ident(pks[0])} is null
 SQL
           logger.debug(sql)
           conn.fetch(sql).all
