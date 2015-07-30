@@ -117,6 +117,7 @@ module ETL::Job
       conn.run(sql)
       return temp_table_name
     end
+    alias qi quote_ident
 
     # Load data into temp table in batches
     def load_temp_data(conn, temp_table_name)
@@ -195,7 +196,6 @@ SQL
       col_names = schema.columns.keys
       col_names.collect! { |x| quote_ident(x) }
       col_name_str = col_names.join(", ")
-      col_name_str_temp = col_names.collect{ |x| "#{temp_table_name}.#{x}"}.join(", ")
 
       # delete existing rows based on load strategy
       case load_strategy
@@ -250,30 +250,31 @@ SQL
         end
 
         # build sql string for updating columns
-        update_cols = schema.columns.keys
+        upd_cols = schema.columns.keys
         pks.each do |pk| # don't need to update pk
-          update_cols.delete(pk) 
+          upd_cols.delete(pk) 
         end
-        update_cols.delete(@col_name_created) # also don't update created
-        update_cols.collect! do |x|
-          q_x = quote_ident(x)
-          "#{q_x} = #{temp_table_name}.#{q_x}"
-        end
-        
-        # build the WHERE clause based on all the PKs
-        where_clauses = []
-        pks.collect{ |v| quote_ident(v)}.each do |pk|
-            where_clauses << "#{temp_table_name}.#{pk} = #{q_dest_table}.#{pk}"
-        end
+        upd_cols.delete(@col_name_created) # also don't update created
 
         # Update records that already exist
-        sql = <<SQL
-update #{q_dest_table}
-set #{update_cols.join(", ")}
-from #{temp_table_name}
-where #{where_clauses.join(" and ")}
+        # XXX Hack - need to specialize on db type until I can generalize this
+        if @conn.database_type.to_s == "mysql"
+          sql = <<SQL
+update #{q_dest_table} dest, #{temp_table_name} tmp
+set #{upd_cols.collect{ |x| qx = qi(x); "dest.#{qx} = tmp.#{qx}"}.join(", ")}
+where #{pks.collect{ |pk| qpk = qi(pk); "dest.#{qpk} = tmp.#{qpk}" }.join(" and ")}
 ;
 SQL
+        else
+          sql = <<SQL
+update #{q_dest_table}
+set #{upd_cols.collect{ |x| qx = qi(x); "#{qx} = tmp.#{qx}"}.join(", ")}
+from #{temp_table_name} tmp
+where #{pks.collect{ |pk| qpk = qi(pk); "#{q_dest_table}.#{qpk} = tmp.#{qpk}" }.join("\n    and ")}
+;
+SQL
+        end
+
         logger.debug(sql)
         conn.fetch(sql).all
         rows_changed += 0
@@ -283,9 +284,10 @@ SQL
           sql = <<SQL
 insert into #{q_dest_table}
   (#{col_name_str})
-  select #{col_name_str_temp}
-  from #{temp_table_name}
-  left outer join #{q_dest_table} on #{where_clauses.join(" and ")}
+  select #{col_names.collect{ |x| "tmp.#{x}"}.join(", ")}
+  from #{temp_table_name} tmp
+  left outer join #{q_dest_table} on 
+    #{pks.collect{ |pk| qpk = qi(pk); "#{q_dest_table}.#{qpk} = tmp.#{qpk}" }.join("\n    and ")}
   where #{q_dest_table}.#{quote_ident(pks[0])} is null
 SQL
           logger.debug(sql)
