@@ -80,6 +80,7 @@ module ETL::Job
       
       # clean up each value
       values.collect! do |x|
+        x = "" if x.nil?
         x.downcase.gsub(/[^a-z\d]/, "")
       end
       
