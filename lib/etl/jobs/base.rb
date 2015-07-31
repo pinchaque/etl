@@ -32,6 +32,12 @@ module ETL::Job
     def default_schema
       nil
     end
+    
+    # Returns the name of this job. By default we just use the feed name but
+    # derived classes may want to override this.
+    def name
+      @feed_name
+    end
 
     # Returns the ActiveModel Job object
     def model()
@@ -45,8 +51,20 @@ module ETL::Job
     # Initialize the logger with our job and batch info
     def logger
       l = ETL.logger
-      l.formatter.job_name = model().class_name
-      l.formatter.batch = @batch
+      attrs = {
+        job_name: name,
+        feed_name: @feed_name,
+        load_strategy: @load_strategy,
+        job_class_name: model().class_name,
+        input_rows_processed: @reader.nil? ? nil : @reader.rows_processed,
+        input_name: @reader.nil? ? "N/A" : @reader.name,
+      }
+      # Add the batch prefix so we can find the batch id later
+      @batch.each do |k, v|
+        key = ETL::Logger::BATCH_PREFIX + k.to_s
+        attrs[key.to_sym] = v
+      end
+      l.attributes = attrs
       l
     end
 

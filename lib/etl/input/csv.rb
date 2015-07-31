@@ -55,6 +55,10 @@ module ETL::Input
       @headers = nil
       @headers_map = {}
     end
+    
+    def name
+      "CSV file '#{@file_name}'"
+    end
 
     # Reads each row from the input file and passes it to the specified
     # block.

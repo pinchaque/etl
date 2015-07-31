@@ -27,6 +27,8 @@ RSpec.describe "inputs" do
       { "col1" => "value1c", "col2" => "value2c", "col3" => "value3c" },
     ]
     input = ETL::Input::Array.new(data)
+    
+    expect(input.name).to eq('ETL::Input::Array')
 
     # first time through the inputs
     i = 0

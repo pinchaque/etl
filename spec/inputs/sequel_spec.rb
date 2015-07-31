@@ -55,6 +55,9 @@ from test_table
 order by day asc
 SQL
 
+    expect(input.name).to eq("Sequel mysql2:dw@127.0.0.1/dw_test")
+
+
     i = 0
     input.each_row do |row|
       case i

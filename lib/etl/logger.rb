@@ -22,11 +22,21 @@ module ETL
 
   # Logger class that includes time stamp and severity for all messages
   class Logger < ::Logger
+    BATCH_PREFIX = "batch_"
+    
     attr_accessor :formatter
 
     def initialize(*args)
       super(*args)
       @formatter = Formatter.new
+    end
+    
+    def attributes=(v)
+      @formatter.attributes = v
+    end
+    
+    def attributes
+      @formatter.attributes
     end
     
     def exception(ex, severity = Logger::ERROR)
@@ -42,19 +52,22 @@ module ETL
     # Formatter that includes time stamp and severity. Also provides ability
     # to add job name and batch ID
     class Formatter < ::Logger::Formatter
-      attr_accessor :job_name, :batch
+      attr_accessor :attributes
 
       def initialize
-        @job_name = nil
-        @batch = nil
+        @attributes = {}
       end
 
       # Format the log message
       def call(severity, timestamp, progname, msg)
         str = ""
-        if not @job_name.nil?
-          str += "{Job=#{@job_name}"
-          str += ", Batch=#{@batch}" unless @batch.nil?
+        if @attributes.has_key?(:job_name)
+          str += "{Job=#{@attributes[:job_name]}"
+          # Add all our batch attributes
+          batch_values = @attributes.select do |k, v| 
+            k.to_s.start_with?(BATCH_PREFIX)
+          end
+          str += ", Batch=#{batch_values}" if batch_values
           str += "} "
         end
         str += String === msg ? msg : msg.inspect

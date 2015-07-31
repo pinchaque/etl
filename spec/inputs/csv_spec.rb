@@ -26,7 +26,10 @@ RSpec.describe "inputs" do
     # 2015-04-01,rain,0,12.3,59.3899
     # 2015-04-02,snow,1,13.1,60.2934
     # 2015-04-03,sun,-1,0.4,-12.83
-    input = ETL::Input::CSV.new("#{ETL.root}/spec/data/simple1.csv")
+    fname = "#{ETL.root}/spec/data/simple1.csv"
+    input = ETL::Input::CSV.new(fname)
+
+    expect(input.name).to eq("CSV file '#{fname}'")
 
     i = 0
     input.each_row do |row|
