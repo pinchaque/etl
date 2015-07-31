@@ -34,6 +34,7 @@ GEM
     forgery (0.6.0)
     i18n (0.7.0)
     json (1.8.2)
+    logstash-event (1.2.02)
     loofah (2.0.1)
       nokogiri (>= 1.5.9)
     mini_portile (0.6.2)
@@ -81,6 +82,7 @@ DEPENDENCIES
   bunny
   factory_girl_rails
   forgery
+  logstash-event
   mysql2
   pg
   rspec-core
