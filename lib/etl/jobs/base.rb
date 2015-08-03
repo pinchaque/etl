@@ -102,10 +102,7 @@ module ETL::Job
           + "#{result.num_rows_error} errors; #{result.message}")
         jr.success(result)
       rescue Exception => ex
-        logger.error("Error: #{ex}")
-        ex.backtrace.each do |x|
-          logger.error("    #{x}")
-        end
+        logger.exception(ex)
         result = Result.new
         result.message = ex.message
         jr.error(result)
