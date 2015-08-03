@@ -19,6 +19,17 @@ require 'time'
 require 'logger'
 
 module ETL
+  
+  # Logs to multiple destinations
+  class MultiLogger < ::Array
+    
+    # Delegate each method to contained loggers
+    def method_missing(m, *args, &block)
+      each do |a|
+        a.send(m, *args, &block)
+      end
+    end
+  end
 
   # Logger class that includes time stamp and severity for all messages
   class Logger < ::Logger
