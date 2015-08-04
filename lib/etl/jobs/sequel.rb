@@ -99,6 +99,14 @@ module ETL::Job
       @conn.quote_identifier(ident.to_s)
     end
     
+    # Returns temp table name acceptable to the database constructed out
+    # of the feed name and batch id
+    def self.temp_table_name(feed_name, batch_id)
+      # we want to keep the length < 64 chars so it works on at least Mysql
+      # and PostgreSQL. Note SecureRandom returns 2 hex chars for each byte
+      "#{feed_name.slice(0, 30)}_#{batch_id.slice(0, 22)}_#{SecureRandom.hex(4)}"
+    end
+    
     # Creates a temp table for this batch in the specified 
     # connection transaction. Returns the name of this temp table.
     def create_temp(conn)
@@ -110,12 +118,12 @@ module ETL::Job
         type_ary << "#{n} #{t}"
       end
 
-      temp_table_name = "#{feed_name}_#{batch_id}_#{SecureRandom.hex(8)}"
-      temp_table_name.gsub!(/\W/, '')
-      sql = "create temporary table #{temp_table_name} (#{type_ary.join(', ')});"
+      name = self.temp_table_name(feed_name, batch_id)
+      name.gsub!(/\W/, '')
+      sql = "create temporary table #{name} (#{type_ary.join(', ')});"
       logger.debug(sql)
       conn.run(sql)
-      return temp_table_name
+      return name
     end
     alias qi quote_ident
 
