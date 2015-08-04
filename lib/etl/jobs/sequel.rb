@@ -118,7 +118,7 @@ module ETL::Job
         type_ary << "#{n} #{t}"
       end
 
-      name = self.temp_table_name(feed_name, batch_id)
+      name = Sequel.temp_table_name(feed_name, batch_id)
       name.gsub!(/\W/, '')
       sql = "create temporary table #{name} (#{type_ary.join(', ')});"
       logger.debug(sql)
