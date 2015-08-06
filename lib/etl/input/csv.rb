@@ -82,7 +82,7 @@ module ETL::Input
             end
           # Error out since we don't know how to process this
           else
-            raise "Input row class #{row_in.class} needs to be a hash or array"
+            raise ETL::InputError, "Input row class #{row_in.class} needs to be a hash or array"
           end
         # if we were given the headers to use then we just need to grab the
         # values out of whatever we have
@@ -90,7 +90,7 @@ module ETL::Input
           values = row_in.kind_of?(::CSV::Row) ? row_in.fields : row_in.to_a
 
           if headers.length != values.length
-            raise "Must have the same number of headers #{headers.length} " + 
+            raise ETL::InputError, "Must have the same number of headers #{headers.length} " + 
               "and values #{values.length}"
           end
 
@@ -107,7 +107,7 @@ module ETL::Input
             row[new_name] = row[name]
             row.delete(name)
           else
-            raise "Input row does not have expected column '#{name}'"
+            raise ETL::InputError, "Input row does not have expected column '#{name}'"
           end
         end
 

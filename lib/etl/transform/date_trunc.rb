@@ -32,7 +32,7 @@ module ETL::Transform
     def transform(str)
       begin
         dt = DateTime.parse(str.to_s) 
-      rescue ArgumentError => ex
+      rescue ::ArgumentError => ex
         # Ignore ill-formatted strings
         return nil
       end
@@ -67,7 +67,7 @@ module ETL::Transform
           m = d = 1
 
         else
-          raise "Invalid resolution '#{@resolution.to_s}'"
+          raise ::ArgumentError, "Invalid resolution '#{@resolution.to_s}'"
         end
 
         # Create truncated object and return string time representation
@@ -78,4 +78,3 @@ module ETL::Transform
     end
   end
 end
-

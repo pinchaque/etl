@@ -226,7 +226,7 @@ SQL
           name = schema.partition_columns.fetch(bn.to_s, bn).to_s
           
           unless schema.columns.has_key?(name)
-            raise "Schema does not have partition column '#{name}'"
+            raise ETL::SchemaError, "Schema does not have partition column '#{name}'"
           end
           
           # XXX Hack that lets us handle day columns. We need to generalize the
@@ -243,7 +243,7 @@ SQL
         logger.debug(@batch.values)
         conn.fetch(sql, *(@batch.values)).all
       else
-        raise "Invalid load strategy '#{load_strategy}'"
+        raise ETL::JobError, "Invalid load strategy '#{load_strategy}'"
       end
 
       # handle insert/upsert/update
@@ -251,7 +251,7 @@ SQL
         # Handle primary keys from schema file
         pks = schema.primary_key
         if pks.nil? or pks.empty?
-          raise "Schema must have primary key specified for update/upsert"
+          raise ETL::SchemaError, "Schema must have primary key specified for update/upsert"
         elsif not pks.is_a?(Array)
           # convert to array
           pks = [pks]

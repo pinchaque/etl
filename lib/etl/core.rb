@@ -23,6 +23,7 @@ require 'sequel'
 
 # Core classes
 require 'etl/logger.rb'
+require 'etl/exception.rb'
 require 'etl/jobs/result.rb'
 require 'etl/jobs/base.rb'
 
