@@ -2,8 +2,6 @@ source 'https://rubygems.org'
 
 gem 'sequel'
 gem 'mysql2'
-gem 'bunny'
-gem 'logstash-event'
 
 group :test do
   gem 'pg'
