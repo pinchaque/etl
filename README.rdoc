@@ -12,3 +12,10 @@ data. Key features include:
  * Code hooks for validation and auditing of data loads
 
 This is a work in progress as not all features are currently implemented.
+
+== LICENSE
+
+Copyright (c) 2015 Charles Smith
+
+This is an Open Source project licensed under the terms of the MIT license as 
+described in the LICENSE file in the root directory of this repository.
