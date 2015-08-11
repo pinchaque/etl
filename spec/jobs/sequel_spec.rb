@@ -113,6 +113,19 @@ RSpec.describe "jobs" do
     end
   end
   
+  it "temp table name" do
+    chars_max = 64
+    names = []
+    names << ETL::Job::Sequel.temp_table_name('abcd', "20150501_orgname")
+    names << ETL::Job::Sequel.temp_table_name('abcd', "20150501123456_orgnamethatssuperduperlonglong")
+    names << ETL::Job::Sequel.temp_table_name('plugin_field_mappings', "20150803_salesforcefreshtest")
+    names << ETL::Job::Sequel.temp_table_name('plugin_field_mappings_table_name_is_really_really_very_very_very_long', "20150803_salesforcefreshtest_also_very_very_long")
+
+    names.each do |n|
+      expect(n.length).to be <= chars_max
+    end
+  end
+  
   # test out our formatting of values
   it "value formatting" do
     input = ETL::Input::Array.new([])

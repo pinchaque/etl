@@ -19,7 +19,7 @@ module ETL::Job
 
   # Base class for all ETL jobs
   class Base
-    attr_accessor :feed_name, :schema, :reader, :load_strategy, :batch
+    attr_accessor :feed_name, :schema, :reader, :load_strategy, :batch, :job_run
 
     def initialize(reader = nil)
       @reader = reader
@@ -31,6 +31,12 @@ module ETL::Job
     # to determine a default schema based on the destination.
     def default_schema
       nil
+    end
+    
+    # Returns the name of this job. By default we just use the feed name but
+    # derived classes may want to override this.
+    def name
+      @feed_name
     end
 
     # Returns the ActiveModel Job object
@@ -45,8 +51,20 @@ module ETL::Job
     # Initialize the logger with our job and batch info
     def logger
       l = ETL.logger
-      l.formatter.job_name = model().class_name
-      l.formatter.batch = @batch
+      attrs = {
+        job_name: name,
+        feed_name: @feed_name,
+        load_strategy: @load_strategy,
+        job_class_name: model().class_name,
+        input_rows_processed: @reader.nil? ? nil : @reader.rows_processed,
+        input_name: @reader.nil? ? "N/A" : @reader.name,
+      }
+      # Add the batch prefix so we can find the batch id later
+      @batch.each do |k, v|
+        key = ETL::Logger::BATCH_PREFIX + k.to_s
+        attrs[key.to_sym] = v
+      end
+      l.attributes = attrs
       l
     end
 
@@ -62,6 +80,7 @@ module ETL::Job
       
       # clean up each value
       values.collect! do |x|
+        x = "" if x.nil?
         x.downcase.gsub(/[^a-z\d]/, "")
       end
       
@@ -73,26 +92,25 @@ module ETL::Job
     # exceptions.
     def run(b)
       @batch = b
-      jr = model().create_run(@batch)
+      @job_run = model().create_run(@batch)
 
       begin
         logger.info("Running...")
-        jr.running()
+        @job_run.running()
         result = run_internal()
         logger.info("Success! #{result.num_rows_success} rows; "\
           + "#{result.num_rows_error} errors; #{result.message}")
-        jr.success(result)
-      rescue Exception => ex
-        logger.error("Error: #{ex}")
-        ex.backtrace.each do |x|
-          logger.error("    #{x}")
-        end
+        @job_run.success(result)
+      rescue ::StandardError => ex
+        # catch this so we can store it with the result
         result = Result.new
         result.message = ex.message
-        jr.error(result)
+        @job_run.error(result)
+        # we don't log it here - let caller do that if they want
+        raise
       end
 
-      return jr
+      return @job_run
     end
 
     # Helper function for output schema definition DSL

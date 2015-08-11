@@ -25,7 +25,13 @@ module ETL::Input
       @row_transform = nil
       @col_transforms = {}
     end
-
+    
+    # Name of this input that is used in logging to help describe where the
+    # data is coming from.
+    def name
+      self.class.name
+    end
+    
     # Reads each row from the input file and passes it to the specified
     # block. By default does nothing, which is likely an error.
     def each_row

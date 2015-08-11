@@ -67,7 +67,7 @@ module ETL::Schema
     end
 
     def add_column(name, type, width, precision, &block)
-      raise "Invalid nil type for column '#{name}'" if type.nil?
+      raise ETL::SchemaError, "Invalid nil type for column '#{name}'" if type.nil?
       t = Column.new(type, width, precision)
       @columns[name.to_s] = t
       yield t if block_given?

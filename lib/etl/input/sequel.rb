@@ -33,10 +33,19 @@ module ETL::Input
       @sql = sql
       @params = params
     end
+    
+    # Display connection string for this input
+    # TODO: Add table name to this - easier if we're given a Sequel dataset
+    def name
+      o = @conn.opts
+      "Sequel #{o[:adapter]}:#{o[:user]}@#{o[:host]}/#{o[:database]}"
+    end
 
     # Reads each row from the query and passes it to the specified block.
     def each_row
-      ETL.logger.debug("Executing Sequel query #{@sql} with params #{@params.join(", ")}")
+      msg = "Executing Sequel query #{@sql}"
+      msg += " with params #{@params.join(", ")}" unless @params.empty?
+      ETL.logger.debug(msg)
       @rows_processed = 0
       @conn.fetch(@sql, *@params) do |row_in|
         row = {}

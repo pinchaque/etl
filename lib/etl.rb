@@ -38,6 +38,16 @@ module ETL
     end
     Psych.load_file(fname)
   end
+  
+  # Returns whole-app configuration hash
+  def ETL.app_config
+    if ETL.respond_to?("app_config_file")
+      fname = ETL.app_config_file
+    else
+      fname = "#{ETL.root}/config/app.yml"
+    end
+    Psych.load_file(fname)
+  end
 end
 
 # Set up the database connection that's needed for Sequel models

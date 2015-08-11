@@ -95,7 +95,7 @@ module ETL::Job
         open_opts = "w"
       else
         # Other load strategies not supported by CSV
-        raise "Invalid load strategy '#{load_strategy}'"
+        raise ETL::JobError, "Invalid load strategy '#{load_strategy}'"
       end
 
       # Open output CSV file for writing

@@ -117,7 +117,11 @@ RSpec.describe "models" do
     job = ETL::Job::Dummy.new(a, b, m)
     job.exception = 'abort!'
     batch = { :day => "2015-03-31" }
-    jr = job.run(batch)
+    begin
+      jr = job.run(batch)
+    rescue
+      jr = job.job_run
+    end
 
     # check this object
     expect(jr.job_id).to eq(job.model.id)
