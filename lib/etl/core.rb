@@ -1,3 +1,6 @@
+libdir = File.expand_path("..", __FILE__)
+$LOAD_PATH.unshift(libdir)
+
 # Pre-define the module so we can use simpler syntax
 module ETL
 end
@@ -5,14 +8,17 @@ end
 require 'sequel'
 
 # Core classes
-require 'etl/logger.rb'
 require 'etl/exception.rb'
-require 'etl/jobs/result.rb'
-require 'etl/jobs/base.rb'
+
+# Utilities
+require 'etl/util/logger.rb'
+require 'etl/util/hash_util.rb'
 
 # Models
+# Set up the database connection that's needed for Sequel models
+# Also we can use the DB constant in the rest of the code
+DB = Sequel::Model.db = Sequel.connect(ETL.config.core[:database])
 Sequel::Model.plugin :timestamps
-require 'etl/models/job_run_status.rb'
 require 'etl/models/job.rb'
 require 'etl/models/job_run.rb'
 
@@ -20,25 +26,18 @@ require 'etl/models/job_run.rb'
 require 'etl/schema/table.rb'
 require 'etl/schema/column.rb'
 
-# Various ETL jobs
-require 'etl/jobs/dummy.rb'
-require 'etl/jobs/csv.rb'
-require 'etl/jobs/sequel.rb'
-
-# Input data readers
-require 'etl/input/base.rb'
-require 'etl/input/csv.rb'
-require 'etl/input/array.rb'
-require 'etl/input/sequel.rb'
-
-# Row transforms
-require 'etl/transform/base.rb'
-require 'etl/transform/date_trunc.rb'
-require 'etl/transform/map_to_nil.rb'
-require 'etl/transform/zip5.rb'
-
-module ETL
-  def ETL.logger
-    return ETL::Logger.new(ETL.log_file)
+base_file = 'base.rb'
+%w( input output transform queue ).each do |d|
+  dir = "#{libdir}/#{d}"
+  require "#{dir}/#{base_file}"
+  Dir.new(dir).each do |file|
+    next unless file =~ /\.rb$/
+    next if file == base_file
+    require "#{dir}/#{file}"
   end
-end  
+end
+
+# High-level classes responsible for executing jobs
+require 'etl/job.rb'
+require 'process/base.rb'
+require 'process/worker.rb'

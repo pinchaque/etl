@@ -1,23 +1,34 @@
 require 'sequel'
+require 'json'
 
 module ETL::Model
   class Job < ::Sequel::Model
-    # Register specified class as a job if it doesn't already exist
-    def self.register(class_name)
-      r = self.find(class_name: class_name)
-      if r.nil?
-          r = Job.new
-          r.class_name = class_name
-          r.save()
-      end
-      return r
-    end
 
-    # Creates JobRun object for this Job and specified batch
-    def create_run(batch)
-      jr = JobRun.create_for_job(self, batch)
-      jr.save
-      jr
+    def output_params_hash
+      params_parse(self.output_params)
+    end
+    
+    def output_params_hash=(h)
+      self.output_params = params_set(h)
+    end
+    
+    def input_params_hash
+      params_parse(self.input_params)
+    end
+    
+    def input_params_hash=(h)
+      self.input_params = params_set(h)
+    end
+    
+    private
+    
+    def params_parse(p)
+      return nil if p.nil?
+      ETL::HashUtil::symbolize_keys(JSON.parse(p))
+    end
+    
+    def params_set(h)
+      h.nil? ? nil : h.to_json
     end
   end
   

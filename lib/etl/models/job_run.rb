@@ -15,14 +15,24 @@ module ETL::Model
       end
     end
 
-    # Sets status for this job given label
-    def status=(label)
-      self.job_run_status_id = JobRunStatus.id_from_label(label)
+    # Looks for JobRun for the specified job and batch. creates a new one
+    # if it doesn't exist.
+    def self.find_or_create_queued(job, batch)
+      jr = JobRun.where(:job_id => job.id, :status => :queued).first
+      
+      # create if doesn't exist
+      if jr.nil?
+        jr = create_for_job(job, batch)
+        jr.queued()
+      end
+      jr
     end
 
-    # Gets status for this job as the label
-    def status()
-      JobRunStatus.label_from_id(self.job_run_status_id)
+    # Sets the current status as queued and sets queued_at
+    def queued()
+      self.status = :queued
+      self.queued_at = DateTime.now
+      save()
     end
 
     # Sets the current status as running and initializes run_start_time
@@ -42,6 +52,11 @@ module ETL::Model
       final_state(:error, result)
     end
     
+    # Mark this as an error and save the exception message
+    def exception(ex)
+      error(ETL::Output::Result.new(nil, nil, ex.message + "\n" + ex.backtrace.join("\n")))
+    end
+
     def success?
       self.status == :success
     end
