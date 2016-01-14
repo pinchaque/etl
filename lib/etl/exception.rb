@@ -3,7 +3,10 @@ module ETL
   class InputError < ::RuntimeError
   end
   
-  # Exception when running ETL job
+  # Exception when writing to output from input
+  class OutputError < ::RuntimeError
+  end
+  
   class JobError < ::RuntimeError
   end
 end

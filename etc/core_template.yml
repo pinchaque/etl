@@ -1,0 +1,40 @@
+data_dir: "/var/tmp/etl_output"
+
+job:
+  retry_max: 5 # maximum times retrying jobs
+  retry_wait: 4 # seconds
+  retry_mult: 2.0 # exponential backoff multiplier
+
+# logging class that we use
+log:
+  class: ETL::Logger
+  level: info
+
+# connection info for database where we store jobs history
+database:
+  adapter: postgresql
+  encoding: utf8
+  reconnect: false
+  database: dw_dev
+  pool: 5
+  username: dw
+  password: 'password'
+  host: 127.0.0.1
+
+# connection info for jobs queue
+queue:
+  class: ETL::Queue::File
+  ### Setup for RabbitMQ
+  #  class: ETL::Queue::RabbitMQ
+  #  amqp_uri: "amqp://user:password@host:port/"
+  #  vhost: "vhost"
+  #  heartbeat: 30
+  #  channel_pool_size: 2
+  #  prefetch_count: 5
+  #  queue: "outreach_etl"
+  #  source: source
+  #  dest: destination
+
+scheduler:
+  day_cutoff_hour: 4 # am - when we switch to loading current day
+  delay_mins: 0.1 # minutes between queueing job runs

@@ -1,0 +1,6 @@
+# These are all files that are managed via chef and provisioned into the
+# proper locations
+
+database.yml
+core.yml
+schema.yml

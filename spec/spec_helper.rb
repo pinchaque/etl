@@ -1,6 +1,7 @@
 # Set environment to test (overrides default of "development")
 ENV["ETL_ENV"] ||= 'test'
 require 'etl'
+require 'factory_girl'
 
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate
@@ -32,6 +33,8 @@ RSpec.configure do |config|
     config.default_formatter = 'doc'
   end
 
+  config.include FactoryGirl::Syntax::Methods
+
   # Print the 10 slowest examples and example groups
   #config.profile_examples = 10
 
@@ -39,7 +42,7 @@ RSpec.configure do |config|
   # order dependency and want to debug it, you can fix the order by providing
   # the seed, which is printed after each run.
   #     --seed 1234
-  config.order = :random
+  #config.order = :random
 
   # Seed global randomization in this process using the `--seed` CLI option.
   # Setting this allows you to use `--seed` to deterministically reproduce
@@ -48,5 +51,4 @@ RSpec.configure do |config|
   Kernel.srand config.seed
 end
 
-# seed the test DB
-#load "#{ETL.root}/db/seeds.rb"
+ETL.logger = ETL::Logger.new({file: ETL.root + "/log/test.log"})

@@ -3,10 +3,11 @@ module ETL::Input
 
     attr_accessor :rows_processed, :row_transform, :col_transforms
 
-    def initialize
+    def initialize(params = {})
       @rows_processed = 0
       @row_transform = nil
       @col_transforms = {}
+      @params = params
     end
     
     # Name of this input that is used in logging to help describe where the

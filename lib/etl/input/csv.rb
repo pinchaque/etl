@@ -1,4 +1,3 @@
-require 'etl/input/base.rb'
 require 'tempfile'
 require 'fileutils'
 require 'csv'
@@ -9,8 +8,8 @@ module ETL::Input
 
     attr_accessor :headers, :headers_map
 
-    # Default options to use for CSV reading
-    def default_options
+    # Default params to use for CSV reading
+    def default_params
       {
         headers: true,
         col_sep: ",",
@@ -19,10 +18,10 @@ module ETL::Input
       }
     end
 
-    # Options we want to force to be set
+    # Params we want to force to be set
     # - We never want headers to be returned since all rows will be treated
     #   as data
-    def force_options
+    def force_params
       {
         return_headers: false,
       }
@@ -30,25 +29,34 @@ module ETL::Input
 
     # Construct reader based on file name and options
     # Options are the same as would be passed to the standard CSV class
-    def initialize(file_name, options = {})
-      super()
-
-      @file_name = file_name
-      @options = default_options.merge(options).merge(force_options)
+    def initialize(params = {})
+      p = default_params.merge(params).merge(force_params)
+      super(p)
       @headers = nil
       @headers_map = {}
     end
     
+    # File name we're reading from, taken from parameters
+    def file_name
+      @params[:file]
+    end
+    
+    # Options we pass to CSV object - everything that was passed in minus our
+    # file name
+    def csv_options
+      @params.reject { |k, v| k == :file }
+    end
+    
     def name
-      "CSV file '#{@file_name}'"
+      "CSV file '#{file_name}'"
     end
 
     # Reads each row from the input file and passes it to the specified
     # block.
     def each_row
-      ETL.logger.debug("Reading from CSV input file #{@file_name}")
+      ETL.logger.debug("Reading from CSV input file #{file_name}")
       @rows_processed = 0
-      ::CSV.foreach(@file_name, @options) do |row_in|
+      ::CSV.foreach(file_name, csv_options) do |row_in|
         # Row that maps name => value
         row = {}
 
