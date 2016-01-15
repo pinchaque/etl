@@ -16,6 +16,10 @@ module ETL::Input
       self.class.name
     end
     
+    def log
+      ETL.logger
+    end
+    
     # Reads each row from the input file and passes it to the specified
     # block. By default does nothing, which is likely an error.
     def each_row

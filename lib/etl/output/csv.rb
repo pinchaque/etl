@@ -79,9 +79,9 @@ module ETL::Output
 
       # Open output CSV file for writing
       rows_success = rows_error = 0
-      logger.debug("Writing to temp CSV output file #{tf.path} with " +
+      log.debug("Writing to temp CSV output file #{tf.path} with " +
         "file opts #{open_opts}")
-      logger.debug(out_opts)
+      log.debug(out_opts)
       ::CSV.open(tf.path, open_opts, out_opts) do |csv_out|
 
         # Iterate through each row in input
@@ -101,7 +101,7 @@ module ETL::Output
 
       # Move temporary file to final destination
       FileUtils.mv(tf.path, output_file)
-      logger.debug("Moving temp CSV file #{tf.path} to final " +
+      log.debug("Moving temp CSV file #{tf.path} to final " +
         "destination #{output_file}")
 
       # Final result

@@ -3,7 +3,7 @@ require 'mysql2'
 require 'etl/core'
 
 
-RSpec.describe "inputs" do
+RSpec.describe "sequel inputs" do
   it "mysql input each" do
     # add data to the test db
     dbconfig = ETL.config.db[:test_mysql]

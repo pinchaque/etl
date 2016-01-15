@@ -107,7 +107,7 @@ module ETL::Output
       name = Sequel.temp_table_name(feed_name, batch_id)
       name.gsub!(/\W/, '')
       sql = "create temporary table #{name} (#{type_ary.join(', ')});"
-      logger.debug(sql)
+      log.debug(sql)
       conn.run(sql)
       return name
     end
@@ -115,7 +115,7 @@ module ETL::Output
 
     # Load data into temp table in batches
     def load_temp_data(conn, temp_table_name)
-      logger.debug("Loading temp table #{temp_table_name} in batches " + 
+      log.debug("Loading temp table #{temp_table_name} in batches " + 
         "of #{@row_batch_size} rows")
       reader.each_row_batch(@row_batch_size) do |rows|
         load_temp_data_batch(conn, temp_table_name, rows)
@@ -125,7 +125,7 @@ module ETL::Output
 
     # Load a single batch of rows (passed in as array) into the temp table
     def load_temp_data_batch(conn, temp_table_name, input_rows)
-      logger.debug("Processing batch size #{input_rows.length}")
+      log.debug("Processing batch size #{input_rows.length}")
       rows = [] # rows we're writing
       cols = {} # columns we're writing
       
@@ -162,8 +162,8 @@ insert into #{temp_table_name}
 values #{params.join(",\n  ")}
 ;
 SQL
-      logger.debug(sql)
-      logger.debug(values)
+      log.debug(sql)
+      log.debug(values)
       conn.fetch(sql, *values).all
     end
 
@@ -176,7 +176,7 @@ SQL
           sql = <<SQL
 update #{temp_table_name} set #{quote_ident(col_name.to_s)} = now();
 SQL
-          logger.debug(sql)
+          log.debug(sql)
           result = conn.run(sql)
         end
       end
@@ -204,7 +204,7 @@ SQL
         sql = <<SQL
 delete from #{q_dest_table};
 SQL
-        logger.debug(sql)
+        log.debug(sql)
         conn.run(sql)
       when :insert_partition
         # clear out records for the partition associated with this batch
@@ -225,8 +225,8 @@ SQL
           end
         end
         sql = "delete from #{q_dest_table} where " + clauses.join(" and ")
-        logger.debug(sql)
-        logger.debug(@batch.values)
+        log.debug(sql)
+        log.debug(@batch.values)
         conn.fetch(sql, *(@batch.values)).all
       else
         raise ETL::OutputError, "Invalid load strategy '#{load_strategy}'"
@@ -269,7 +269,7 @@ where #{pks.collect{ |pk| qpk = qi(pk); "#{q_dest_table}.#{qpk} = tmp.#{qpk}" }.
 SQL
         end
 
-        logger.debug(sql)
+        log.debug(sql)
         conn.fetch(sql).all
 
         # for upsert we also insert records that don't exist yet
@@ -283,7 +283,7 @@ insert into #{q_dest_table}
     #{pks.collect{ |pk| qpk = qi(pk); "#{q_dest_table}.#{qpk} = tmp.#{qpk}" }.join("\n    and ")}
   where #{q_dest_table}.#{quote_ident(pks[0])} is null
 SQL
-          logger.debug(sql)
+          log.debug(sql)
           conn.fetch(sql).all
         end
 
@@ -295,7 +295,7 @@ insert into #{q_dest_table}
   select #{col_name_str}
   from #{temp_table_name};
 SQL
-        logger.debug(sql)
+        log.debug(sql)
         conn.fetch(sql).all
       end
     end

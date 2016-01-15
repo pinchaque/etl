@@ -26,7 +26,7 @@ module ETL::Output
     end
 
     # Initialize the logger with our job and batch info
-    def logger
+    def log
       l = ETL.logger
       attrs = {
         job_name: name,
@@ -68,9 +68,9 @@ module ETL::Output
     # Runs the job for the batch, keeping the status updated and handling
     # exceptions.
     def run
-      logger.info("Running...")
+      log.info("Running...")
       result = run_internal()
-      logger.info("Success! #{result.message}")
+      log.info("Success! #{result.message}")
       return result
     end
     

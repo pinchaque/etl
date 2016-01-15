@@ -2,7 +2,7 @@
 require 'etl/core'
 
 
-RSpec.describe "jobs" do
+RSpec.describe "base output" do
 
   it "base job id" do
 
