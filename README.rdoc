@@ -1,21 +1,66 @@
-== README
+= Ruby ETL Gem
+This ETL (Extract Transform Load) Ruby gem provides a back-end system for 
+moving data between data sources in a reliable and scalable manner. It 
+includes features for extracting from several different data sources, 
+transforming the data, and loading to different databases with a user-specified 
+load strategy. 
 
-This is an ETL system for scheduling and executing jobs to move data into
-a warehouse for further analytic workloads. The intended users are software
-developers who want a lightweight, powerful, and reliable mechanism for moving
-data. Key features include:
- * Connect to various data sources including relational, non-relational, and flat file
- * Flexible load strategies including insert, partition, and upsert
- * Job scheduling and dependency representation
- * Job configuration and specification through Ruby for flexibility
- * Automated management of common warehouse columns such as load date
- * Code hooks for validation and auditing of data loads
+The ETL system is designed from the ground up to be highly available and 
+scalable through usage of queued ETL jobs, distributed workers, and optimized 
+load paths.
+ 
+== Key Use Cases
+* Loading data in batches into a data warehouse (e.g. Redshift) for downstream analytic workloads
+* Creating aggregated/roll-up tables from raw data
 
-This is a work in progress as not all features are currently implemented.
+Because the ETL system is configured through Ruby and JSON, the target users
+are back-end developers who are looking to integrate a lightweight solution
+into their system.
 
-== LICENSE
+== Key Features
+Currently implemented features:
+* Connects to various data sources including relational, non-relational, and flat file
+* Flexible load strategies including insert, partition, and upsert
+* Job configuration and specification through Ruby for flexibility
+* Jobs are parameterized by JSON payloads that can be sent as queue messages for distributed processing
+* Automated management of common warehouse columns such as load date
+* Worker process that reads jobs from queue and runs them
 
-Copyright (c) 2015 Charles Smith
+Future features:
+* Parameterizable Ruby process for scheduling jobs
+* Posts metrics on job scheduling and execution performance
+* Additional data sources/destinations
+* Job scheduling and dependency representation
+* Support for streaming data sources
+* Code hooks for validation and auditing of data loads
+
+== Data Sources and Destinations
+Currently the following sources are supported for both data input and
+output.
+* CSV
+* MySQL
+* PostgreSQL
+* InfluxDB
+
+The following are on the short list for future support:
+* Redshift
+* CloudWatch
+
+== Status
+Although there are many working parts of this system and it is being used in 
+production at my current company, the interface is still evolving and not
+all features have been fully implemented. This should be considered pre-Alpha
+software. Please contact me if you're interested in contributing or have
+questions.
+
+To be completed before I'd consider this "alpha":
+* Finish scheduling and metrics features listed above
+* Provide documentation and examples of the API
+* Publish to RubyGems
+
+== Copyright
+
+Copyright (c) 2015-2016 Charles Smith
 
 This is an Open Source project licensed under the terms of the MIT license as 
 described in the LICENSE file in the root directory of this repository.
