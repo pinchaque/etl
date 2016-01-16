@@ -1,7 +1,7 @@
 
 require 'etl/core'
 
-RSpec.describe "inputs" do
+RSpec.describe "input transforms" do
 
   it "input transforms" do
     data = [

@@ -3,6 +3,7 @@ PATH
   specs:
     etl (0.1.0)
       bunny
+      influxdb
       mysql2
       sequel
 
@@ -18,11 +19,15 @@ GEM
     amq-protocol (2.0.0)
     bunny (2.2.0)
       amq-protocol (>= 2.0.0)
+    cause (0.1)
     diff-lcs (1.2.5)
     factory_girl (4.5.0)
       activesupport (>= 3.0.0)
     forgery (0.6.0)
     i18n (0.7.0)
+    influxdb (0.2.3)
+      cause
+      json
     json (1.8.2)
     minitest (5.5.1)
     mysql2 (0.4.2)

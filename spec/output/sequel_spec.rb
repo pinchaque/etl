@@ -77,7 +77,7 @@ class TestSequelPartition1 < ETL::Output::Sequel
   end
 end
 
-RSpec.describe "jobs" do
+RSpec.describe "sequel output" do
   def conn_params
     dbconfig = ETL.config.db[:test]
     dbconfig[:adapter] = 'postgres'

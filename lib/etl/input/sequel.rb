@@ -44,7 +44,7 @@ module ETL::Input
       else
         msg += " with no params"
       end
-      ETL.logger.debug(msg)
+      log.debug(msg)
       
       # block used to process each row
       row_proc = Proc.new do |row_in|

@@ -1,7 +1,7 @@
 
 require 'etl/core'
 
-RSpec.describe "inputs" do
+RSpec.describe "array input" do
 
   it "array input each" do
     data = [

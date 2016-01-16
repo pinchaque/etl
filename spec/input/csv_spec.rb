@@ -2,7 +2,7 @@
 require 'etl/core'
 
 
-RSpec.describe "inputs" do
+RSpec.describe "csv inputs" do
 
   it "csv input each" do
     # day,attribute,value_int,value_num,value_float

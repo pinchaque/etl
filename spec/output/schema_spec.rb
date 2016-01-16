@@ -1,7 +1,7 @@
 require 'etl/core'
 
 
-RSpec.describe "jobs" do
+RSpec.describe "schema" do
 
   it "schema constructor" do
 

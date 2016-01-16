@@ -21,6 +21,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'sequel'
   spec.add_dependency 'mysql2'
   spec.add_dependency 'bunny'
+  spec.add_dependency 'influxdb'
 
   spec.add_development_dependency 'pg'
   spec.add_development_dependency 'factory_girl'
