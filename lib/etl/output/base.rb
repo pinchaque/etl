@@ -2,15 +2,20 @@ module ETL::Output
 
   # Base class for all ETL jobs
   class Base
-    attr_accessor :feed_name, :reader, :load_strategy, :batch
-
+    attr_accessor :reader, :batch
+    
     def initialize(params = {})
-      @params = params || {}
+      @params = {
+        load_strategy: :unknown
+      }.merge(params)
       @reader ||= ETL::Input::Base.new
       @schema = nil # lazy load using default_schema
-      @load_strategy ||= :unknown
       @batch ||= {}
-      @feed_name ||= 'UNKNOWN'
+    end
+    
+    # Accessor for the load strategy
+    def load_strategy
+      @params[:load_strategy]
     end
     
     # Returns the default schema for this job. Some derived jobs may be able
@@ -19,19 +24,18 @@ module ETL::Output
       nil
     end
     
-    # Returns the name of this job. By default we just use the feed name but
-    # derived classes may want to override this.
-    def name
-      @feed_name
+    # Name of this data feed. We use the class name as default with the 
+    # assumption that each derived class is a different feed. 
+    def feed_name
+      ETL::StringUtil.camel_to_snake(self.class.name).gsub(/::/, '_')
     end
 
     # Initialize the logger with our job and batch info
     def log
       l = ETL.logger
       attrs = {
-        job_name: name,
-        feed_name: @feed_name,
-        load_strategy: @load_strategy,
+        feed_name: feed_name,
+        load_strategy: load_strategy,
         output_class_name: self.class.name.to_s,
         input_rows_processed: @reader.nil? ? nil : @reader.rows_processed,
         input_name: @reader.nil? ? "N/A" : @reader.name,

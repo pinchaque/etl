@@ -201,14 +201,13 @@ RSpec.describe "influxdb output" do
     end
   end
   
-  it 'writes data to influxdb', foo: true do
+  it 'writes data to influxdb' do
     odb.reader = input
     odb.define_schema do |s|
       s.date(:time)
       s.string(:label)
       s.float(:temp)
     end
-    odb.load_strategy = :upsert
     odb.run
     
     # now make sure the data is there

@@ -1,10 +1,15 @@
 require 'etl/core'
 
+def conn_params
+  dbconfig = ETL.config.db[:test]
+  dbconfig[:adapter] = 'postgres'
+  dbconfig[:user] = dbconfig[:username]
+  dbconfig
+end
+  
 class RelDb1 < ETL::Output::Sequel
-  def initialize(input, conn, table_name)
-    super(conn)
-    @reader = input
-    @feed_name = table_name
+  def initialize
+    super
     define_schema do |s|
       s.date(:day)
     end
@@ -17,10 +22,12 @@ end
 
 # Test loading into postgres
 class TestSequelCreate1 < ETL::Output::Sequel
-  def initialize(input, conn)
-    super(conn)
+  def initialize(input)
+    super({ 
+      dest_table: "test_1",
+      load_strategy: :insert_append
+    }.merge(conn_params))
     @reader = input
-    @feed_name = "test_1"
 
     define_schema do |s|
       s.date("day")
@@ -29,8 +36,6 @@ class TestSequelCreate1 < ETL::Output::Sequel
       s.numeric("value_num", 10, 1)
       s.float("value_float")
     end
-
-    @load_strategy = :insert_append
   end
   
   def default_schema
@@ -39,10 +44,12 @@ class TestSequelCreate1 < ETL::Output::Sequel
 end
 
 class TestSequelLoad1 < ETL::Output::Sequel
-  def initialize(input, conn, table_name)
-    super(conn)
+  def initialize(input, load_strategy, table_name)
+    super({ 
+      dest_table: table_name,
+      load_strategy: load_strategy,
+    }.merge(conn_params))
     @reader = input
-    @feed_name = table_name
     define_schema do |s|
       s.date(:day)
       s.int(:id)
@@ -60,10 +67,12 @@ end
 
 # tests multi-column partitions
 class TestSequelPartition1 < ETL::Output::Sequel
-  def initialize(input, conn, table_name)
-    super(conn)
+  def initialize(input, load_strategy, table_name)
+    super({ 
+      dest_table: table_name,
+      load_strategy: load_strategy,
+    }.merge(conn_params))
     @reader = input
-    @feed_name = table_name
     define_schema do |s|
       s.date(:day)
       s.string(:city_name)
@@ -78,13 +87,7 @@ class TestSequelPartition1 < ETL::Output::Sequel
 end
 
 RSpec.describe "sequel output" do
-  def conn_params
-    dbconfig = ETL.config.db[:test]
-    dbconfig[:adapter] = 'postgres'
-    dbconfig[:user] = dbconfig[:username]
-    dbconfig
-  end
-  
+
   def get_conn
     Sequel.connect(conn_params)
   end
@@ -144,10 +147,8 @@ RSpec.describe "sequel output" do
 
     d.each do |h|
       it "formats values for type #{h[:type]} value #{h[:value]}" do
-        input = ETL::Input::Array.new({data: []})
-        job = RelDb1.new(input, nil, "xxx")
         col = ETL::Schema::Column.new(h[:type])
-        actual = job.value_to_db_str(col, h[:value])
+        actual = RelDb1.new.value_to_db_str(col, h[:value])
         expect(actual).to eq(h[:expected])
       end
     end
@@ -175,7 +176,7 @@ SQL
         "attribute" => "condition", 
         "value_numeric" => "value_num"
     }
-    job = TestSequelCreate1.new(input, conn_params)
+    job = TestSequelCreate1.new(input)
     job.row_batch_size = 2 # test batching of rows loaded to tmp
 
     job.batch = batch
@@ -227,8 +228,7 @@ SQL
       { "day" => "2015-04-03", "id" => 12, "value" => 3},
     ]
     input = ETL::Input::Array.new({data: data})
-    job = TestSequelLoad1.new(input, conn_params, table_name)
-    job.load_strategy = :insert_append
+    job = TestSequelLoad1.new(input, :insert_append, table_name)
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
@@ -244,8 +244,7 @@ SQL
       { "day" => "2015-04-02", "id" => 13, "value" => 5},
     ]
     input = ETL::Input::Array.new({data: data})
-    job = TestSequelLoad1.new(input, conn_params, table_name)
-    job.load_strategy = :insert_append
+    job = TestSequelLoad1.new(input, :insert_append, table_name)
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(2)
@@ -287,8 +286,7 @@ SQL
       { "day" => "2015-04-03", "id" => 12, "value" => 3},
     ]
     input = ETL::Input::Array.new({data: data})
-    job = TestSequelLoad1.new(input, conn_params, table_name)
-    job.load_strategy = :insert_table
+    job = TestSequelLoad1.new(input, :insert_table, table_name)
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
@@ -304,8 +302,7 @@ SQL
       { "day" => "2015-04-02", "id" => 13, "value" => 5},
     ]
     input = ETL::Input::Array.new({data: data})
-    job = TestSequelLoad1.new(input, conn_params, table_name)
-    job.load_strategy = :insert_table
+    job = TestSequelLoad1.new(input, :insert_table, table_name)
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(2)
@@ -346,8 +343,7 @@ SQL
       { "day" => "2015-04-03", "id" => 12, "value" => 3},
     ]
     input = ETL::Input::Array.new({data: data})
-    job = TestSequelLoad1.new(input, conn_params, table_name)
-    job.load_strategy = :insert_partition
+    job = TestSequelLoad1.new(input, :insert_partition, table_name)
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
@@ -364,8 +360,7 @@ SQL
       { "day" => "2015-04-03", "id" => 12, "value" => 6},
     ]
     input = ETL::Input::Array.new({data: data})
-    job = TestSequelLoad1.new(input, conn_params, table_name)
-    job.load_strategy = :insert_partition
+    job = TestSequelLoad1.new(input, :insert_partition, table_name)
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
@@ -407,8 +402,7 @@ SQL
       { "day" => "2015-04-03", "id" => 12, "value" => 3},
     ]
     input = ETL::Input::Array.new({data: data})
-    job = TestSequelLoad1.new(input, conn_params, table_name)
-    job.load_strategy = :insert_append
+    job = TestSequelLoad1.new(input, :insert_append, table_name)
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
@@ -425,8 +419,7 @@ SQL
       { "day" => "2015-04-05", "id" => 12, "value" => 6},
     ]
     input = ETL::Input::Array.new({data: data})
-    job = TestSequelLoad1.new(input, conn_params, table_name)
-    job.load_strategy = :update
+    job = TestSequelLoad1.new(input, :update, table_name)
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
@@ -465,8 +458,7 @@ SQL
       { "day" => "2015-04-03", "id" => 12, "value" => 3},
     ]
     input = ETL::Input::Array.new({data: data})
-    job = TestSequelLoad1.new(input, conn_params, table_name)
-    job.load_strategy = :insert_append
+    job = TestSequelLoad1.new(input, :insert_append, table_name)
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
@@ -483,8 +475,7 @@ SQL
       { "day" => "2015-04-05", "id" => 12, "value" => 6},
     ]
     input = ETL::Input::Array.new({data: data})
-    job = TestSequelLoad1.new(input, conn_params, table_name)
-    job.load_strategy = :upsert
+    job = TestSequelLoad1.new(input, :upsert, table_name)
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
@@ -527,8 +518,7 @@ SQL
       { "day" => "2015-04-03", "id" => 10, "value" => 6},
     ]
     input = ETL::Input::Array.new({data: data})
-    job = TestSequelLoad1.new(input, conn_params, table_name)
-    job.load_strategy = :upsert
+    job = TestSequelLoad1.new(input, :upsert, table_name)
     job.schema.primary_key = [:day, :id]
     job.batch = batch
     jr = job.run
@@ -543,8 +533,7 @@ SQL
       { "day" => "2015-04-04", "id" => 11, "value" => 13},
     ]
     input = ETL::Input::Array.new({data: data})
-    job = TestSequelLoad1.new(input, conn_params, table_name)
-    job.load_strategy = :upsert
+    job = TestSequelLoad1.new(input, :upsert, table_name)
     job.schema.primary_key = [:day, :id]
     job.batch = batch
     jr = job.run
@@ -596,8 +585,7 @@ SQL
       { "day" => "2015-04-03", "city_name" => "Seattle", "value" => 3},
     ]
     input = ETL::Input::Array.new({data: data})
-    job = TestSequelPartition1.new(input, conn_params, table_name)
-    job.load_strategy = :insert_partition
+    job = TestSequelPartition1.new(input, :insert_partition, table_name)
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
@@ -611,8 +599,7 @@ SQL
       { "day" => "2015-04-02", "city_name" => "Portland", "value" => 5},
     ]
     input = ETL::Input::Array.new({data: data})
-    job = TestSequelPartition1.new(input, conn_params, table_name)
-    job.load_strategy = :insert_partition
+    job = TestSequelPartition1.new(input, :insert_partition, table_name)
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(2)
@@ -641,8 +628,7 @@ SQL
       { "day" => "2015-04-01", "city_name" => "Seattle", "value" => 5},
     ]
     input = ETL::Input::Array.new({data: data})
-    job = TestSequelPartition1.new(input, conn_params, table_name)
-    job.load_strategy = :insert_partition
+    job = TestSequelPartition1.new(input, :insert_partition, table_name)
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(2)

@@ -26,11 +26,18 @@ module ETL::Output
     def transform_row(row)
       row
     end
+    
+    # Name of the destination table. By default we assume this is the class
+    # name but you can override this in the parameters.
+    def dest_table
+      @params[:dest_table] || 
+        ETL::StringUtil::camel_to_snake(self.class.name.gsub(/^.*::/, ''))
+    end
 
     # Returns the default schema based on the table in the destination db
     def default_schema
-      return nil unless @feed_name && conn
-      sequel_schema = conn.schema(@feed_name)
+      return nil unless dest_table && conn
+      sequel_schema = conn.schema(dest_table)
       ETL::Schema::Table.from_sequel_schema(sequel_schema)
     end
 
@@ -170,7 +177,7 @@ SQL
     # Perform table transformations on the temporary table before final
     # load. This function is given the names of the temporary and final
     # tables but it should only modify the temp one.
-    def transform_table(conn, temp_table_name, dest_table)
+    def transform_table(conn, temp_table_name)
       [@col_name_updated, @col_name_created].each do |col_name|
         if schema.columns.has_key?(col_name)
           sql = <<SQL
@@ -184,7 +191,7 @@ SQL
 
     # Load temp table records into destination table, returning number of
     # affected rows
-    def load_destination_table(conn, temp_table_name, dest_table)
+    def load_destination_table(conn, temp_table_name)
       q_dest_table = quote_ident(dest_table)
       # build array of quoted column names
       col_names = schema.columns.keys
@@ -323,11 +330,10 @@ SQL
         rows_success = load_temp_data(conn, temp_table_name)
 
         # Perform full table transformation on the temp table
-        dest_table = feed_name
-        transform_table(conn, temp_table_name, dest_table)
+        transform_table(conn, temp_table_name)
 
         # Load temp table records into destination table
-        load_destination_table(conn, temp_table_name, dest_table)
+        load_destination_table(conn, temp_table_name)
 
         msg = "Processed #{rows_success} input rows for #{dest_table}"
       end

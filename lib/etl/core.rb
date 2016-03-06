@@ -13,6 +13,7 @@ require 'etl/exception.rb'
 # Utilities
 require 'etl/util/logger.rb'
 require 'etl/util/hash_util.rb'
+require 'etl/util/string_util.rb'
 
 # Models
 # Set up the database connection that's needed for Sequel models

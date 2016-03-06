@@ -27,9 +27,9 @@ module ETL
       input = Object::const_get(jm.input_class).new(jm.input_params_hash)
       
       # prepare the job to run
-      output = Object::const_get(jm.output_class).new(jm.output_params_hash)
+      out_hash = jm.output_params_hash.merge({ feed_name: jm.feed_name })
+      output = Object::const_get(jm.output_class).new(out_hash)
       output.reader = input
-      output.feed_name = jm.feed_name
       output.batch = batch
       
       # get a run for this job

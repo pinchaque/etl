@@ -14,6 +14,7 @@ module ETL::Output
         series: nil, # needs to be set
         empty_tag: "[empty]", # influx doesn't allow empty tags, use this default
         ts_tag_format: "%F", # how we format timestamp values in tags
+        load_strategy: :upsert, # the only one that works
       }
     end
 

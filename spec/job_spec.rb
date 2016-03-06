@@ -8,10 +8,9 @@ RSpec.describe "job" do
   let(:output_params) { { success: 34, error: 1, message: 'congrats!', sleep: nil, exception: nil }}
   let(:input_params) { nil }
   let(:job_model) { 
-    jm = ETL::Model::Job.new
+    jm = ETL::Model::Job.new({ feed_name: "xxx" })
     jm.output_class = "ETL::Output::Null"
     jm.input_class = "ETL::Input::Null"
-    jm.feed_name = 'test'
     jm.output_params_hash = output_params
     jm.input_params_hash = input_params
     jm.save

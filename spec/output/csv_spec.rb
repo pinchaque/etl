@@ -5,7 +5,6 @@ require 'etl/core'
 class TestCsvCreate1 < ETL::Output::CSV
   def initialize(params = {})
     super
-    @feed_name = "test_1"
 
     define_schema do |s|
       s.date("day")
@@ -15,14 +14,17 @@ class TestCsvCreate1 < ETL::Output::CSV
       s.float("value_float")
     end
   end
+  
+  def feed_name
+    "test_1"
+  end
 end
 
 
 # Test reading in pipe-separated file and outputting @ separated
 class TestCsvCreate2 < ETL::Output::CSV
   def initialize(params = {})
-    super
-    @feed_name = "test_2"
+    super({load_strategy: :insert_table}.merge(params))
     define_schema do |s|
       s.date("day")
       s.string("condition")
@@ -30,8 +32,10 @@ class TestCsvCreate2 < ETL::Output::CSV
       s.numeric("value_num", 10, 1)
       s.float("value_float")
     end
-
-    @load_strategy = :insert_table
+  end
+  
+  def feed_name
+    "test_2"
   end
 
   def csv_output_options
@@ -57,9 +61,8 @@ RSpec.describe "csv output" do
     }
     batch = { :day => "2015-03-31" }
 
-    job = TestCsvCreate1.new
+    job = TestCsvCreate1.new({load_strategy: :insert_table})
     job.reader = input
-    job.load_strategy = :insert_table
     job.batch = batch
     jr = job.run
     expect(job.output_file).to eq(outfile)
@@ -79,9 +82,8 @@ END
     expect(contents).to eq(expect_contents)
 
     # run a second time
-    job = TestCsvCreate1.new
+    job = TestCsvCreate1.new({load_strategy: :insert_table})
     job.reader = input
-    job.load_strategy = :insert_table
     job.batch = batch
     jr = job.run
     expect(job.output_file).to eq(outfile)
@@ -117,9 +119,8 @@ END
     }
     batch = { :day => "2015-03-31" }
 
-    job = TestCsvCreate1.new
+    job = TestCsvCreate1.new({load_strategy: :insert_append})
     job.reader = input
-    job.load_strategy = :insert_append
     job.batch = batch
     jr = job.run
 
@@ -140,9 +141,8 @@ END
     expect(contents).to eq(expect_contents)
 
     # run a second time
-    job = TestCsvCreate1.new
+    job = TestCsvCreate1.new({load_strategy: :insert_append})
     job.reader = input
-    job.load_strategy = :insert_append
     job.batch = batch
     jr = job.run
     expect(job.output_file).to eq(outfile)
