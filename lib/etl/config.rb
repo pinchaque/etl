@@ -6,7 +6,7 @@ module ETL
   
   # Configuration class
   class Config
-    attr_accessor :config_dir, :db_file, :db, :schema_file, :schema, :etl_file, :etl
+    attr_accessor :config_dir, :db 
     
     include Singleton
     
@@ -15,23 +15,15 @@ module ETL
     end
     
     def db_file
-      @db_file ||= @config_dir + "/database.yml"
+      @config_dir + "/database.yml"
     end
     
     def db
       @db ||= load_config(db_file)
     end
-      
-    def schema_file
-      @schema_file ||= @config_dir + "/schema.yml"
-    end
-    
-    def schema
-      @schema ||= load_config(schema_file)
-    end
     
     def core_file
-      @core_file ||= @config_dir + "/core.yml"
+      @config_dir + "/core.yml"
     end
     
     def core

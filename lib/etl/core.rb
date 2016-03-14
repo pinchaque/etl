@@ -40,5 +40,3 @@ end
 
 # High-level classes responsible for executing jobs
 require 'etl/job_exec.rb'
-require 'process/base.rb'
-require 'process/worker.rb'

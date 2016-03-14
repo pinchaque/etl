@@ -1,3 +1,4 @@
+require 'etl/process/base'
 module ETL::Process
 
   # Class that handles processing jobs from the queue as a background process
