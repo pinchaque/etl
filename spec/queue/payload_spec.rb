@@ -3,7 +3,7 @@ RSpec.describe "payload" do
 
   it "makes round trip" do    
     id = 123
-    batch = {:foo => "abc", :bar => "xyz"}
+    batch = ETL::Batch.new({:foo => "abc", :bar => "xyz"})
     
     p = ETL::Queue::Payload.new
     p.job_id = id
@@ -18,6 +18,7 @@ STR
 
     p2 = ETL::Queue::Payload.decode(enc)
     expect(p2.job_id).to eq(id)
-    expect(p2.batch).to eq(batch)
+    expect(p2.batch.class.name).to eq('ETL::Batch')
+    expect(p2.batch.to_h).to eq(batch.to_h)
   end
 end

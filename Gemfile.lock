@@ -6,6 +6,8 @@ PATH
       influxdb
       mysql2
       sequel
+      tzinfo
+      tzinfo-data
 
 GEM
   remote: https://rubygems.org/
@@ -16,9 +18,9 @@ GEM
       minitest (~> 5.1)
       thread_safe (~> 0.3, >= 0.3.4)
       tzinfo (~> 1.1)
-    amq-protocol (2.0.0)
-    bunny (2.2.0)
-      amq-protocol (>= 2.0.0)
+    amq-protocol (2.0.1)
+    bunny (2.3.0)
+      amq-protocol (>= 2.0.1)
     cause (0.1)
     diff-lcs (1.2.5)
     factory_girl (4.5.0)
@@ -30,7 +32,7 @@ GEM
       json
     json (1.8.2)
     minitest (5.5.1)
-    mysql2 (0.4.2)
+    mysql2 (0.4.3)
     pg (0.18.0)
     rspec-core (3.3.1)
       rspec-support (~> 3.3.0)
@@ -41,10 +43,13 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.3.0)
     rspec-support (3.3.0)
-    sequel (4.30.0)
+    sequel (4.32.0)
     thread_safe (0.3.4)
+    time-warp (1.0.15)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
+    tzinfo-data (1.2016.1)
+      tzinfo (>= 1.0.0)
 
 PLATFORMS
   ruby
@@ -57,6 +62,7 @@ DEPENDENCIES
   rspec-core
   rspec-expectations
   rspec-mocks
+  time-warp
 
 BUNDLED WITH
    1.11.2

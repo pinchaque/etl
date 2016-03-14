@@ -22,6 +22,8 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'mysql2'
   spec.add_dependency 'bunny'
   spec.add_dependency 'influxdb'
+  spec.add_dependency 'tzinfo'
+  spec.add_dependency 'tzinfo-data'
 
   spec.add_development_dependency 'pg'
   spec.add_development_dependency 'factory_girl'
@@ -29,4 +31,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rspec-core'
   spec.add_development_dependency 'rspec-expectations'
   spec.add_development_dependency 'rspec-mocks'
+  spec.add_development_dependency 'time-warp'
 end

@@ -83,7 +83,7 @@ module ETL
 
     def extract_payload
       # Extract info from payload
-      job_model = @payload.job_model
+      job_model = ETL::Model::Job[@payload.job_id]
       raise ETL::JobError, "Invalid job_id in payload: '#{@payload.job_id}'" unless job_model
       [@payload.batch, job_model]
     end

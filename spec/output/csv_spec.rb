@@ -59,7 +59,7 @@ RSpec.describe "csv output" do
         "attribute" => "condition", 
         "value_numeric" => "value_num"
     }
-    batch = { :day => "2015-03-31" }
+    batch = ETL::Batch.new({ :day => "2015-03-31" })
 
     job = TestCsvCreate1.new({load_strategy: :insert_table})
     job.reader = input
@@ -117,7 +117,7 @@ END
         "attribute" => "condition", 
         "value_numeric" => "value_num"
     }
-    batch = { :day => "2015-03-31" }
+    batch = ETL::Batch.new({ :day => "2015-03-31" })
 
     job = TestCsvCreate1.new({load_strategy: :insert_append})
     job.reader = input
@@ -182,7 +182,7 @@ END
     input.headers = %w{day condition value_int value_num value_float}
     job = TestCsvCreate2.new
     job.reader = input
-    batch = { :day => "2015-03-31" }
+    batch = ETL::Batch.new({ :day => "2015-03-31" })
 
     job.batch = batch
     jr = job.run

@@ -2,6 +2,7 @@
 ENV["ETL_ENV"] ||= 'test'
 require 'etl'
 require 'factory_girl'
+require 'time_warp'
 
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate

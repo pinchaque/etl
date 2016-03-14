@@ -14,6 +14,7 @@ require 'etl/exception.rb'
 require 'etl/util/logger.rb'
 require 'etl/util/hash_util.rb'
 require 'etl/util/string_util.rb'
+require 'etl/batch.rb'
 
 # Models
 # Set up the database connection that's needed for Sequel models
@@ -28,7 +29,7 @@ require 'etl/schema/table.rb'
 require 'etl/schema/column.rb'
 
 base_file = 'base.rb'
-%w( input output transform queue ).each do |d|
+%w( input output transform queue batch_factory schedule ).each do |d|
   dir = "#{libdir}/#{d}"
   require "#{dir}/#{base_file}"
   Dir.new(dir).each do |file|

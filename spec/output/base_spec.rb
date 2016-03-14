@@ -19,7 +19,7 @@ RSpec.describe "base output" do
     
     d.each do |a|
       expect(a.length).to eq(2)
-      b.batch = a[0]
+      b.batch = ETL::Batch.new(a[0])
       expect(b.batch_id).to eq(a[1])
     end
   end

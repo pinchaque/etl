@@ -10,7 +10,6 @@ module ETL::Output
       }.merge(params)
       @reader ||= ETL::Input::Base.new
       @schema = nil # lazy load using default_schema
-      @batch ||= {}
     end
     
     # Accessor for the load strategy
@@ -41,7 +40,7 @@ module ETL::Output
         input_name: @reader.nil? ? "N/A" : @reader.name,
       }
       # Add the batch prefix so we can find the batch id later
-      @batch.each do |k, v|
+      @batch.to_h.each do |k, v|
         key = ETL::Logger::BATCH_PREFIX + k.to_s
         attrs[key.to_sym] = v
       end
@@ -50,23 +49,8 @@ module ETL::Output
     end
 
     # Returns string representation of batch suitable as an identifier
-    # Concatenates batch data members separated by underscores. Sorts
-    # keys before concatenation so we have deterministic batch ID regardless
-    # of order keys were added to hash.
     def batch_id
-      return nil if @batch.nil?
-      
-      # get batch values sorted by keys
-      values = @batch.sort.collect { |x| x[1] }
-      
-      # clean up each value
-      values.collect! do |x|
-        x = "" if x.nil?
-        x.downcase.gsub(/[^a-z\d]/, "")
-      end
-      
-      # separate by underscores
-      values.join("_")
+      @batch && @batch.to_s
     end
 
     # Runs the job for the batch, keeping the status updated and handling

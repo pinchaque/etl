@@ -215,7 +215,7 @@ SQL
         conn.run(sql)
       when :insert_partition
         # clear out records for the partition associated with this batch
-        clauses = @batch.keys.collect do |bn|
+        clauses = @batch.to_h.keys.collect do |bn|
           name = schema.partition_columns.fetch(bn.to_s, bn).to_s
           
           unless schema.columns.has_key?(name)
@@ -233,8 +233,8 @@ SQL
         end
         sql = "delete from #{q_dest_table} where " + clauses.join(" and ")
         log.debug(sql)
-        log.debug(@batch.values)
-        conn.fetch(sql, *(@batch.values)).all
+        log.debug(@batch.to_h.values)
+        conn.fetch(sql, *(@batch.to_h.values)).all
       else
         raise ETL::OutputError, "Invalid load strategy '#{load_strategy}'"
       end
