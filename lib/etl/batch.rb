@@ -1,3 +1,5 @@
+require 'json'
+
 module ETL
   
   # Class that encapsulates the batch parameters for an ETL job
@@ -11,13 +13,17 @@ module ETL
     def to_h
       @hash
     end
+    
+    def to_json
+      to_h.to_json
+    end
       
     # Concatenates batch data members separated by underscores. Sorts
     # keys before concatenation so we have deterministic batch ID regardless
     # of order keys were added to hash.
     def to_s
       # get batch values sorted by keys
-      v = @hash.sort.collect { |x| x[1] }
+      v = @hash.sort.collect { |x| x[1].to_s }
       
       # clean up each value
       v.collect! do |x|

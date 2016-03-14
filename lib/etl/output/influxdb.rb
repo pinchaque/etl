@@ -51,7 +51,7 @@ module ETL::Output
       msg = "Processed #{rows_success} input rows for #{@params[:series]}"
 
       # Final result
-      Result.new(rows_success, rows_error, msg)
+      ETL::Job::Result.new(rows_success, rows_error, msg)
     end
 
     # Load a single batch of rows (passed in as array) into the db

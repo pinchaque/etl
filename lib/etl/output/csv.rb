@@ -106,7 +106,7 @@ module ETL::Output
 
       # Final result
       msg = "Wrote #{rows_success} rows to #{output_file}"
-      Result.new(rows_success, rows_error, msg)
+      ETL::Job::Result.new(rows_success, rows_error, msg)
     end
   end
 end

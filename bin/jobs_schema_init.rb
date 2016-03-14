@@ -45,22 +45,11 @@ end
 
 date_puts("Creating initial schema...")
 
-conn.create_table(:jobs) do
-  primary_key :id
-  DateTime :created_at, null: false
-  DateTime :updated_at, null: false
-  String :output_class, null: false
-  String :output_params
-  String :feed_name, null: false
-  String :input_class, null: false
-  String :input_params
-end
-
 conn.create_table(:job_runs) do
   primary_key :id
   DateTime :created_at, null: false
   DateTime :updated_at, null: false
-  Integer :job_id, :null => false, :index => true
+  String :job_class, :null => false, :index => true
   String :status, :null => false, :index => true
   DateTime :queued_at
   DateTime :run_start_time

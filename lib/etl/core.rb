@@ -21,7 +21,6 @@ require 'etl/batch.rb'
 # Also we can use the DB constant in the rest of the code
 DB = Sequel::Model.db = Sequel.connect(ETL.config.core[:database])
 Sequel::Model.plugin :timestamps
-require 'etl/models/job.rb'
 require 'etl/models/job_run.rb'
 
 # Schema management
@@ -29,7 +28,7 @@ require 'etl/schema/table.rb'
 require 'etl/schema/column.rb'
 
 base_file = 'base.rb'
-%w( input output transform queue batch_factory schedule ).each do |d|
+%w( job input output transform queue batch_factory schedule ).each do |d|
   dir = "#{libdir}/#{d}"
   require "#{dir}/#{base_file}"
   Dir.new(dir).each do |file|
@@ -40,6 +39,6 @@ base_file = 'base.rb'
 end
 
 # High-level classes responsible for executing jobs
-require 'etl/job.rb'
+require 'etl/job_exec.rb'
 require 'process/base.rb'
 require 'process/worker.rb'

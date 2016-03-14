@@ -339,7 +339,7 @@ SQL
       end
 
       # Final result
-      Result.new(rows_success, rows_error, msg)
+      ETL::Job::Result.new(rows_success, rows_error, msg)
     end
   end
 end

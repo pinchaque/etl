@@ -9,7 +9,7 @@ module ETL::Model
     def self.create_for_job(job, batch)
       JobRun.new do |jr|
         jr.job = job
-        jr.job_id = job.id
+        jr.job_class = job.class.name
         jr.status = :new
         jr.batch = batch.to_json
       end
@@ -18,7 +18,7 @@ module ETL::Model
     # Looks for JobRun for the specified job and batch. creates a new one
     # if it doesn't exist.
     def self.find_or_create_queued(job, batch)
-      jr = JobRun.where(:job_id => job.id, :status => :queued).first
+      jr = JobRun.where(:job_class => job.class.name, :status => :queued).first
       
       # create if doesn't exist
       if jr.nil?
@@ -54,7 +54,7 @@ module ETL::Model
     
     # Mark this as an error and save the exception message
     def exception(ex)
-      error(ETL::Output::Result.new(nil, nil, ex.message + "\n" + ex.backtrace.join("\n")))
+      error(ETL::Job::Result.new(nil, nil, ex.message + "\n" + ex.backtrace.join("\n")))
     end
 
     def success?

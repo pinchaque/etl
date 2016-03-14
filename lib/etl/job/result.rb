@@ -1,4 +1,4 @@
-module ETL::Output
+module ETL::Job
 
   # Class that represents the result of an ETL job run
   class Result
