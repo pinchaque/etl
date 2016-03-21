@@ -9,6 +9,7 @@ job:
 log:
   class: ETL::Logger
   level: info
+  file: /var/log/etl.log # comment this out to log to STDOUT
 
 # connection info for database where we store jobs history
 database:

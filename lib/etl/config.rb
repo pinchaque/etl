@@ -18,16 +18,20 @@ module ETL
       @config_dir + "/database.yml"
     end
     
-    def db
+    def db(&b)
       @db ||= load_config(db_file)
+      yield @db if block_given?
+      @db
     end
     
     def core_file
       @config_dir + "/core.yml"
     end
     
-    def core
+    def core(&b)
       @core ||= load_config(core_file)
+      yield @core if block_given?
+      @core
     end
     
     def load_config(file)

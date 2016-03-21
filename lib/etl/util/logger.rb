@@ -8,7 +8,7 @@ module ETL
     attr_accessor :formatter
 
     def initialize(params = {})
-      super(STDOUT)
+      super(params[:file] || STDOUT)
       @formatter = Formatter.new
       level = self.class.string_to_severity(params[:level])
     end

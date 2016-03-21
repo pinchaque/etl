@@ -1,10 +1,11 @@
 require 'optparse'
+require 'etl/mixins/cached_logger'
 
 module ETL::Process
   
   # Base class for the various processes we run in the ETL system
   class Base
-    include CachedLogger
+    include ETL::CachedLogger
     
     def initialize
       @options = {}
@@ -48,7 +49,10 @@ module ETL::Process
       option_parser.parse(ARGV)
       
       [:config].each do |opt|
-        raise "Option '#{opt}' is required" unless @options[opt]
+        unless @options[opt]
+          puts(option_parser)
+          abort("\nERROR: Option '#{opt}' is required") 
+        end
       end
       
       config.config_dir = @options[:config]

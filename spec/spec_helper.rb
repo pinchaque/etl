@@ -1,5 +1,3 @@
-# Set environment to test (overrides default of "development")
-ENV["ETL_ENV"] ||= 'test'
 require 'etl'
 require 'factory_girl'
 require 'time_warp'
@@ -50,4 +48,14 @@ RSpec.configure do |config|
   # test failures related to randomization by passing the same `--seed` value
   # as the one that triggered the failure.
   Kernel.srand config.seed
+end
+
+# ETL system configuration
+ETL.config.core do |c|
+  # override to write logs to file so they don't clutter up STDOUT
+  unless c[:log][:file]
+    f = "log/test.log"
+    puts("Writing rspec output to #{f}")
+    c[:log][:file] = f
+  end
 end
