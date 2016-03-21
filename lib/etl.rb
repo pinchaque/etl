@@ -12,6 +12,3 @@ require 'etl/config'
     
 # Include the rest of code needed for ETL system
 require 'etl/core'
-
-# Create objects that exist in ETL module
-require 'etl/init'

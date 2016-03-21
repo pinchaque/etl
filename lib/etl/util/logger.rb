@@ -2,47 +2,23 @@ require 'time'
 require 'logger'
 
 module ETL
-  
-  # Logs to multiple destinations
-  class MultiLogger < ::Array
-    
-    # Delegate each method to contained loggers
-    def method_missing(m, *args, &block)
-      each do |a|
-        a.send(m, *args, &block)
-      end
-    end
-  end
-  
 
   # Logger class that includes time stamp and severity for all messages
   class Logger < ::Logger
-    BATCH_PREFIX = "batch_"
-    
     attr_accessor :formatter
 
     def initialize(params = {})
-      # file-based log
-      if params.has_key?(:file)
-        path = params[:file]
-        path = "#{ETL.root}/#{path}" unless path.start_with?("/")
-        super(path)
-      # stdout log
-      else
-        super(STDERR)
-      end
-      
-      set_severity_string(params.fetch(:level, "info"))
-    
+      super(STDOUT)
       @formatter = Formatter.new
+      level = self.class.string_to_severity(params[:level])
     end
     
-    def attributes=(v)
-      @formatter.attributes = v
+    def context
+      @formatter.context
     end
     
-    def attributes
-      @formatter.attributes
+    def context=(h)
+      @formatter.context = h
     end
     
     def exception(ex, severity = Logger::ERROR)
@@ -55,19 +31,16 @@ module ETL
       add(severity) { msg }
     end
     
-    # Sets severity level based on string representation of severity (e.g.
-    # from config file)
-    def set_severity_string(str)
-      sev_threshold = Logger.string_to_severity(str)
-    end
-
     # Converts string representation of severity into a Logger constant
     def self.string_to_severity(str)
+      return Logger::INFO unless str
       case str.downcase
       when "debug"
         Logger::DEBUG
       when "info"
         Logger::INFO
+      when "warning"
+        Logger::WARN
       when "warn"
         Logger::WARN
       when "error"
@@ -82,27 +55,22 @@ module ETL
     # Formatter that includes time stamp and severity. Also provides ability
     # to add job name and batch ID
     class Formatter < ::Logger::Formatter
-      attr_accessor :attributes
+      attr_accessor :context
 
-      def initialize
-        @attributes = {}
+      def initialize(ctx = {})
+        @context = ctx
       end
-
-      # Format the log message
+      
+      # convert context string into a prefix we can put in log messages
+      def context_str
+        a = @context.to_a.map{ |x| x.join(':') }.join(", ")
+        a.empty? ? "" : "{#{a}} "
+      end
+      
       def call(severity, timestamp, progname, msg)
-        str = ""
-        if @attributes.has_key?(:job_name)
-          str += "{Job=#{@attributes[:job_name]}"
-          # Add all our batch attributes
-          batch_values = @attributes.select do |k, v| 
-            k.to_s.start_with?(BATCH_PREFIX)
-          end
-          str += ", Batch=#{batch_values}" if batch_values
-          str += "} "
-        end
-        str += String === msg ? msg : msg.inspect
+        str = String === msg ? msg : msg.inspect
         timestr = timestamp.strftime("%F %T.%L")
-        "[#{timestr}] #{severity} #{str}\n"
+        "[#{timestr}] #{severity} #{context_str}#{str}\n"
       end
     end
   end

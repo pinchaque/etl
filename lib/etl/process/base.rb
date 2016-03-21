@@ -4,12 +4,10 @@ module ETL::Process
   
   # Base class for the various processes we run in the ETL system
   class Base
+    include CachedLogger
+    
     def initialize
       @options = {}
-    end
-    
-    def log
-      ETL.logger
     end
     
     def config

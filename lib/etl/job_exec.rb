@@ -69,7 +69,12 @@ module ETL
     private
 
     def log
-      ETL.logger
+      return @log if @log
+      @log = ETL.create_logger({
+          job: @payload.job_id,
+          batch: @payload.batch.to_s,
+        })
+      @log
     end
 
     def extract_payload

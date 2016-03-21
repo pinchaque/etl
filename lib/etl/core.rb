@@ -38,5 +38,42 @@ base_file = 'base.rb'
   end
 end
 
-# High-level classes responsible for executing jobs
-require 'etl/job_exec.rb'
+module ETL
+  
+  # Generic App-wide logger
+  def ETL.logger
+    @@logger ||= ETL.create_logger
+  end
+  
+  # Sets generic App-wide logger
+  def ETL.logger=(v)
+    @@logger = v
+  end
+  
+  # Creates a new logger instance that we can use for different contexts 
+  # based on 
+  def ETL.create_logger(context = {})
+    log = ETL.create_class(:log)
+    log.context = context.dup
+    log
+  end
+  
+  def ETL.queue
+    @@queue ||= ETL.create_queue
+  end
+  
+  def ETL.queue=(v)
+    @@queue = v
+  end
+  
+  def ETL.create_queue
+    ETL.create_class(:queue)
+  end  
+  
+  # Helper function to create a class given a class name stored in the config
+  # under "sym"
+  def ETL.create_class(sym)
+    cfg = ETL.config.core[sym]
+    Object::const_get(cfg[:class]).new(cfg)
+  end
+end  

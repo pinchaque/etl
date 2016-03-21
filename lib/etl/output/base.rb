@@ -1,7 +1,10 @@
+require 'mixins/cached_logger'
+
 module ETL::Output
 
   # Base class for all ETL jobs
   class Base
+    include ETL::CachedLogger
     attr_accessor :reader, :batch
     
     def initialize(params = {})
@@ -28,24 +31,12 @@ module ETL::Output
     def feed_name
       ETL::StringUtil.camel_to_snake(self.class.name).gsub(/::/, '_')
     end
-
-    # Initialize the logger with our job and batch info
-    def log
-      l = ETL.logger
-      attrs = {
-        feed_name: feed_name,
-        load_strategy: load_strategy,
-        output_class_name: self.class.name.to_s,
-        input_rows_processed: @reader.nil? ? nil : @reader.rows_processed,
-        input_name: @reader.nil? ? "N/A" : @reader.name,
+    
+    def log_context
+      { 
+        class: self.class.name.gsub(/^.*::/, ''),
+        batch: batch_id,
       }
-      # Add the batch prefix so we can find the batch id later
-      @batch.to_h.each do |k, v|
-        key = ETL::Logger::BATCH_PREFIX + k.to_s
-        attrs[key.to_sym] = v
-      end
-      l.attributes = attrs
-      l
     end
 
     # Returns string representation of batch suitable as an identifier

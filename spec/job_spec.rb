@@ -1,3 +1,4 @@
+require 'etl/job_exec'
 
 class SpecJob < ETL::Job::Base
   def input_class

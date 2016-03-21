@@ -1,6 +1,8 @@
+require 'mixins/cached_logger'
+
 module ETL::Input
   class Base
-
+    include ETL::CachedLogger
     attr_accessor :rows_processed, :row_transform, :col_transforms
 
     def initialize(params = {})
@@ -16,14 +18,10 @@ module ETL::Input
       self.class.name
     end
     
-    def log
-      ETL.logger
-    end
-    
     # Reads each row from the input file and passes it to the specified
     # block. By default does nothing, which is likely an error.
     def each_row
-      ETL.logger.warning("Called ETL::Input::Base::each_row()")
+      log.warning("Called ETL::Input::Base::each_row()")
     end
 
     # Reads rows in batches of specified size from the input source and
@@ -54,6 +52,10 @@ module ETL::Input
           row[name] = func.call(row[name])
         end
       end
+    end
+    
+    def log_context
+      { name: name, }
     end
   end
 end
