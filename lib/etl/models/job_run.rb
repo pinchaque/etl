@@ -1,44 +1,67 @@
-require 'json'
 require 'sequel'
 
 module ETL::Model
   class JobRun < ::Sequel::Model
-    attr_accessor :job
 
     # Creates JobRun object from Job and batch date
     def self.create_for_job(job, batch)
       JobRun.new do |jr|
-        jr.job = job
-        jr.job_class = job.class.name
+        jr.job_id = job.id
         jr.status = :new
         jr.batch = batch.to_json
       end
     end
-
-    # Looks for JobRun for the specified job and batch. creates a new one
-    # if it doesn't exist.
-    def self.find_or_create_queued(job, batch)
-      jr = JobRun.where(:job_class => job.class.name, :status => :queued).first
-      
-      # create if doesn't exist
-      if jr.nil?
-        jr = create_for_job(job, batch)
-        jr.queued()
-      end
-      jr
+    
+    # Finds all runs for specified job and batch
+    def self.find(job, batch)
+      JobRun.where(job_id: job.id, batch: batch.to_json).all
+    end
+    
+    # Finds all "pending" runs for specified job and batch
+    # Pending means the job is either queued or currently running
+    def self.find_pending(job, batch)
+      JobRun.where(
+        job_id: job.id, 
+        batch: batch.to_json,
+        status: %w(queued running)
+        ).all
+    end
+    
+    # Returns true if this job+batch has pending jobs
+    def self.has_pending?(job, batch)
+      !self.find_pending(job, batch).empty?
+    end
+    
+    # Returns whether there have been any successful runs of this job+batch
+    def self.was_successful?(job, batch)
+      !JobRun.where(
+        job_id: job.id, 
+        batch: batch.to_json,
+        status: "success"
+        ).first.nil?
+    end
+    
+    # Returns the last ended JobRun, or nil if none has ended
+    # Note that a ended job can be either success or error
+    def self.last_ended(job, batch)
+      JobRun.where(
+        job_id: job.id, 
+        batch: batch.to_json,
+        status: %w(success error)
+        ).order(:ended_at).last
     end
 
     # Sets the current status as queued and sets queued_at
-    def queued()
+    def queued
       self.status = :queued
-      self.queued_at = DateTime.now
+      self.queued_at = Time.now
       save()
     end
 
-    # Sets the current status as running and initializes run_start_time
-    def running()
+    # Sets the current status as running and initializes started_at
+    def running
       self.status = :running
-      self.run_start_time = DateTime.now
+      self.started_at = Time.now
       save()
     end
 
@@ -64,7 +87,7 @@ module ETL::Model
     private
     def final_state(state, result)
       self.status = state
-      self.run_end_time = DateTime.now
+      self.ended_at = Time.now
       self.num_rows_success = result.num_rows_success
       self.num_rows_error = result.num_rows_error
       self.message = result.message

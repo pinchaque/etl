@@ -49,18 +49,16 @@ conn.create_table(:job_runs) do
   primary_key :id
   DateTime :created_at, null: false
   DateTime :updated_at, null: false
-  String :job_class, :null => false, :index => true
+  String :job_id, :null => false, :index => true
+  String :batch, :null => false, :index => true
   String :status, :null => false, :index => true
   DateTime :queued_at
-  DateTime :run_start_time
-  DateTime :run_end_time
+  DateTime :started_at
+  DateTime :ended_at
   Integer :num_rows_success
   Integer :num_rows_error
   String :message
-  String :batch
 end
-
-# seed data
 
 date_puts(<<MSG)
 Done! The following tables have been created:

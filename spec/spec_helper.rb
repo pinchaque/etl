@@ -59,3 +59,14 @@ ETL.config.core do |c|
     c[:log][:file] = f
   end
 end
+
+# Libraries in ETL rspec directory
+libdir = File.expand_path("../lib", __FILE__)
+$LOAD_PATH.unshift(libdir)
+%w( jobs ).each do |d|
+  dir = "#{libdir}/#{d}"
+  Dir.new(dir).each do |file|
+    next unless file =~ /\.rb$/
+    require "#{dir}/#{file}"
+  end
+end

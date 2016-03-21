@@ -19,7 +19,7 @@ module ETL
     end
     
     def db(&b)
-      @db ||= load_config(db_file)
+      @db ||= self.class.load_file(db_file)
       yield @db if block_given?
       @db
     end
@@ -29,12 +29,12 @@ module ETL
     end
     
     def core(&b)
-      @core ||= load_config(core_file)
+      @core ||= self.class.load_file(core_file)
       yield @core if block_given?
       @core
     end
     
-    def load_config(file)
+    def self.load_file(file)
       ETL::HashUtil::symbolize_keys(Psych.load_file(file))
     end
   end

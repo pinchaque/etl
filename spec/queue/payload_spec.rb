@@ -5,16 +5,12 @@ RSpec.describe "payload" do
     id = 123
     batch = ETL::Batch.new({:foo => "abc", :bar => "xyz"})
     
-    p = ETL::Queue::Payload.new
-    p.job_id = id
-    p.batch = batch
+    p = ETL::Queue::Payload.new(id, batch)
     expect(p.to_s).to eq(<<STR.strip)
-Payload[job_id=123, batch={:foo=>\"abc\", :bar=>\"xyz\"}]
+Payload<job_id=123, batch=xyz_abc>
 STR
     enc = p.encode
-    expect(enc).to eq(<<STR.strip)
-{\"batch\":{\"foo\":\"abc\",\"bar\":\"xyz\"},\"job_id\":123}
-STR
+    expect(enc).to eq('{"batch":{"bar":"xyz","foo":"abc"},"job_id":123}')
 
     p2 = ETL::Queue::Payload.decode(enc)
     expect(p2.job_id).to eq(id)

@@ -4,9 +4,7 @@ ENV["TMPDIR"] = "/var/tmp"
 RSpec.describe "file-based queue" do
   
   def create_payload(id)
-    p = ETL::Queue::Payload.new
-    p.job_id = id
-    p
+    ETL::Queue::Payload.new(id, ETL::Batch.new)
   end
 
   it "purges messages" do

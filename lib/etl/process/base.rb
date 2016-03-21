@@ -45,10 +45,14 @@ module ETL::Process
       end
     end
     
+    def required_args
+      [:config]
+    end
+    
     def parse_argv
       option_parser.parse(ARGV)
       
-      [:config].each do |opt|
+      required_args.each do |opt|
         unless @options[opt]
           puts(option_parser)
           abort("\nERROR: Option '#{opt}' is required") 

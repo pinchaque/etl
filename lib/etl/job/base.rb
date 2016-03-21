@@ -6,31 +6,52 @@ module ETL::Job
   class Base
     include ETL::CachedLogger
     
-    def initialize(batch)
-      @batch = batch
+    attr_reader :batch
+    
+    def initialize(b)
+      @batch = b
     end
     
     # Run the job by instantiating input and output classes with parameters
     # and then running the output class for this batch
     def run
-      log.debug("Input: #{input_class.name} #{input_params}")
-      log.debug("Output: #{output_class.name} #{output_params}")
+      log.debug("Input: #{self.class.input_class.name} #{input_params}")
+      log.debug("Output: #{self.class.output_class.name} #{output_params}")
       log.debug("Batch: #{@batch.to_s}")
-      input = input_class.new(input_params)
+      input = self.class.input_class.new(input_params)
       input.log = log
-      output = output_class.new(output_params)
+      output = self.class.output_class.new(output_params)
       output.log = log
       output.reader = input
       output.batch = @batch
       output.run
     end
+    
+    # By default we use the class name for the ID so we can instantiate the 
+    # class again later from this ID.
+    def id
+      self.class.name
+    end
+    
+    def to_s
+      "#{id}<#{@batch ? @batch.to_s : "NIL BATCH"}>"
+    end
+    
+    # Instantiates schedule for this job
+    def schedule
+      @schedule ||= self.class.schedule_class.new(self, @batch)
+    end
   
     protected
-    def batch_factory_class
+    def self.schedule_class
+      ETL::Schedule::Never
+    end
+    
+    def self.batch_factory_class
       ETL::BatchFactory::Base
     end
   
-    def input_class
+    def self.input_class
       ETL::Input::Null
     end
     
@@ -38,7 +59,7 @@ module ETL::Job
       {}
     end
     
-    def output_class
+    def self.output_class
       ETL::Output::Null
     end
     
@@ -48,7 +69,7 @@ module ETL::Job
 
     def log_context
       {
-          job: self.class.name.gsub(/^.*::/, ''),
+          job: id.to_s,
           batch: @batch.to_s,
       }
     end
