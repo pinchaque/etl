@@ -1,4 +1,4 @@
-require 'etl/job_exec'
+require 'etl/job/exec'
 
 class SpecDefaultJob < ETL::Job::Base
   public :log_context # for testing
@@ -34,7 +34,7 @@ RSpec.describe "job" do
   let(:job_id) { 'SpecJob' }
   let(:payload) { ETL::Queue::Payload.new(job_id, batch) }
   let(:job) { SpecJob.new(payload.batch) }
-  let(:job_exec) { ETL::JobExec.new(payload) }
+  let(:job_exec) { ETL::Job::Exec.new(payload) }
   
   it "has sane default settings" do
     expect(SpecDefaultJob.schedule_class).to eq(ETL::Schedule::Never)

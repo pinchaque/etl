@@ -1,7 +1,7 @@
-module ETL
+module ETL::Job
 
   # Class that runs jobs given a payload
-  class JobExec
+  class Exec
     # Initialize with payload we received from the queue
     def initialize(payload, params = {})
       @payload = payload
@@ -69,12 +69,10 @@ module ETL
     private
 
     def log
-      return @log if @log
-      @log = ETL.create_logger({
+      @log ||= ETL.create_logger({
           job: @payload.job_id,
           batch: @payload.batch.to_s,
         })
-      @log
     end
 
     def extract_payload

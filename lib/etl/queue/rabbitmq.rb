@@ -7,6 +7,7 @@ module ETL::Queue
   class RabbitMQ < Base
     
     def initialize(params)
+      @params = params
       @conn = Bunny.new(params[:amqp_uri],
         heartbeat: params[:heartbeat],
         vhost: params[:vhost]
@@ -15,6 +16,10 @@ module ETL::Queue
       @channel = @conn.create_channel(nil, params[:channel_pool_size])
       @channel.prefetch(params[:prefetch_count])
       @queue = @channel.queue(params[:queue], :durable => true)
+    end
+    
+    def to_s
+      "#{self.class.name}<#{@params[:amqp_uri]}/#{@params[:vhost]}/#{@params[:queue]}>"
     end
     
     # Adds the passed in job details to the run queue

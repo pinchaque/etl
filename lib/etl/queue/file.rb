@@ -11,6 +11,10 @@ module ETL::Queue
       @fname = params.fetch(:path, Tempfile.new("ETL_Queue_File").path)
     end
     
+    def to_s
+      "#{self.class.name}<#{@fname}>"
+    end
+    
     def enqueue(payload)
       ::File.open(@fname, "a") do |f|
         f.puts(payload.encode + "\n")

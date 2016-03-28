@@ -49,7 +49,7 @@ module ETL::Cli::Cmd
           # Handle case when tables already exist
           tables = conn.tables
           if tables.length > 0
-            if @force
+            if force?
               log.info("Forcing removal of existing tables...")
               drop_tables(conn)
             else

@@ -1,5 +1,5 @@
 require_relative '../command'
-require 'etl/job_exec'
+require 'etl/job/exec'
 
 module ETL::Cli::Cmd
   # Class that handles processing jobs from the queue as a background process
@@ -10,7 +10,7 @@ module ETL::Cli::Cmd
         ETL.queue.process_async do |message_info, payload|
           begin
             log.debug("Payload from queue: #{payload.to_s}")
-            ETL::JobExec.new(payload).run
+            ETL::Job::Exec.new(payload).run
           rescue StandardError => ex
             # Log and ignore all exceptions. We want other jobs in the queue
             # to still process even though this one is skipped.
