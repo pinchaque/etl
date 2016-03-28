@@ -2,8 +2,7 @@ PATH
   remote: .
   specs:
     etl (0.1.0)
-      bunny
-      influxdb
+      clamp
       mysql2
       sequel
       tzinfo
@@ -22,6 +21,7 @@ GEM
     bunny (2.3.0)
       amq-protocol (>= 2.0.1)
     cause (0.1)
+    clamp (1.0.0)
     diff-lcs (1.2.5)
     factory_girl (4.5.0)
       activesupport (>= 3.0.0)
@@ -55,9 +55,11 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  bunny
   etl!
   factory_girl
   forgery
+  influxdb
   pg
   rspec-core
   rspec-expectations

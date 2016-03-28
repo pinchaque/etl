@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require File.expand_path('../../lib/etl', __FILE__)
+require 'etl/cli/main'
+ETL::Cli::Main.run

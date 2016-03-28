@@ -51,7 +51,7 @@ module ETL
   end
   
   # Creates a new logger instance that we can use for different contexts 
-  # based on 
+  # based on context that is passed in
   def ETL.create_logger(context = {})
     log = ETL.create_class(:log)
     log.context = context.dup
@@ -75,5 +75,12 @@ module ETL
   def ETL.create_class(sym)
     cfg = ETL.config.core[sym]
     Object::const_get(cfg[:class]).new(cfg)
+  end
+  
+  # load all user job classes
+  def ETL.load_user_classes
+    if c = ETL.config.core[:job][:class_dir]
+      ETL::Job::Manager.load_job_classes(c)
+    end
   end
 end  

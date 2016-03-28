@@ -9,8 +9,8 @@ module ETL
 
     def initialize(params = {})
       super(params[:file] || STDOUT)
+      self.level = self.class.string_to_severity(params[:level])
       @formatter = Formatter.new
-      level = self.class.string_to_severity(params[:level])
     end
     
     def context
@@ -33,22 +33,22 @@ module ETL
     
     # Converts string representation of severity into a Logger constant
     def self.string_to_severity(str)
-      return Logger::INFO unless str
+      return ::Logger::INFO unless str
       case str.downcase
       when "debug"
-        Logger::DEBUG
+        ::Logger::DEBUG
       when "info"
-        Logger::INFO
+        ::Logger::INFO
       when "warning"
-        Logger::WARN
+        ::Logger::WARN
       when "warn"
-        Logger::WARN
+        ::Logger::WARN
       when "error"
-        Logger::ERROR
+        ::Logger::ERROR
       when "fatal"
-        Logger::FATAL
+        ::Logger::FATAL
       else
-        Logger::INFO
+        ::Logger::INFO
       end
     end
     

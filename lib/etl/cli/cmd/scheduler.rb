@@ -1,44 +1,37 @@
-require 'etl/process/base'
-require 'etl/job/job_manager'
+require_relative '../command'
+require 'etl/job/manager'
 
-module ETL::Process
-
+module ETL::Cli::Cmd
   # Class that handles putting scheduled jobs into the queue for execution
-  class Scheduler < Base
+  class Scheduler < ETL::Cli::Command
     
-    def option_parser
-      super do |opts|
-        opts.on("-j", "--job-file FILE", "File listing all of the jobs") do |file|
-          @options[:jobs_file] = file
-        end
-        opts.on("-p", "--pause SECS", "Seconds to pause between scheduling runs") do |secs|
-          @options[:pause] = secs
+    parameter "JOBS_FILE", "file in YAML format of the job classes we are scheduling", required: true
+    option ["-p", "--pause"], "SECS", "seconds to pause between scheduling runs", default: 60 do |s|
+      Float(s)
+    end
+    
+    def execute
+      unless File.exist?(@jobs_file)
+        signal_usage_error "JOBS_FILE must be a valid file"
+      end
+      
+      ETL.load_user_classes
+      
+      with_log do
+        while true
+          run_iteration
         end
       end
     end
     
-    def pause_secs
-      @options[:pause] || 60
-    end
-    
-    def required_args
-      super + [:jobs_file]
-    end
-    
-    # Starts the infinite loop that schedules jobs
-    def run_process
-      while true
-        run_iteration
-        log.debug("Sleeping for #{pause_secs} seconds")
-        sleep(pause_secs)
-      end
+    def job_manager
+      jobs = ETL::Config.load_file(@jobs_file)
+      ETL::Job::Manager.new(jobs.keys)
     end
     
     def run_iteration
       log.debug("Start scheduling iteration")
-      jobs = ETL::Config.load_file(@options[:jobs_file])
-      jm = ETL::Job::Manager.new(jobs)
-      jm.each_class do |job_class|
+      job_manager.each_class do |job_class|
         begin
           process_job_class(job_class)
         rescue StandardError => ex
@@ -47,7 +40,8 @@ module ETL::Process
           log.exception(ex)
         end
       end
-      log.debug("End scheduling iteration")
+      log.debug("End scheduling iteration, sleeping for #{pause} seconds")
+      sleep(pause)
     end
     
     # Schedule a job class that has been registered with the manager. To do this
@@ -68,7 +62,7 @@ module ETL::Process
       
       payload = ETL::Queue::Payload.new(job.id, job.batch)
       ETL.queue.enqueue(payload)
-      log.debug("Job #{job} ready to run, enqueued #{payload}")
+      log.info("Job #{job} ready to run, enqueued #{payload}")
     end
   end
 end

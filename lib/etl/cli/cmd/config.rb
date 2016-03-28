@@ -1,12 +1,11 @@
-require 'etl/process/base'
+require_relative '../command'
 require 'pp'
 
-module ETL::Process
-
-  class ConfigCheck < Base
+module ETL::Cli::Cmd
+  class Config < ETL::Cli::Command
     REDACT = "[REDACTED]"
     
-    def run_process
+    def execute
       puts("===== Configuration =====")
       pp(ETL::HashUtil.sanitize(config.core, REDACT))
       puts("\n\n")

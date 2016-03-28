@@ -1,4 +1,3 @@
-
 module ETL::Test
   class CsvToCsvJob < ETL::Job::Base
     def input_class

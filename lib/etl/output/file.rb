@@ -6,7 +6,7 @@ module ETL::Output
     # Directory structure is:
     # OUTPUT_ROOT/FEED_NAME/BATCH.(csv|json|xml)
     def output_root
-      ETL.config.core[:data_dir]
+      ETL.config.core[:job][:data_dir]
     end
 
     # Output file name for this batch

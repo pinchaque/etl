@@ -18,16 +18,17 @@ Gem::Specification.new do |spec|
   spec.executables   = "etl"
   spec.require_paths = ["lib"]
 
-  spec.add_dependency 'sequel'
+  spec.add_dependency 'clamp'
   spec.add_dependency 'mysql2'
-  spec.add_dependency 'bunny'
-  spec.add_dependency 'influxdb'
+  spec.add_dependency 'sequel'
   spec.add_dependency 'tzinfo'
   spec.add_dependency 'tzinfo-data'
 
-  spec.add_development_dependency 'pg'
+  spec.add_development_dependency 'bunny'
   spec.add_development_dependency 'factory_girl'
   spec.add_development_dependency 'forgery'
+  spec.add_development_dependency 'influxdb'
+  spec.add_development_dependency 'pg'
   spec.add_development_dependency 'rspec-core'
   spec.add_development_dependency 'rspec-expectations'
   spec.add_development_dependency 'rspec-mocks'
