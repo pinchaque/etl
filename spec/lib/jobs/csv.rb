@@ -2,11 +2,14 @@ module ETL::Test
   class Csv < ETL::Job::Base
     register_job
     
-    class Output < ETL::Output::CSV
+    class Input < ETL::Input::CSV
     end
     
     def input_class
-      ETL::Input::Null
+      Input
+    end
+    
+    class Output < ETL::Output::CSV
     end
     
     def output_class
@@ -14,7 +17,7 @@ module ETL::Test
     end
     
     def batch_factory_class
-      ETL::BatchFactory::Day
+      ETL::BatchFactory::Hour
     end
     
     def output_params

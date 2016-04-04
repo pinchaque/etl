@@ -177,7 +177,7 @@ SQL
         "value_numeric" => "value_num"
     }
     job = TestSequelCreate1.new(input)
-    job.row_batch_size = 2 # test batching of rows loaded to tmp
+    job.row_slice_size = 2 # test batching of rows loaded to tmp
 
     job.batch = batch
     jr = job.run

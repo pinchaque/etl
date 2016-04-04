@@ -21,6 +21,7 @@ end
 ETL::Schedule::Base.job_run_class = JobRunMock
 
 class ScheduleBaseSpecJob < ETL::Job::Base
+  register_job
 end
 
 RSpec.describe "schedule/base" do

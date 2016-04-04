@@ -11,6 +11,7 @@ module ETL
       @hash = h.keys.sort.each_with_object({}) { |k, hash| hash[k] = h[k] }
     end
     
+    # Returns hash representation of batch
     def to_h
       @hash.dup # duplicate so caller can't change ordering of this hash
     end

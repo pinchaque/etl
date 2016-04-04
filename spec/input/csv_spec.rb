@@ -59,7 +59,7 @@ RSpec.describe "csv inputs" do
     input = ETL::Input::CSV.new({file: "#{ETL.root}/spec/data/simple1.csv"})
 
     i = 0
-    input.each_row_batch(1) do |row_ary|
+    input.each_row_slice(1) do |row_ary|
       expect(row_ary.length).to eq(1)
       row = row_ary[0]
 
@@ -90,7 +90,7 @@ RSpec.describe "csv inputs" do
     input = ETL::Input::CSV.new({file: "#{ETL.root}/spec/data/simple1.csv"})
 
     i = 0
-    input.each_row_batch(2) do |row_ary|
+    input.each_row_slice(2) do |row_ary|
       case i
       when 0 then
         expect(row_ary.length).to eq(2)
@@ -125,7 +125,7 @@ RSpec.describe "csv inputs" do
     input = ETL::Input::CSV.new({file: "#{ETL.root}/spec/data/simple1.csv"})
 
     i = 0
-    input.each_row_batch do |row_ary|
+    input.each_row_slice do |row_ary|
       case i
       when 0 then
         expect(row_ary.length).to eq(3)
@@ -159,7 +159,7 @@ RSpec.describe "csv inputs" do
     input.headers = %w{one two three four five}
 
     i = 0
-    input.each_row_batch do |row_ary|
+    input.each_row_slice do |row_ary|
       case i
       when 0 then
         expect(row_ary.length).to eq(3)
@@ -201,7 +201,7 @@ RSpec.describe "csv inputs" do
     expected_headers = %w{day condition value_int value_numeric value_float}
 
     i = 0
-    input.each_row_batch do |row_ary|
+    input.each_row_slice do |row_ary|
       case i
       when 0 then
         expect(row_ary.length).to eq(3)
@@ -245,7 +245,7 @@ RSpec.describe "csv inputs" do
     expected_headers = %w{one condition three four five}
 
     i = 0
-    input.each_row_batch do |row_ary|
+    input.each_row_slice do |row_ary|
       case i
       when 0 then
         expect(row_ary.length).to eq(3)
@@ -288,7 +288,7 @@ RSpec.describe "csv inputs" do
     expected_headers = [0, 1, 2, 3, 4]
 
     i = 0
-    input.each_row_batch do |row_ary|
+    input.each_row_slice do |row_ary|
       case i
       when 0 then
         expect(row_ary.length).to eq(3)
@@ -332,7 +332,7 @@ RSpec.describe "csv inputs" do
     expected_headers = %w{day attribute value_int value_numeric value_float}
 
     i = 0
-    input.each_row_batch do |row_ary|
+    input.each_row_slice do |row_ary|
       case i
       when 0 then
         expect(row_ary.length).to eq(3)

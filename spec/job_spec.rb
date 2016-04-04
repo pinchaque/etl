@@ -1,22 +1,26 @@
 require 'etl/job/exec'
 
 class SpecDefaultJob < ETL::Job::Base
+  register_job
   public :log_context # for testing
 end
 
 class SpecJob < ETL::Job::Base
+  register_job
   def output_params
     { success: 34, error: 1, message: 'congrats!', sleep: nil, exception: nil }
   end
 end
 
 class SpecJobSleep < ETL::Job::Base
+  register_job
   def output_params
     { success: 35, error: 2, message: 'congrats!', sleep: 2, exception: nil }
   end
 end
 
 class SpecJobError < ETL::Job::Base
+  register_job
   def output_params
     { success: 1, error: 100, message: 'error!', sleep: nil, exception: 'abort!' }
   end
@@ -30,10 +34,10 @@ RSpec.describe "job" do
     ETL::Model::JobRun.dataset.delete
   end
   
-  let(:batch) { ETL::Batch.new({ day: "2015-03-31" }) }
-  let(:job_id) { 'SpecJob' }
+  let(:batch) { ETL::Batch.new() }
+  let(:job_id) { 'spec_job' }
   let(:payload) { ETL::Queue::Payload.new(job_id, batch) }
-  let(:job) { SpecJob.new(payload.batch) }
+  let(:job) { SpecJob.new(ETL::Batch.new(payload.batch_hash)) }
   let(:job_exec) { ETL::Job::Exec.new(payload) }
   
   it "has sane default settings" do
@@ -43,15 +47,15 @@ RSpec.describe "job" do
     expect(SpecDefaultJob.batch_factory_class).to eq(ETL::BatchFactory::Base)
     
     j = SpecDefaultJob.new(ETL::Batch.new)
-    expect(j.id).to eq("SpecDefaultJob")
-    expect(j.to_s).to eq("SpecDefaultJob<>")
+    expect(j.id).to eq("spec_default_job")
+    expect(j.to_s).to eq("spec_default_job<>")
     expect(j.schedule.ready?).to be_falsy
-    expect(j.log_context).to eq({ job: "SpecDefaultJob", batch: "" })
+    expect(j.log_context).to eq({ job: "spec_default_job", batch: "" })
   end
   
   it "creates run models" do
     jr = ETL::Model::JobRun.create_for_job(job, batch)
-    expect(jr.job_id).to eq('SpecJob')
+    expect(jr.job_id).to eq('spec_job')
     expect(jr.status).to eq("new")
     expect(jr.started_at).to be_nil
     expect(jr.batch).to eq(batch.to_json)
@@ -89,8 +93,8 @@ RSpec.describe "job" do
   end
 
   describe "successful run with sleep" do
-    let(:job_id) { 'SpecJobSleep' }
-    let(:job) { SpecJobSleep.new(payload.batch) }
+    let(:job_id) { 'spec_job_sleep' }
+    let(:job) { SpecJobSleep.new(ETL::Batch.new(payload.batch_hash)) }
 
     it 'sets correct result state' do
       jr = job_exec.run
@@ -122,8 +126,8 @@ RSpec.describe "job" do
   end
 
   describe "run with exception" do
-    let(:job_id) { 'SpecJobError' }
-    let(:job) { SpecJobError.new(payload.batch) }
+    let(:job_id) { 'spec_job_error' }
+    let(:job) { SpecJobError.new(ETL::Batch.new(payload.batch_hash)) }
 
     it 'sets correct result state' do
       jr = job_exec.run

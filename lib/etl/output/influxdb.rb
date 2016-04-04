@@ -8,7 +8,7 @@ module ETL::Output
         
     def default_params
       {
-        row_batch_size: 1000, # rows to write at a time to db
+        row_slice_size: 1000, # rows to write at a time to db
         ts_column: "time", # column to use for our timestamp
         ts_precision: "n", # precision=[n,u,ms,s,m,h]
         series: nil, # needs to be set
@@ -43,9 +43,9 @@ module ETL::Output
 
       raise "Invalid load strategy #{load_strategy}" unless load_strategy == :upsert
       
-      log.debug("Loading in batches of #{@params[:row_batch_size]} rows")
-      reader.each_row_batch(@params[:row_batch_size]) do |rows|
-        load_batch(rows)
+      log.debug("Loading in slices of #{@params[:row_slice_size]} rows")
+      reader.each_row_slice(@params[:row_slice_size]) do |rows|
+        load_slice(rows)
       end
       rows_success = reader.rows_processed
       msg = "Processed #{rows_success} input rows for #{@params[:series]}"
@@ -54,11 +54,11 @@ module ETL::Output
       ETL::Job::Result.new(rows_success, rows_error, msg)
     end
 
-    # Load a single batch of rows (passed in as array) into the db
-    def load_batch(input_rows)
-      log.debug("Processing batch size #{input_rows.length}")
+    # Load a single slice of rows (passed in as array) into the db
+    def load_slice(input_rows)
+      log.debug("Processing slice size #{input_rows.length}")
       
-      # create this batch of points we're writing
+      # create this slice of points we're writing
       points = input_rows.map do |row_in|
         # Read our input row into a hash containing all schema columns
         row_out = read_input_row(row_in) 

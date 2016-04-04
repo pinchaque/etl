@@ -71,7 +71,7 @@ module ETL::Job
     def log
       @log ||= ETL.create_logger({
           job: @payload.job_id,
-          batch: @payload.batch.to_s,
+          batch: @payload.batch_hash.to_s,
         })
     end
       
@@ -84,11 +84,15 @@ module ETL::Job
       klass = job_manager.get_class(@payload.job_id)
       raise ETL::JobError, "Failed to find job ID '#{@payload.job_id}' in manager when extracting payload" unless klass
       
+      # instantiate and validate our batch class
+      bf = klass.batch_factory_class.new
+      batch = bf.validate!(bf.from_hash(@payload.batch_hash))
+
       # instantiate the job class
-      job_obj = klass.new(@payload.batch)
+      job_obj = klass.new(batch)
       raise ETL::JobError, "Failed to instantiate job class: '#{klass.name}'" unless job_obj
       
-      [@payload.batch, job_obj]
+      [batch, job_obj]
     end
   end
 end

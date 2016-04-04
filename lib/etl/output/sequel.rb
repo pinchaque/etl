@@ -7,13 +7,13 @@ module ETL::Output
   # Class that contains shared logic for writing to relational DBs. DB-specific
   # logic should be minimized and put into subclasses.
   class Sequel < Base
-    attr_accessor :row_batch_size, :col_name_updated, :col_name_created
+    attr_accessor :row_slice_size, :col_name_updated, :col_name_created
 
     # Initialize given a connection to the database
     def initialize(params = {})
       super
       @conn = nil
-      @row_batch_size = 100
+      @row_slice_size = 100
       @col_name_updated = "dw_updated"
       @col_name_created = "dw_created"
     end
@@ -120,19 +120,19 @@ module ETL::Output
     end
     alias qi quote_ident
 
-    # Load data into temp table in batches
+    # Load data into temp table in slices
     def load_temp_data(conn, temp_table_name)
-      log.debug("Loading temp table #{temp_table_name} in batches " + 
-        "of #{@row_batch_size} rows")
-      reader.each_row_batch(@row_batch_size) do |rows|
-        load_temp_data_batch(conn, temp_table_name, rows)
+      log.debug("Loading temp table #{temp_table_name} in slices " + 
+        "of #{@row_slice_size} rows")
+      reader.each_row_slice(@row_slice_size) do |rows|
+        load_temp_data_slice(conn, temp_table_name, rows)
       end
       reader.rows_processed
     end
 
-    # Load a single batch of rows (passed in as array) into the temp table
-    def load_temp_data_batch(conn, temp_table_name, input_rows)
-      log.debug("Processing batch size #{input_rows.length}")
+    # Load a single slice of rows (passed in as array) into the temp table
+    def load_temp_data_slice(conn, temp_table_name, input_rows)
+      log.debug("Processing slice size #{input_rows.length}")
       rows = [] # rows we're writing
       cols = {} # columns we're writing
       

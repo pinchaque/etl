@@ -24,21 +24,21 @@ module ETL::Input
       log.warning("Called ETL::Input::Base::each_row()")
     end
 
-    # Reads rows in batches of specified size from the input source and
+    # Reads rows in slices of specified size from the input source and
     # passes them as an array to the specified block. By default we just
     # put a wrapper around each_row that collects rows into an array. 
-    # Derived classes can implement more intelligent batching logic if the 
+    # Derived classes can implement more intelligent slicing logic if the 
     # input source supports it.
-    def each_row_batch(batch_size = 100)
-      batch = []
+    def each_row_slice(slice_size = 100)
+      slice = []
       each_row do |row_in|
-        batch << row_in
-        if batch.length >= batch_size
-          yield batch
-          batch = []
+        slice << row_in
+        if slice.length >= slice_size
+          yield slice
+          slice = []
         end
       end
-      yield batch if batch.length > 0
+      yield slice if slice.length > 0
     end
 
     # Runs all our defined transforms on rows

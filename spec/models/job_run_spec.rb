@@ -1,5 +1,6 @@
 
 class JobRunSpecJob < ETL::Job::Base
+  register_job
   def output_params
     { success: 34, error: 1, message: 'congrats!', sleep: nil, exception: nil }
   end
