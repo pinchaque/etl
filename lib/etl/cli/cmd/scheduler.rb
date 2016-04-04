@@ -5,18 +5,12 @@ module ETL::Cli::Cmd
   # Class that handles putting scheduled jobs into the queue for execution
   class Scheduler < ETL::Cli::Command
     
-    parameter "JOBS_FILE", "file in YAML format of the job classes we are scheduling", required: true
     option ["-p", "--pause"], "SECS", "seconds to pause between scheduling runs", default: 60 do |s|
       Float(s)
     end
     
     def execute
-      unless File.exist?(@jobs_file)
-        signal_usage_error "JOBS_FILE must be a valid file"
-      end
-      
       ETL.load_user_classes
-      
       with_log do
         while true
           run_iteration
@@ -25,15 +19,14 @@ module ETL::Cli::Cmd
     end
     
     def job_manager
-      jobs = ETL::Config.load_file(@jobs_file)
-      ETL::Job::Manager.new(jobs.keys)
+      ETL::Job::Manager.instance
     end
     
     def run_iteration
       log.debug("Start scheduling iteration")
-      job_manager.each_class do |job_class|
+      job_manager.each_class do |klass|
         begin
-          process_job_class(job_class)
+          process_job_class(klass)
         rescue StandardError => ex
           # Log and ignore all exceptions so that one job doesn't affect others
           log.error("Scheduling job #{j.name} encountered an error")
@@ -47,10 +40,10 @@ module ETL::Cli::Cmd
     # Schedule a job class that has been registered with the manager. To do this
     # we must generate all batches for this job class and instantiate jobs
     # for each to check if they're ready.
-    def process_job_class(job_class)
-      batch_fact = job_class.batch_factory_class.new
+    def process_job_class(klass)
+      batch_fact = klass.batch_factory_class.new
       batch_fact.each do |batch|
-        process_job(job_class.new(batch))
+        process_job(klass.new(batch))
       end
     end
     

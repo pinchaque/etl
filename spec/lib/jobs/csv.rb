@@ -1,11 +1,16 @@
 module ETL::Test
-  class CsvToCsvJob < ETL::Job::Base
+  class Csv < ETL::Job::Base
+    register_job
+    
+    class Output < ETL::Output::CSV
+    end
+    
     def input_class
       ETL::Input::Null
     end
     
     def output_class
-      ETL::Output::Null
+      Output
     end
     
     def batch_factory_class

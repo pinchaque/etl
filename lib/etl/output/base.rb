@@ -34,7 +34,7 @@ module ETL::Output
     
     def log_context
       { 
-        class: self.class.name.gsub(/^.*::/, ''),
+        class: self.class.name.to_s,
         batch: batch_id,
       }
     end

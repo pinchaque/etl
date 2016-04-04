@@ -74,12 +74,20 @@ module ETL::Job
           batch: @payload.batch.to_s,
         })
     end
+      
+    def job_manager
+      ETL::Job::Manager.instance
+    end
 
     def extract_payload
       # Extract info from payload
-      klass = @payload.job_id
-      job_obj = Object::const_get(klass).new(@payload.batch)
-      raise ETL::JobError, "Invalid job_id in payload: '#{klass}'" unless job_obj
+      klass = job_manager.get_class(@payload.job_id)
+      raise ETL::JobError, "Failed to find job ID '#{@payload.job_id}' in manager when extracting payload" unless klass
+      
+      # instantiate the job class
+      job_obj = klass.new(@payload.batch)
+      raise ETL::JobError, "Failed to instantiate job class: '#{klass.name}'" unless job_obj
+      
       [@payload.batch, job_obj]
     end
   end

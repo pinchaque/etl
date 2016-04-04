@@ -13,6 +13,8 @@ module ETL
       @formatter = Formatter.new
     end
     
+    alias_method :warning, :warn # convenience
+    
     def context
       @formatter.context
     end

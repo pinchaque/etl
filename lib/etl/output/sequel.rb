@@ -31,7 +31,7 @@ module ETL::Output
     # name but you can override this in the parameters.
     def dest_table
       @params[:dest_table] || 
-        ETL::StringUtil::camel_to_snake(self.class.name.gsub(/^.*::/, ''))
+        ETL::StringUtil::camel_to_snake(ETL::StringUtil::base_class_name(self.class.name))
     end
 
     # Returns the default schema based on the table in the destination db

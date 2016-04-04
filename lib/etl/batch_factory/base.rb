@@ -20,4 +20,7 @@ module ETL::BatchFactory
       end
     end
   end
+  
+  class Null < Base
+  end
 end

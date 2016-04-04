@@ -12,6 +12,13 @@ module ETL::Job
       @batch = b
     end
     
+    # Registers a job class with the manager. This is typically called by
+    # subclasses to register themselves with a convenient id to represent
+    # that subclass. Only registered jobs can be executed.
+    def self.register_job
+      Manager.instance.register(id, self)
+    end
+    
     # Run the job by instantiating input and output classes with parameters
     # and then running the output class for this batch
     def run
@@ -27,10 +34,14 @@ module ETL::Job
       output.run
     end
     
-    # By default we use the class name for the ID so we can instantiate the 
-    # class again later from this ID.
+    # Default class function for getting ID based on class name
+    def self.id
+      ETL::StringUtil::camel_to_snake(ETL::StringUtil::base_class_name(name.to_s))
+    end
+
+    # Default function for getting ID based on class name
     def id
-      self.class.name
+      self.class.id
     end
     
     def to_s

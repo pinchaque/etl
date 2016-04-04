@@ -6,6 +6,9 @@ module ETL::Cli
     require_relative './cmd/config'
     subcommand 'config', "Checks on ETL system configuration ", Cmd::Config
 
+    require_relative './cmd/job'
+    subcommand 'job', "Executes or enqueues ETL jobs", Cmd::Job
+
     require_relative './cmd/queue'
     subcommand 'queue', "Commands for managing job queue", Cmd::Queue
 
