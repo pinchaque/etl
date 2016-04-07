@@ -7,7 +7,8 @@ RSpec.describe "batch" do
     b = ETL::Batch.new(h)
     expect(b.to_h).to eq(h)
     expect(b.to_json).to eq('{"foo":"bar","quux":123}')
-    expect(b.to_s).to eq('bar_123')
+    expect(b.to_s).to eq('Batch<foo=bar,quux=123>')
+    expect(b.id).to eq('bar_123')
   end
   
   it "batch has deterministic ordering" do
@@ -16,6 +17,7 @@ RSpec.describe "batch" do
     expect(b1.to_h).to eq(b2.to_h)
     expect(b1.to_json).to eq(b2.to_json)
     expect(b1.to_s).to eq(b2.to_s)
+    expect(b1.id).to eq(b2.id)
   end
   
   it "changing batch's hash doesn't change the ordering" do
@@ -25,7 +27,7 @@ RSpec.describe "batch" do
     # original state
     expect(b.to_h).to eq(h)
     expect(b.to_json).to eq('{"foo":"bar","quux":123}')
-    expect(b.to_s).to eq('bar_123')
+    expect(b.id).to eq('bar_123')
     
     # change the hash
     x = b.to_h
@@ -35,6 +37,14 @@ RSpec.describe "batch" do
     # should still be in original state
     expect(b.to_h).to eq(h)
     expect(b.to_json).to eq('{"foo":"bar","quux":123}')
-    expect(b.to_s).to eq('bar_123')
+    expect(b.id).to eq('bar_123')
+  end
+  
+  it "empty batch" do
+    b = ETL::Batch.new
+    expect(b.to_h).to eq({})
+    expect(b.to_json).to eq('{}')
+    expect(b.to_s).to eq('Batch<>')
+    expect(b.id).to be_nil
   end
 end

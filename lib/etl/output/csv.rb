@@ -40,7 +40,6 @@ module ETL::Output
     # Reads the input CSV file one row at a time, performs the transform
     # operation, and writes that row to the output.
     def run_internal
-
       # Prepare output directory
       dir = ::File.dirname(output_file)
       FileUtils.mkdir_p(dir) unless Dir.exists?(dir)
@@ -78,7 +77,7 @@ module ETL::Output
       end
 
       # Open output CSV file for writing
-      rows_success = rows_error = 0
+      rows_processed = 0
       log.debug("Writing to temp CSV output file #{tf.path} with " +
         "file opts #{open_opts}")
       log.debug(out_opts)
@@ -86,6 +85,8 @@ module ETL::Output
 
         # Iterate through each row in input
         reader.each_row do |row_in|
+          
+          log.debug("Processing input row #{row_in}")
 
           # Read our input row into a hash containing all schema columns
           row_out = read_input_row(row_in) 
@@ -95,7 +96,7 @@ module ETL::Output
 
           # Write row to output
           csv_out << row_out
-          rows_success += 1
+          rows_processed += 1
         end
       end
 
@@ -104,9 +105,8 @@ module ETL::Output
       log.debug("Moving temp CSV file #{tf.path} to final " +
         "destination #{output_file}")
 
-      # Final result
-      msg = "Wrote #{rows_success} rows to #{output_file}"
-      ETL::Job::Result.new(rows_success, rows_error, msg)
+      msg = "Wrote #{rows_processed} rows to #{output_file}"
+      ETL::Job::Result.success(rows_processed, msg)
     end
   end
 end

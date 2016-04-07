@@ -38,20 +38,15 @@ module ETL::Output
     
     # Runs the ETL job
     def run_internal
-      rows_success = rows_error = 0
-      msg = ''
-
       raise "Invalid load strategy #{load_strategy}" unless load_strategy == :upsert
       
       log.debug("Loading in slices of #{@params[:row_slice_size]} rows")
       reader.each_row_slice(@params[:row_slice_size]) do |rows|
         load_slice(rows)
       end
-      rows_success = reader.rows_processed
-      msg = "Processed #{rows_success} input rows for #{@params[:series]}"
+      msg = "Processed #{reader.rows_processed} input rows for #{@params[:series]}"
 
-      # Final result
-      ETL::Job::Result.new(rows_success, rows_error, msg)
+      ETL::Job::Result.success(reader.rows_processed, msg)
     end
 
     # Load a single slice of rows (passed in as array) into the db

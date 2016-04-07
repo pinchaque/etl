@@ -170,7 +170,7 @@ SQL
     conn.run(sql)
 
 
-    batch = { :day => "2015-03-31" }
+    batch = ETL::Batch.new({ :day => "2015-03-31" })
     input = ETL::Input::CSV.new({file: "#{ETL.root}/spec/data/simple1.csv"})
     input.headers_map = {
         "attribute" => "condition", 
@@ -183,8 +183,7 @@ SQL
     jr = job.run
 
     expect(input.rows_processed).to eq(3)
-    expect(jr.num_rows_success).to eq(3)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(3)
 
     result = conn.fetch("select to_char(day, 'YYYY-MM-DD HH24:MI:SS') as day, condition from test_1 order by day asc")
     
@@ -221,7 +220,7 @@ SQL
     table_name = "test_2"
     conn = init_conn_table(table_name)
 
-    batch = { :day => "2015-04-03" }
+    batch = ETL::Batch.new({ :day => "2015-04-03" })
     data = [
       { "day" => "2015-04-01", "id" => 10, "value" => 1},
       { "day" => "2015-04-02", "id" => 11, "value" => 2},
@@ -232,8 +231,7 @@ SQL
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
-    expect(jr.num_rows_success).to eq(3)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(3)
 
     d1 = "2015-02-03 12:34:56"
     d2 = "2015-02-04 01:23:45"
@@ -248,8 +246,7 @@ SQL
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(2)
-    expect(jr.num_rows_success).to eq(2)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(2)
 
     result = conn.fetch(<<SQL
 select to_char(day, 'YYYY-MM-DD HH24:MI:SS') as day
@@ -279,7 +276,7 @@ SQL
     table_name = "test_2"
     conn = init_conn_table(table_name)
 
-    batch = { :day => "2015-04-03" }
+    batch = ETL::Batch.new({ :day => "2015-04-03" })
     data = [
       { "day" => "2015-04-01", "id" => 10, "value" => 1},
       { "day" => "2015-04-02", "id" => 11, "value" => 2},
@@ -290,8 +287,7 @@ SQL
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
-    expect(jr.num_rows_success).to eq(3)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(3)
 
     d1 = "2015-02-03 12:34:56"
     d2 = "2015-02-04 01:23:45"
@@ -306,8 +302,7 @@ SQL
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(2)
-    expect(jr.num_rows_success).to eq(2)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(2)
 
 
 
@@ -336,7 +331,7 @@ SQL
     table_name = "test_2"
     conn = init_conn_table(table_name)
 
-    batch = { :day => "2015-04-02" }
+    batch = ETL::Batch.new({ :day => "2015-04-02" })
     data = [
       { "day" => "2015-04-01", "id" => 10, "value" => 1},
       { "day" => "2015-04-02", "id" => 11, "value" => 2},
@@ -347,8 +342,7 @@ SQL
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
-    expect(jr.num_rows_success).to eq(3)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(3)
 
     d1 = "2015-02-03 12:34:56"
     d2 = "2015-02-04 01:23:45"
@@ -364,8 +358,7 @@ SQL
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
-    expect(jr.num_rows_success).to eq(3)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(3)
 
     result = conn.fetch(<<SQL
 select to_char(day, 'YYYY-MM-DD HH24:MI:SS') as day
@@ -395,7 +388,7 @@ SQL
     table_name = "test_2"
     conn = init_conn_table(table_name)
 
-    batch = { :day => "2015-04-02" }
+    batch = ETL::Batch.new({ :day => "2015-04-02" })
     data = [
       { "day" => "2015-04-01", "id" => 10, "value" => 1},
       { "day" => "2015-04-02", "id" => 11, "value" => 2},
@@ -406,8 +399,7 @@ SQL
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
-    expect(jr.num_rows_success).to eq(3)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(3)
 
     d1 = "2015-02-03 12:34:56"
     d2 = "2015-02-04 01:23:45"
@@ -423,8 +415,7 @@ SQL
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
-    expect(jr.num_rows_success).to eq(3)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(3)
 
     result = conn.fetch(<<SQL
 select to_char(day, 'YYYY-MM-DD HH24:MI:SS') as day
@@ -451,7 +442,7 @@ SQL
     table_name = "test_2"
     conn = init_conn_table(table_name)
 
-    batch = { :day => "2015-04-02" }
+    batch = ETL::Batch.new({ :day => "2015-04-02" })
     data = [
       { "day" => "2015-04-01", "id" => 10, "value" => 1},
       { "day" => "2015-04-02", "id" => 11, "value" => 2},
@@ -462,8 +453,7 @@ SQL
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
-    expect(jr.num_rows_success).to eq(3)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(3)
 
     d1 = "2015-02-03 12:34:56"
     d2 = "2015-02-04 01:23:45"
@@ -479,8 +469,7 @@ SQL
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
-    expect(jr.num_rows_success).to eq(3)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(3)
 
     result = conn.fetch(<<SQL
 select to_char(day, 'YYYY-MM-DD HH24:MI:SS') as day
@@ -508,7 +497,7 @@ SQL
     table_name = "test_2"
     conn = init_conn_table(table_name)
 
-    batch = { :day => "2015-04-02" }
+    batch = ETL::Batch.new({ :day => "2015-04-02" })
     data = [
       { "day" => "2015-04-01", "id" => 10, "value" => 1},
       { "day" => "2015-04-01", "id" => 11, "value" => 2},
@@ -523,8 +512,7 @@ SQL
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(6)
-    expect(jr.num_rows_success).to eq(6)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(6)
 
     data = [
       { "day" => "2015-04-02", "id" => 11, "value" => 10},
@@ -538,8 +526,7 @@ SQL
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(4)
-    expect(jr.num_rows_success).to eq(4)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(4)
 
     result = conn.fetch(<<SQL
 select to_char(day, 'YYYY-MM-DD HH24:MI:SS') as day
@@ -578,7 +565,7 @@ SQL
     conn.run(sql)
 
     # Initial data fill
-    batch = { :day => "2015-04-02", :city => "Seattle" }
+    batch = ETL::Batch.new({ :day => "2015-04-02", :city => "Seattle" })
     data = [
       { "day" => "2015-04-01", "city_name" => "Seattle", "value" => 1},
       { "day" => "2015-04-02", "city_name" => "Portland", "value" => 2},
@@ -589,11 +576,10 @@ SQL
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(3)
-    expect(jr.num_rows_success).to eq(3)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(3)
 
     # run with partition 2014-04-02, Portland
-    batch = { :day => "2015-04-02", :city => "Portland" }
+    batch = ETL::Batch.new({ :day => "2015-04-02", :city => "Portland" })
     data = [
       { "day" => "2015-04-02", "city_name" => "Seattle", "value" => 4},
       { "day" => "2015-04-02", "city_name" => "Portland", "value" => 5},
@@ -603,8 +589,7 @@ SQL
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(2)
-    expect(jr.num_rows_success).to eq(2)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(2)
 
     result = conn.fetch(<<SQL
 select to_char(day, 'YYYY-MM-DD HH24:MI:SS') as day, city_name as city, value
@@ -622,7 +607,7 @@ SQL
     compare_db_results(exp_values, result)
     
     # run with partition 2014-04-01, Seattle
-    batch = { :day => "2015-04-01", :city => "Seattle" }
+    batch = ETL::Batch.new({ :day => "2015-04-01", :city => "Seattle" })
     data = [
       { "day" => "2015-04-01", "city_name" => "Seattle", "value" => 4},
       { "day" => "2015-04-01", "city_name" => "Seattle", "value" => 5},
@@ -632,8 +617,7 @@ SQL
     job.batch = batch
     jr = job.run
     expect(input.rows_processed).to eq(2)
-    expect(jr.num_rows_success).to eq(2)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(2)
 
     result = conn.fetch(<<SQL
 select to_char(day, 'YYYY-MM-DD HH24:MI:SS') as day, city_name as city, value

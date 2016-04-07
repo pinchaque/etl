@@ -8,21 +8,21 @@ end
 class SpecJob < ETL::Job::Base
   register_job
   def output_params
-    { success: 34, error: 1, message: 'congrats!', sleep: nil, exception: nil }
+    { success: 34, message: 'congrats!', sleep: nil, exception: nil }
   end
 end
 
 class SpecJobSleep < ETL::Job::Base
   register_job
   def output_params
-    { success: 35, error: 2, message: 'congrats!', sleep: 2, exception: nil }
+    { success: 35, message: 'congrats!', sleep: 2, exception: nil }
   end
 end
 
 class SpecJobError < ETL::Job::Base
   register_job
   def output_params
-    { success: 1, error: 100, message: 'error!', sleep: nil, exception: 'abort!' }
+    { success: 1, message: 'error!', sleep: nil, exception: 'abort!' }
   end
 end
 
@@ -48,9 +48,9 @@ RSpec.describe "job" do
     
     j = SpecDefaultJob.new(ETL::Batch.new)
     expect(j.id).to eq("spec_default_job")
-    expect(j.to_s).to eq("spec_default_job<>")
+    expect(j.to_s).to eq("spec_default_job<NO_BATCH>")
     expect(j.schedule.ready?).to be_falsy
-    expect(j.log_context).to eq({ job: "spec_default_job", batch: "" })
+    expect(j.log_context).to eq({ job: "spec_default_job", batch: "nil" })
   end
   
   it "creates run models" do
@@ -72,8 +72,7 @@ RSpec.describe "job" do
     expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
     expect(jr.ended_at.to_i() - jr.started_at.to_i()).to be <= 1
     expect(jr.batch).to eq(batch.to_json)
-    expect(jr.num_rows_success).to eq(job.output_params[:success])
-    expect(jr.num_rows_error).to eq(job.output_params[:error])
+    expect(jr.rows_processed).to eq(job.output_params[:success])
     expect(jr.message).to eq(job.output_params[:message])
     
     # now check what's in the db
@@ -87,8 +86,7 @@ RSpec.describe "job" do
     expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
     expect(jr.ended_at.to_i() - jr.started_at.to_i()).to be <= 1
     expect(jr.batch).to eq(batch.to_json)
-    expect(jr.num_rows_success).to eq(job.output_params[:success])
-    expect(jr.num_rows_error).to eq(job.output_params[:error])
+    expect(jr.rows_processed).to eq(job.output_params[:success])
     expect(jr.message).to eq(job.output_params[:message])
   end
 
@@ -105,8 +103,7 @@ RSpec.describe "job" do
       expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.ended_at.to_i() - jr.started_at.to_i()).to be > 1
       expect(jr.batch).to eq(batch.to_json)
-      expect(jr.num_rows_success).to eq(job.output_params[:success])
-      expect(jr.num_rows_error).to eq(job.output_params[:error])
+      expect(jr.rows_processed).to eq(job.output_params[:success])
       expect(jr.message).to eq(job.output_params[:message])
     
       runs = ETL::Model::JobRun.where(job_id: job.id).all
@@ -119,8 +116,7 @@ RSpec.describe "job" do
       expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.ended_at.to_i() - jr.started_at.to_i()).to be > 1
       expect(jr.batch).to eq(batch.to_json)
-      expect(jr.num_rows_success).to eq(35)
-      expect(jr.num_rows_error).to eq(2)
+      expect(jr.rows_processed).to eq(35)
       expect(jr.message).to eq('congrats!')
     end
   end
@@ -137,8 +133,7 @@ RSpec.describe "job" do
       expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.started_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.batch).to eq(batch.to_json)
-      expect(jr.num_rows_success).to be_nil
-      expect(jr.num_rows_error).to be_nil
+      expect(jr.rows_processed).to be_nil
       expect(jr.message.start_with?('abort!')).to be_truthy
       expect(jr.message.match(/null.rb:\d+:in `run_internal/)).to be_truthy
       
@@ -150,8 +145,7 @@ RSpec.describe "job" do
       expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.started_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.batch).to eq(batch.to_json)
-      expect(jr.num_rows_success).to be_nil
-      expect(jr.num_rows_error).to be_nil
+      expect(jr.rows_processed).to be_nil
       expect(jr.message.start_with?('abort!')).to be_truthy
       expect(jr.message.match(/null.rb:\d+:in `run_internal/)).to be_truthy
     end

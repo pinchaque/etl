@@ -19,12 +19,14 @@ module ETL
     def to_json
       @hash.to_json
     end
-      
-    # Concatenates batch data members separated by underscores. Sorts
-    # keys before concatenation so we have deterministic batch ID regardless
-    # of order keys were added to hash.
-    def to_s
-      # get batch values sorted by keys
+    
+    # Returns identifier to use for this batch. The identifier is derived from
+    # the batch data but is formatted to remove non-word characters. The idea
+    # is that this id can uniquely represent this batch for use in naming
+    # files, tables, etc. If the batch is empty then this ID is meaningless
+    # and this function will return nil.
+    def id
+      @hash.empty? ? nil : to_s
       v = @hash.values.collect { |x| x.to_s }
       
       # clean up each value
@@ -34,7 +36,12 @@ module ETL
       end
       
       # separate by underscores
-      v.join("_")
+      v.empty? ? nil : v.join("_")
+    end
+      
+    def to_s
+      kvs = @hash.keys.map { |k| "#{k}=#{@hash[k]}" }.join(",")
+      "Batch<#{kvs}>"
     end
   end
 end

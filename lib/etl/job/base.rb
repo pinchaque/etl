@@ -45,7 +45,8 @@ module ETL::Job
     end
     
     def to_s
-      "#{id}<#{@batch ? @batch.to_s : "NIL BATCH"}>"
+      batch_id = (@batch && @batch.id) || "NO_BATCH"
+      "#{id}<#{batch_id}>"
     end
     
     # Instantiates schedule for this job
@@ -81,7 +82,7 @@ module ETL::Job
     def log_context
       {
           job: id.to_s,
-          batch: @batch.to_s,
+          batch: (@batch && @batch.id) || "nil",
       }
     end
   end

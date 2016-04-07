@@ -72,8 +72,7 @@ module ETL::Cli::Cmd
             DateTime :queued_at
             DateTime :started_at
             DateTime :ended_at
-            Integer :num_rows_success
-            Integer :num_rows_error
+            Integer :rows_processed
             String :message
           end
       

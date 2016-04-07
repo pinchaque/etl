@@ -27,8 +27,12 @@ module ETL::Output
     end
     
     # Name of this data feed. We use the class name as default with the 
-    # assumption that each derived class is a different feed. 
+    # assumption that each derived class is a different feed. Note that feed_name
+    # cannot be nil because we use it as an identifier in many places. This could
+    # happen if the derived class is anonymous, in which case the user must
+    # override this method with a non-nil name.
     def feed_name
+      raise "Invalid nil feed_name() in Output class #{self.class}" unless self.class.name
       ETL::StringUtil.camel_to_snake(self.class.name).gsub(/::/, '_')
     end
     
@@ -40,8 +44,10 @@ module ETL::Output
     end
 
     # Returns string representation of batch suitable as an identifier
+    # Returns nil if there is no batch or it's emtpy, in which case we don't
+    # have a suitable identifier
     def batch_id
-      @batch && @batch.to_s
+      @batch && @batch.id
     end
 
     # Runs the job for the batch, keeping the status updated and handling

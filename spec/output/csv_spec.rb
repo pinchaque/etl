@@ -66,8 +66,7 @@ RSpec.describe "csv output" do
     job.batch = batch
     jr = job.run
     expect(job.output_file).to eq(outfile)
-    expect(jr.num_rows_success).to eq(3)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(3)
     expect(jr.message).to include(outfile)
     expect(File.exist?(outfile)).to be true
     expect(input.rows_processed).to eq(3)
@@ -87,8 +86,7 @@ END
     job.batch = batch
     jr = job.run
     expect(job.output_file).to eq(outfile)
-    expect(jr.num_rows_success).to eq(3)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(3)
     expect(jr.message).to include(outfile)
     expect(File.exist?(outfile)).to be true
     expect(input.rows_processed).to eq(3)
@@ -125,8 +123,7 @@ END
     jr = job.run
 
     expect(job.output_file).to eq(outfile)
-    expect(jr.num_rows_success).to eq(3)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(3)
     expect(jr.message).to include(outfile)
     expect(File.exist?(outfile)).to be true
     expect(input.rows_processed).to eq(3)
@@ -146,8 +143,7 @@ END
     job.batch = batch
     jr = job.run
     expect(job.output_file).to eq(outfile)
-    expect(jr.num_rows_success).to eq(3)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(3)
     expect(jr.message).to include(outfile)
     expect(File.exist?(outfile)).to be true
     expect(input.rows_processed).to eq(3)
@@ -189,8 +185,7 @@ END
 
     expect(input.rows_processed).to eq(3)
     expect(job.output_file).to eq(outfile)
-    expect(jr.num_rows_success).to eq(3)
-    expect(jr.num_rows_error).to eq(0)
+    expect(jr.rows_processed).to eq(3)
     expect(jr.message).to include(outfile)
     expect(File.exist?(outfile)).to be true
 

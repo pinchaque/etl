@@ -8,7 +8,6 @@ module ETL::Output
     def initialize(params = {})
       super({
         success: 0,
-        error: 0,
         sleep: nil,
         exception: nil,
         message: '',
@@ -18,7 +17,7 @@ module ETL::Output
     def run_internal
       sleep(@params[:sleep]) unless @params[:sleep].nil?
       raise ETL::OutputError, @params[:exception] unless @params[:exception].nil?
-      ETL::Job::Result.new(@params[:success], @params[:error], @params[:message])
+      ETL::Job::Result.success(@params[:success], @params[:message])
     end
   end
 end

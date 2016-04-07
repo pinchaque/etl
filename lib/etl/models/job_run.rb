@@ -77,19 +77,18 @@ module ETL::Model
     
     # Mark this as an error and save the exception message
     def exception(ex)
-      error(ETL::Job::Result.new(nil, nil, ex.message + "\n" + ex.backtrace.join("\n")))
+      error(ETL::Job::Result.error(ex))
     end
 
     def success?
-      self.status == :success
+      self.status == "success"
     end
 
     private
     def final_state(state, result)
       self.status = state
       self.ended_at = Time.now
-      self.num_rows_success = result.num_rows_success
-      self.num_rows_error = result.num_rows_error
+      self.rows_processed = result.rows_processed
       self.message = result.message
       save()
     end

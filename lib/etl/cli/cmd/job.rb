@@ -58,7 +58,12 @@ module ETL::Cli::Cmd
           ETL.queue.enqueue(payload)
         else
           log.info("Running #{payload}")
-          ETL::Job::Exec.new(payload).run
+          result = ETL::Job::Exec.new(payload).run
+          if result.success?
+            log.info("SUCCESS: #{result.message}")
+          else
+            log.error(result.message)
+          end
         end
       end
     end

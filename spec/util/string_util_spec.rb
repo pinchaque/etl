@@ -13,6 +13,10 @@ RSpec.describe "snake_util" do
         expect(ETL::StringUtil.base_class_name(inp)).to eq(exp)
       end
     end
+    
+    it "nil" do
+      expect(ETL::StringUtil.base_class_name(nil)).to be_nil
+    end
   end
 
   describe "camel_to_snake_case" do
@@ -27,6 +31,10 @@ RSpec.describe "snake_util" do
       it inp do
         expect(ETL::StringUtil.camel_to_snake(inp)).to eq(exp)
       end
+    end
+    
+    it "nil" do
+      expect(ETL::StringUtil.camel_to_snake(nil)).to be_nil
     end
   end
 end

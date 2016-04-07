@@ -318,7 +318,7 @@ SQL
 
     # Runs the ETL job
     def run_internal
-      rows_success = rows_error = 0
+      rows_processed = 0
       msg = ''
 
       # Perform all steps within a transaction
@@ -327,7 +327,7 @@ SQL
         temp_table_name = create_temp(conn)
 
         # Load data into temp table
-        rows_success = load_temp_data(conn, temp_table_name)
+        rows_processed = load_temp_data(conn, temp_table_name)
 
         # Perform full table transformation on the temp table
         transform_table(conn, temp_table_name)
@@ -335,11 +335,10 @@ SQL
         # Load temp table records into destination table
         load_destination_table(conn, temp_table_name)
 
-        msg = "Processed #{rows_success} input rows for #{dest_table}"
+        msg = "Processed #{rows_processed} input rows for #{dest_table}"
       end
 
-      # Final result
-      ETL::Job::Result.new(rows_success, rows_error, msg)
+      ETL::Job::Result.success(rows_processed, msg)
     end
   end
 end

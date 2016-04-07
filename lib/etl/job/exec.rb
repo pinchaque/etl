@@ -67,12 +67,16 @@ module ETL::Job
     end
     
     private
+    
+    def log_context
+      {
+        job: @payload.job_id,
+        batch: @payload.batch_hash.to_s,
+      }
+    end
 
     def log
-      @log ||= ETL.create_logger({
-          job: @payload.job_id,
-          batch: @payload.batch_hash.to_s,
-        })
+      @log ||= ETL.create_logger(log_context)
     end
       
     def job_manager

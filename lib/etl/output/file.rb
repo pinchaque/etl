@@ -11,11 +11,12 @@ module ETL::Output
 
     # Output file name for this batch
     def output_file
-      [
+      raise "Invalid empty feed_name()" if feed_name.nil? || feed_name.empty?
+      path = [
         output_root,
         feed_name,
-        batch_id + "." + output_extension
-      ].join("/")
+        batch_id || "output"
+      ].compact.join("/") + "." + output_extension
     end
   end
 end
