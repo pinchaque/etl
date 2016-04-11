@@ -6,47 +6,26 @@ module ETL::Input
 
   class CSV < Base
 
-    attr_accessor :headers, :headers_map
+    attr_accessor :headers, :headers_map, :file_name, :csv_options
 
-    # Default params to use for CSV reading
-    def default_params
-      {
-        headers: true,
-        col_sep: ",",
-        row_sep: "\n",
-        quote_char: '"'
-      }
-    end
-
-    # Params we want to force to be set
-    # - We never want headers to be returned since all rows will be treated
-    #   as data
-    def force_params
-      {
-        return_headers: false,
-      }
-    end
-
-    # Construct reader based on file name and options
+    # Construct reader based on input file name
     # Options are the same as would be passed to the standard CSV class
-    def initialize(params = {})
-      p = default_params.merge(params).merge(force_params)
-      super(p)
+    def initialize(file_name)
+      super()
+      @file_name = file_name
       @headers = nil
       @headers_map = {}
+      
+      # default options we use for CSV files
+      @csv_options = {
+        headers: true, # assume input file has headers
+        return_headers: false, # all rows will be treated as data by each_row()
+        col_sep: ",",
+        row_sep: "\n",
+        quote_char: '"',
+      }
     end
-    
-    # File name we're reading from, taken from parameters
-    def file_name
-      @params[:file]
-    end
-    
-    # Options we pass to CSV object - everything that was passed in minus our
-    # file name
-    def csv_options
-      @params.reject { |k, v| k == :file }
-    end
-    
+      
     def name
       "CSV file '#{file_name}'"
     end

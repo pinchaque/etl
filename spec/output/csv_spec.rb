@@ -3,7 +3,7 @@ require 'etl/core'
 
 # Test reading and writing basic CSV file
 class TestCsvCreate1 < ETL::Output::CSV
-  def initialize(params = {})
+  def initialize(file_mode = :overwrite)
     super
 
     define_schema do |s|
@@ -23,8 +23,8 @@ end
 
 # Test reading in pipe-separated file and outputting @ separated
 class TestCsvCreate2 < ETL::Output::CSV
-  def initialize(params = {})
-    super({load_strategy: :insert_table}.merge(params))
+  def initialize(file_mode = :overwrite)
+    super
     define_schema do |s|
       s.date("day")
       s.string("condition")
@@ -54,14 +54,14 @@ RSpec.describe "csv output" do
     File.delete(outfile) if File.exist?(outfile)
     expect(File.exist?(outfile)).to be false
 
-    input = ETL::Input::CSV.new({file: "#{ETL.root}/spec/data/simple1.csv"})
+    input = ETL::Input::CSV.new("#{ETL.root}/spec/data/simple1.csv")
     input.headers_map = {
         "attribute" => "condition", 
         "value_numeric" => "value_num"
     }
     batch = ETL::Batch.new({ :day => "2015-03-31" })
 
-    job = TestCsvCreate1.new({load_strategy: :insert_table})
+    job = TestCsvCreate1.new(:overwrite)
     job.reader = input
     job.batch = batch
     jr = job.run
@@ -81,7 +81,7 @@ END
     expect(contents).to eq(expect_contents)
 
     # run a second time
-    job = TestCsvCreate1.new({load_strategy: :insert_table})
+    job = TestCsvCreate1.new(:overwrite)
     job.reader = input
     job.batch = batch
     jr = job.run
@@ -110,14 +110,14 @@ END
     File.delete(outfile) if File.exist?(outfile)
     expect(File.exist?(outfile)).to be false
 
-    input = ETL::Input::CSV.new({file: "#{ETL.root}/spec/data/simple1.csv"})
+    input = ETL::Input::CSV.new("#{ETL.root}/spec/data/simple1.csv")
     input.headers_map = {
         "attribute" => "condition", 
         "value_numeric" => "value_num"
     }
     batch = ETL::Batch.new({ :day => "2015-03-31" })
 
-    job = TestCsvCreate1.new({load_strategy: :insert_append})
+    job = TestCsvCreate1.new(:append)
     job.reader = input
     job.batch = batch
     jr = job.run
@@ -138,7 +138,7 @@ END
     expect(contents).to eq(expect_contents)
 
     # run a second time
-    job = TestCsvCreate1.new({load_strategy: :insert_append})
+    job = TestCsvCreate1.new(:append)
     job.reader = input
     job.batch = batch
     jr = job.run
@@ -171,10 +171,9 @@ END
     expect(File.exist?(outfile)).to be false
     # file does not have headers
 
-    input = ETL::Input::CSV.new({
-      file: "#{ETL.root}/spec/data/simple1.psv",
-      headers: false, 
-      col_sep: '|'})
+    input = ETL::Input::CSV.new("#{ETL.root}/spec/data/simple1.psv")
+    input.csv_options[:col_sep] = '|'
+    input.csv_options[:headers] = false
     input.headers = %w{day condition value_int value_num value_float}
     job = TestCsvCreate2.new
     job.reader = input

@@ -4,20 +4,21 @@ module ETL::Output
   # Caller can set up number of seconds to sleep or the exception to throw
   # (to simulate error)
   class Null < Base
+    attr_accessor :success, :sleep_time, :exception, :message
+    
     # Initialize with the values we will use for the result
-    def initialize(params = {})
-      super({
-        success: 0,
-        sleep: nil,
-        exception: nil,
-        message: '',
-      }.merge(params))
+    def initialize
+      super()
+      @success = 0
+      @sleep_time = nil
+      @exception = nil
+      @message = ''
     end
 
     def run_internal
-      sleep(@params[:sleep]) unless @params[:sleep].nil?
-      raise ETL::OutputError, @params[:exception] unless @params[:exception].nil?
-      ETL::Job::Result.success(@params[:success], @params[:message])
+      sleep(@sleep_time) unless @sleep_time.nil?
+      raise ETL::OutputError, @exception unless @exception.nil?
+      ETL::Job::Result.success(@success, @message)
     end
   end
 end

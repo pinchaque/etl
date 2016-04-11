@@ -34,10 +34,10 @@ SQL
       user: dbconfig[:username],
       password: dbconfig[:password], 
       host: dbconfig[:host],
-      sql: "select day, attribute from test_table order by day asc",
     }
     
-    input = ETL::Input::Sequel.new(params)
+    sql = "select day, attribute from test_table order by day asc"
+    input = ETL::Input::Sequel.new(params, sql)
     expect(input.name).to eq("Sequel mysql2:dw@127.0.0.1/dw_test")
 
     i = 0

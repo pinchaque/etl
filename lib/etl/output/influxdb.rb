@@ -5,22 +5,20 @@ module ETL::Output
   # Class that writes data into InfluxDB
   class Influxdb < Base
     include ETL::InfluxdbConn
+    
+    attr_accessor :series, :params, :row_slice_size, :ts_column, :ts_precision,
+      :empty_tag, :ts_tag_format
         
-    def default_params
-      {
-        row_slice_size: 1000, # rows to write at a time to db
-        ts_column: "time", # column to use for our timestamp
-        ts_precision: "n", # precision=[n,u,ms,s,m,h]
-        series: nil, # needs to be set
-        empty_tag: "[empty]", # influx doesn't allow empty tags, use this default
-        ts_tag_format: "%F", # how we format timestamp values in tags
-        load_strategy: :upsert, # the only one that works
-      }
-    end
-
-    # Initialize given a connection to the database
-    def initialize(params = {})
-      super(default_params.merge(params))
+    # Initialize given connection parameters and series name
+    def initialize(params, series = nil)
+      super()
+      @params = params
+      @series = series # must be set eventually
+      @row_slice_size = 1000 # rows to write at a time to db
+      @ts_column = "time" # column to use for our timestamp
+      @ts_precision = "n" # precision=[n,u,ms,s,m,h]
+      @empty_tag = "[empty]" # influx doesn't allow empty tags, use this default
+      @ts_tag_format = "%F" # how we format timestamp values in tags
       @conn = nil
     end
 
@@ -38,13 +36,11 @@ module ETL::Output
     
     # Runs the ETL job
     def run_internal
-      raise "Invalid load strategy #{load_strategy}" unless load_strategy == :upsert
-      
-      log.debug("Loading in slices of #{@params[:row_slice_size]} rows")
-      reader.each_row_slice(@params[:row_slice_size]) do |rows|
+      log.debug("Loading in slices of #{@row_slice_size} rows")
+      reader.each_row_slice(@row_slice_size) do |rows|
         load_slice(rows)
       end
-      msg = "Processed #{reader.rows_processed} input rows for #{@params[:series]}"
+      msg = "Processed #{reader.rows_processed} input rows for #{@series}"
 
       ETL::Job::Result.success(reader.rows_processed, msg)
     end
@@ -70,7 +66,7 @@ module ETL::Output
     end
       
     def row_to_point(row)
-      raise "Series name not set" unless @params[:series]
+      raise "Series name not set" unless @series
       timestamp = Time.now
       i_values = {}
       i_tags = {}
@@ -78,14 +74,14 @@ module ETL::Output
       # put everything in row into either values or tags based on what we
       # can learn about it from the schema and its type
       row.each do |k, v|
-        if k == @params[:ts_column]
+        if k == @ts_column
           timestamp = v.is_a?(Time) ? v : Time.parse(v)
         elsif schema.columns.has_key?(k)
           case schema.columns[k].type
           when :int, :float, :numeric
             i_values[k] = Float(v)
           when :date
-            i_tags[k] = Time.parse(v.to_s).utc.strftime(@params[:ts_tag_format])
+            i_tags[k] = Time.parse(v.to_s).utc.strftime(@ts_tag_format)
           else
             i_tags[k] = v.to_s
           end
@@ -99,7 +95,7 @@ module ETL::Output
       # format our tags to be what influxdb expects
       tags = {}
       i_tags.each do |k, v|
-        v = @params[:empty_tag] if v.nil? || v.empty?
+        v = @empty_tag if v.nil? || v.empty?
         tags[tag_key(k)] = tag_value(v)
       end
       
@@ -112,7 +108,7 @@ module ETL::Output
       values["value"] = 1.0 if values.empty? # ensure we got something
       
       {
-        series: @params[:series],
+        series: @series,
         values: values,
         tags: tags,
         timestamp: format_timestamp(timestamp.utc),

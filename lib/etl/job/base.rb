@@ -22,16 +22,21 @@ module ETL::Job
     # Run the job by instantiating input and output classes with parameters
     # and then running the output class for this batch
     def run
-      log.debug("Input: #{self.class.input_class.name} #{input_params}")
-      log.debug("Output: #{self.class.output_class.name} #{output_params}")
+      # set up our input object
+      inp = input
+      inp.log = log
+      log.debug("Input: #{inp.name}")
+      
+      # set up our output object
+      out = output
+      out.log = log
+      out.reader = input
+      log.debug("Output: #{out.feed_name}")
+      
+      # run this batch
       log.debug("Batch: #{@batch.to_s}")
-      input = self.class.input_class.new(input_params)
-      input.log = log
-      output = self.class.output_class.new(output_params)
-      output.log = log
-      output.reader = input
-      output.batch = @batch
-      output.run
+      out.batch = @batch
+      out.run
     end
     
     # Default class function for getting ID based on class name
@@ -54,7 +59,6 @@ module ETL::Job
       @schedule ||= self.class.schedule_class.new(self, @batch)
     end
   
-    protected
     def self.schedule_class
       ETL::Schedule::Never
     end
@@ -63,22 +67,19 @@ module ETL::Job
       ETL::BatchFactory::Base
     end
   
-    def self.input_class
-      ETL::Input::Null
+    # Instantiates the input class for this job. Derived job classes should
+    # override this method to create the correct input object for the job.
+    def input
+      ETL::Input::Null.new
     end
     
-    def input_params
-      {}
-    end
-    
-    def self.output_class
-      ETL::Output::Null
-    end
-    
-    def output_params
-      {}
+    # Instantiates the output class for this job. Derived job classes should
+    # override this method to create the correct output object for the job.
+    def output
+      ETL::Output::Null.new
     end
 
+    protected
     def log_context
       {
           job: id.to_s,

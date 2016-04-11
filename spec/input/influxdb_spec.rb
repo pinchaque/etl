@@ -6,8 +6,7 @@ RSpec.describe "influxdb inputs" do
   
   let(:dbconfig) { ETL.config.db[:influxdb] }
   let(:iql) { '' }
-  let(:params) { dbconfig.merge({iql: iql}) }
-  let(:idb) { ETL::Input::Influxdb.new(params) }
+  let(:idb) { ETL::Input::Influxdb.new(dbconfig, iql) }
   let(:ts) { Time.parse('2015-01-10T23:00:50Z').utc } # changing this will break tests
   
   let(:series) { 'input_test' }

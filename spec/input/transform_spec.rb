@@ -11,7 +11,7 @@ RSpec.describe "input transforms" do
       { "day" => "2015-04-04", "id" => "3", "zip_code" => "" },
     ]
 
-    input = ETL::Input::Array.new({data: data})
+    input = ETL::Input::Array.new(data)
 
     input.row_transform = Proc.new do |row|
       t = ETL::Transform::MapToNil.new("")

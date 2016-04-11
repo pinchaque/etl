@@ -1,6 +1,11 @@
 module ETL::Output
 
   class File < Base
+    
+    def initialize(file_mode = :overwrite)
+      super()
+      @file_mode = file_mode
+    end
 
     # Root directory under which all file-based data feeds will be placed
     # Directory structure is:

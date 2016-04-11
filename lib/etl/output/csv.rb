@@ -45,13 +45,13 @@ module ETL::Output
       FileUtils.mkdir_p(dir) unless Dir.exists?(dir)
 
       # Temporary location to which we load data
-      tmp_id = "etl_#{feed_name}_#{batch_id}"
+      tmp_id = "etl_#{feed_name}_#{batch_id || "nil"}"
       tf = Tempfile.new(tmp_id)
 
       # Open temp output file based on our load strategy
       out_opts = csv_output_options
-      case load_strategy
-      when :insert_append
+      case @file_mode
+      when :append
         open_opts = "a"
         if ::File.exist?(output_file)
           # Don't write headers
@@ -68,7 +68,7 @@ module ETL::Output
             end
           end
         end
-      when :insert_table
+      when :overwrite
         # Overwrite with headers
         open_opts = "w"
       else
@@ -79,7 +79,7 @@ module ETL::Output
       # Open output CSV file for writing
       rows_processed = 0
       log.debug("Writing to temp CSV output file #{tf.path} with " +
-        "file opts #{open_opts}")
+        "file mode '#{open_opts}'")
       log.debug(out_opts)
       ::CSV.open(tf.path, open_opts, out_opts) do |csv_out|
 

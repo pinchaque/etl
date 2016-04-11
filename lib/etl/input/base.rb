@@ -5,11 +5,10 @@ module ETL::Input
     include ETL::CachedLogger
     attr_accessor :rows_processed, :row_transform, :col_transforms
 
-    def initialize(params = {})
+    def initialize
       @rows_processed = 0
       @row_transform = nil
       @col_transforms = {}
-      @params = params
     end
     
     # Name of this input that is used in logging to help describe where the

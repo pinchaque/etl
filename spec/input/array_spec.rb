@@ -9,7 +9,7 @@ RSpec.describe "array input" do
       { "col1" => "value1b", "col2" => "value2b", "col3" => "value3b" },
       { "col1" => "value1c", "col2" => "value2c", "col3" => "value3c" },
     ]
-    input = ETL::Input::Array.new({data: data})
+    input = ETL::Input::Array.new(data)
     
     expect(input.name).to eq('ETL::Input::Array')
 

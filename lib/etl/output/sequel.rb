@@ -7,19 +7,22 @@ module ETL::Output
   # Class that contains shared logic for writing to relational DBs. DB-specific
   # logic should be minimized and put into subclasses.
   class Sequel < Base
-    attr_accessor :row_slice_size, :col_name_updated, :col_name_created
+    attr_accessor :row_slice_size, :col_name_updated, :col_name_created, 
+      :load_strategy, :conn_params
 
     # Initialize given a connection to the database
-    def initialize(params = {})
-      super
+    def initialize(load_strategy, conn_params = {})
+      super()
+      @load_strategy = load_strategy
       @conn = nil
+      @conn_params = conn_params
       @row_slice_size = 100
       @col_name_updated = "dw_updated"
       @col_name_created = "dw_created"
     end
     
     def conn
-      @conn ||= ::Sequel.connect(@params)
+      @conn ||= ::Sequel.connect(@conn_params)
     end
 
     # Perform transformation operation on each row that is read. 
@@ -30,7 +33,7 @@ module ETL::Output
     # Name of the destination table. By default we assume this is the class
     # name but you can override this in the parameters.
     def dest_table
-      @params[:dest_table] || 
+      @dest_table || 
         ETL::StringUtil::camel_to_snake(ETL::StringUtil::base_class_name(self.class.name))
     end
 

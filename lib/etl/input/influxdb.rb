@@ -8,32 +8,14 @@ module ETL::Input
   class Influxdb < Base
     include ETL::InfluxdbConn
     
-    def default_params
-      {
-        global_max_attempts: 5,
-        global_delay_start: 0.5,
-        global_multiplier: 2.0,
-        retry: 2, # limit retries to avoid blocking forever
-        min_delay: 0.02,
-        max_delay: 0.5,
-        port: 8086,
-        host: 'localhost',
-        database: 'default',
-        username: nil,
-        password: nil,
-        iql: nil,
-      }
-    end
+    attr_accessor :iql, :params
 
-    def initialize(params = {})
-      super(default_params.merge(params))
+    def initialize(params, iql = nil)
+      super()
+      @iql = iql
       @conn = nil
+      @params = params
     end
-    
-    def iql
-      @params[:iql]
-    end
-    
     
     # Display connection string for this input
     def name

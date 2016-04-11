@@ -7,22 +7,40 @@ end
 
 class SpecJob < ETL::Job::Base
   register_job
-  def output_params
-    { success: 34, message: 'congrats!', sleep: nil, exception: nil }
+  
+  def output
+    o = super
+    o.success = 34
+    o.message = 'congrats!'
+    o.sleep_time = nil
+    o.exception = nil
+    o
   end
 end
 
 class SpecJobSleep < ETL::Job::Base
   register_job
-  def output_params
-    { success: 35, message: 'congrats!', sleep: 2, exception: nil }
+  
+  def output
+    o = super
+    o.success = 35
+    o.message = 'congrats!'
+    o.sleep_time = 2
+    o.exception = nil
+    o
   end
 end
 
 class SpecJobError < ETL::Job::Base
   register_job
-  def output_params
-    { success: 1, message: 'error!', sleep: nil, exception: 'abort!' }
+  
+  def output
+    o = super
+    o.success = 1
+    o.message = 'error!'
+    o.sleep_time = nil
+    o.exception = 'abort!'
+    o
   end
 end
 
@@ -42,13 +60,13 @@ RSpec.describe "job" do
   
   it "has sane default settings" do
     expect(SpecDefaultJob.schedule_class).to eq(ETL::Schedule::Never)
-    expect(SpecDefaultJob.input_class).to eq(ETL::Input::Null)
-    expect(SpecDefaultJob.output_class).to eq(ETL::Output::Null)
     expect(SpecDefaultJob.batch_factory_class).to eq(ETL::BatchFactory::Base)
     
     j = SpecDefaultJob.new(ETL::Batch.new)
     expect(j.id).to eq("spec_default_job")
     expect(j.to_s).to eq("spec_default_job<NO_BATCH>")
+    expect(j.input.class).to eq(ETL::Input::Null)
+    expect(j.output.class).to eq(ETL::Output::Null)
     expect(j.schedule.ready?).to be_falsy
     expect(j.log_context).to eq({ job: "spec_default_job", batch: "nil" })
   end
@@ -72,8 +90,8 @@ RSpec.describe "job" do
     expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
     expect(jr.ended_at.to_i() - jr.started_at.to_i()).to be <= 1
     expect(jr.batch).to eq(batch.to_json)
-    expect(jr.rows_processed).to eq(job.output_params[:success])
-    expect(jr.message).to eq(job.output_params[:message])
+    expect(jr.rows_processed).to eq(job.output.success)
+    expect(jr.message).to eq(job.output.message)
     
     # now check what's in the db
     runs = ETL::Model::JobRun.where(job_id: job.id).all
@@ -86,8 +104,8 @@ RSpec.describe "job" do
     expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
     expect(jr.ended_at.to_i() - jr.started_at.to_i()).to be <= 1
     expect(jr.batch).to eq(batch.to_json)
-    expect(jr.rows_processed).to eq(job.output_params[:success])
-    expect(jr.message).to eq(job.output_params[:message])
+    expect(jr.rows_processed).to eq(job.output.success)
+    expect(jr.message).to eq(job.output.message)
   end
 
   describe "successful run with sleep" do
@@ -103,8 +121,8 @@ RSpec.describe "job" do
       expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.ended_at.to_i() - jr.started_at.to_i()).to be > 1
       expect(jr.batch).to eq(batch.to_json)
-      expect(jr.rows_processed).to eq(job.output_params[:success])
-      expect(jr.message).to eq(job.output_params[:message])
+      expect(jr.rows_processed).to eq(job.output.success)
+      expect(jr.message).to eq(job.output.message)
     
       runs = ETL::Model::JobRun.where(job_id: job.id).all
       expect(runs.count).to eq(1)

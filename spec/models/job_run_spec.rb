@@ -1,10 +1,17 @@
 
 class JobRunSpecJob < ETL::Job::Base
   register_job
-  def output_params
-    { success: 34, error: 1, message: 'congrats!', sleep: nil, exception: nil }
+  
+  def output
+    o = super
+    o.success = 34
+    o.message = 'congrats!'
+    o.sleep_time = nil
+    o.exception = nil
+    o
   end
 end
+
 
 
 RSpec.describe "models/job_run" do

@@ -8,13 +8,21 @@ RSpec.describe "influxdb output" do
   let(:dbconfig) { ETL.config.db[:influxdb] }
   let(:iql) { '' }
   let(:series) { 'output_test' }
-  let(:params) { dbconfig.merge({series: series}) }
-  let(:odb) { ETL::Output::Influxdb.new(params) }
+  let(:ts_column) { nil }
+  let(:ts_tag_format) { nil }
+  let(:empty_tag) { nil }
+  let(:odb) { 
+    o = ETL::Output::Influxdb.new(dbconfig, series) 
+    o.ts_column = ts_column if ts_column
+    o.ts_tag_format = ts_tag_format if ts_tag_format
+    o.empty_tag = empty_tag if empty_tag
+    o
+  }
   let(:ts) { Time.parse('2015-01-10T23:00:50Z').utc } # changing this will break tests
   
   let(:input) {
     data = [ { "time" => ts, "label" => rnd_str, "temp" => 66.2 } ]
-    ETL::Input::Array.new({data: data})
+    ETL::Input::Array.new(data)
   }
   
   describe 'is_numeric' do
@@ -138,13 +146,11 @@ RSpec.describe "influxdb output" do
   
   describe 'create points using schema' do
     # tests out a bunch of the parameters we can give to the influx outputter
-    let(:params) { 
-      dbconfig.merge({
-        series: series, 
-        ts_column: "ts", 
-        ts_tag_format: "%D",
-        empty_tag: "null",
-        }) }
+    let(:ts_column) { "ts" }
+    let(:ts_tag_format) { "%D" }
+    let(:empty_tag) { "null" }
+        
+        
     [
       {
         input: {

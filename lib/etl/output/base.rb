@@ -7,17 +7,9 @@ module ETL::Output
     include ETL::CachedLogger
     attr_accessor :reader, :batch
     
-    def initialize(params = {})
-      @params = {
-        load_strategy: :unknown
-      }.merge(params)
+    def initialize
       @reader ||= ETL::Input::Base.new
       @schema = nil # lazy load using default_schema
-    end
-    
-    # Accessor for the load strategy
-    def load_strategy
-      @params[:load_strategy]
     end
     
     # Returns the default schema for this job. Some derived jobs may be able

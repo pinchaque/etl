@@ -10,7 +10,7 @@ RSpec.describe "csv inputs" do
     # 2015-04-02,snow,1,13.1,60.2934
     # 2015-04-03,sun,-1,0.4,-12.83
     fname = "#{ETL.root}/spec/data/simple1.csv"
-    input = ETL::Input::CSV.new({file: fname})
+    input = ETL::Input::CSV.new(fname)
 
     expect(input.name).to eq("CSV file '#{fname}'")
 
@@ -56,7 +56,7 @@ RSpec.describe "csv inputs" do
     # 2015-04-01,rain,0,12.3,59.3899
     # 2015-04-02,snow,1,13.1,60.2934
     # 2015-04-03,sun,-1,0.4,-12.83
-    input = ETL::Input::CSV.new({file: "#{ETL.root}/spec/data/simple1.csv"})
+    input = ETL::Input::CSV.new("#{ETL.root}/spec/data/simple1.csv")
 
     i = 0
     input.each_row_slice(1) do |row_ary|
@@ -87,7 +87,7 @@ RSpec.describe "csv inputs" do
     # 2015-04-01,rain,0,12.3,59.3899
     # 2015-04-02,snow,1,13.1,60.2934
     # 2015-04-03,sun,-1,0.4,-12.83
-    input = ETL::Input::CSV.new({file: "#{ETL.root}/spec/data/simple1.csv"})
+    input = ETL::Input::CSV.new("#{ETL.root}/spec/data/simple1.csv")
 
     i = 0
     input.each_row_slice(2) do |row_ary|
@@ -122,7 +122,7 @@ RSpec.describe "csv inputs" do
     # 2015-04-01,rain,0,12.3,59.3899
     # 2015-04-02,snow,1,13.1,60.2934
     # 2015-04-03,sun,-1,0.4,-12.83
-    input = ETL::Input::CSV.new({file: "#{ETL.root}/spec/data/simple1.csv"})
+    input = ETL::Input::CSV.new("#{ETL.root}/spec/data/simple1.csv")
 
     i = 0
     input.each_row_slice do |row_ary|
@@ -155,7 +155,7 @@ RSpec.describe "csv inputs" do
     # 2015-04-01,rain,0,12.3,59.3899
     # 2015-04-02,snow,1,13.1,60.2934
     # 2015-04-03,sun,-1,0.4,-12.83
-    input = ETL::Input::CSV.new({file: "#{ETL.root}/spec/data/simple1.csv"})
+    input = ETL::Input::CSV.new("#{ETL.root}/spec/data/simple1.csv")
     input.headers = %w{one two three four five}
 
     i = 0
@@ -195,7 +195,7 @@ RSpec.describe "csv inputs" do
     # 2015-04-01,rain,0,12.3,59.3899
     # 2015-04-02,snow,1,13.1,60.2934
     # 2015-04-03,sun,-1,0.4,-12.83
-    input = ETL::Input::CSV.new({file: "#{ETL.root}/spec/data/simple1.csv"})
+    input = ETL::Input::CSV.new("#{ETL.root}/spec/data/simple1.csv")
     input.headers_map = {"attribute" => "condition"}
 
     expected_headers = %w{day condition value_int value_numeric value_float}
@@ -237,7 +237,7 @@ RSpec.describe "csv inputs" do
     # 2015-04-01,rain,0,12.3,59.3899
     # 2015-04-02,snow,1,13.1,60.2934
     # 2015-04-03,sun,-1,0.4,-12.83
-    input = ETL::Input::CSV.new({file: "#{ETL.root}/spec/data/simple1.csv"})
+    input = ETL::Input::CSV.new("#{ETL.root}/spec/data/simple1.csv")
     input.headers = %w{one two three four five}
     input.headers_map = {"two" => "condition"}
 
@@ -280,10 +280,8 @@ RSpec.describe "csv inputs" do
     # 2015-04-01|rain|0|12.3|59.3899
     # 2015-04-02|snow|1|13.1|60.2934
     # 2015-04-03|sun|-1|0.4|-12.83
-    input = ETL::Input::CSV.new({
-      file: "#{ETL.root}/spec/data/simple1.psv",
-      headers: false, 
-      col_sep: '|'})
+    input = ETL::Input::CSV.new("#{ETL.root}/spec/data/simple1.psv")
+    input.csv_options.merge!({ headers: false, col_sep: '|'})
 
     expected_headers = [0, 1, 2, 3, 4]
 
@@ -324,10 +322,8 @@ RSpec.describe "csv inputs" do
     # 2015-04-01|rain|0|12.3|59.3899
     # 2015-04-02|snow|1|13.1|60.2934
     # 2015-04-03|sun|-1|0.4|-12.83
-    input = ETL::Input::CSV.new({
-      file: "#{ETL.root}/spec/data/simple1.psv",
-      headers: false, 
-      col_sep: '|'})
+    input = ETL::Input::CSV.new("#{ETL.root}/spec/data/simple1.psv")
+    input.csv_options.merge!({ headers: false, col_sep: '|'})
     input.headers = %w{day attribute value_int value_numeric value_float}
     expected_headers = %w{day attribute value_int value_numeric value_float}
 

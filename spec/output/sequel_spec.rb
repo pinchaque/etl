@@ -1,6 +1,6 @@
 require 'etl/core'
 
-def conn_params
+def rspec_conn_params
   dbconfig = ETL.config.db[:test]
   dbconfig[:adapter] = 'postgres'
   dbconfig[:user] = dbconfig[:username]
@@ -9,7 +9,7 @@ end
   
 class RelDb1 < ETL::Output::Sequel
   def initialize
-    super
+    super(:upsert, rspec_conn_params)
     define_schema do |s|
       s.date(:day)
     end
@@ -23,10 +23,8 @@ end
 # Test loading into postgres
 class TestSequelCreate1 < ETL::Output::Sequel
   def initialize(input)
-    super({ 
-      dest_table: "test_1",
-      load_strategy: :insert_append
-    }.merge(conn_params))
+    super(:insert_append, rspec_conn_params) 
+    @dest_table = "test_1"
     @reader = input
 
     define_schema do |s|
@@ -45,10 +43,8 @@ end
 
 class TestSequelLoad1 < ETL::Output::Sequel
   def initialize(input, load_strategy, table_name)
-    super({ 
-      dest_table: table_name,
-      load_strategy: load_strategy,
-    }.merge(conn_params))
+    super(load_strategy, rspec_conn_params)
+    @dest_table = table_name
     @reader = input
     define_schema do |s|
       s.date(:day)
@@ -68,10 +64,8 @@ end
 # tests multi-column partitions
 class TestSequelPartition1 < ETL::Output::Sequel
   def initialize(input, load_strategy, table_name)
-    super({ 
-      dest_table: table_name,
-      load_strategy: load_strategy,
-    }.merge(conn_params))
+    super(load_strategy, rspec_conn_params)
+    @dest_table = table_name
     @reader = input
     define_schema do |s|
       s.date(:day)
@@ -89,7 +83,7 @@ end
 RSpec.describe "sequel output" do
 
   def get_conn
-    Sequel.connect(conn_params)
+    Sequel.connect(rspec_conn_params)
   end
   
   # helper function for comparing expected and actual results from PG
@@ -171,7 +165,7 @@ SQL
 
 
     batch = ETL::Batch.new({ :day => "2015-03-31" })
-    input = ETL::Input::CSV.new({file: "#{ETL.root}/spec/data/simple1.csv"})
+    input = ETL::Input::CSV.new("#{ETL.root}/spec/data/simple1.csv")
     input.headers_map = {
         "attribute" => "condition", 
         "value_numeric" => "value_num"
@@ -226,7 +220,7 @@ SQL
       { "day" => "2015-04-02", "id" => 11, "value" => 2},
       { "day" => "2015-04-03", "id" => 12, "value" => 3},
     ]
-    input = ETL::Input::Array.new({data: data})
+    input = ETL::Input::Array.new(data)
     job = TestSequelLoad1.new(input, :insert_append, table_name)
     job.batch = batch
     jr = job.run
@@ -241,7 +235,7 @@ SQL
       { "day" => "2015-04-02", "id" => 11, "value" => 4},
       { "day" => "2015-04-02", "id" => 13, "value" => 5},
     ]
-    input = ETL::Input::Array.new({data: data})
+    input = ETL::Input::Array.new(data)
     job = TestSequelLoad1.new(input, :insert_append, table_name)
     job.batch = batch
     jr = job.run
@@ -282,7 +276,7 @@ SQL
       { "day" => "2015-04-02", "id" => 11, "value" => 2},
       { "day" => "2015-04-03", "id" => 12, "value" => 3},
     ]
-    input = ETL::Input::Array.new({data: data})
+    input = ETL::Input::Array.new(data)
     job = TestSequelLoad1.new(input, :insert_table, table_name)
     job.batch = batch
     jr = job.run
@@ -297,7 +291,7 @@ SQL
       { "day" => "2015-04-02", "id" => 11, "value" => 4},
       { "day" => "2015-04-02", "id" => 13, "value" => 5},
     ]
-    input = ETL::Input::Array.new({data: data})
+    input = ETL::Input::Array.new(data)
     job = TestSequelLoad1.new(input, :insert_table, table_name)
     job.batch = batch
     jr = job.run
@@ -337,7 +331,7 @@ SQL
       { "day" => "2015-04-02", "id" => 11, "value" => 2},
       { "day" => "2015-04-03", "id" => 12, "value" => 3},
     ]
-    input = ETL::Input::Array.new({data: data})
+    input = ETL::Input::Array.new(data)
     job = TestSequelLoad1.new(input, :insert_partition, table_name)
     job.batch = batch
     jr = job.run
@@ -353,7 +347,7 @@ SQL
       { "day" => "2015-04-02", "id" => 13, "value" => 5},
       { "day" => "2015-04-03", "id" => 12, "value" => 6},
     ]
-    input = ETL::Input::Array.new({data: data})
+    input = ETL::Input::Array.new(data)
     job = TestSequelLoad1.new(input, :insert_partition, table_name)
     job.batch = batch
     jr = job.run
@@ -394,7 +388,7 @@ SQL
       { "day" => "2015-04-02", "id" => 11, "value" => 2},
       { "day" => "2015-04-03", "id" => 12, "value" => 3},
     ]
-    input = ETL::Input::Array.new({data: data})
+    input = ETL::Input::Array.new(data)
     job = TestSequelLoad1.new(input, :insert_append, table_name)
     job.batch = batch
     jr = job.run
@@ -410,7 +404,7 @@ SQL
       { "day" => "2015-04-02", "id" => 13, "value" => 5},
       { "day" => "2015-04-05", "id" => 12, "value" => 6},
     ]
-    input = ETL::Input::Array.new({data: data})
+    input = ETL::Input::Array.new(data)
     job = TestSequelLoad1.new(input, :update, table_name)
     job.batch = batch
     jr = job.run
@@ -448,7 +442,7 @@ SQL
       { "day" => "2015-04-02", "id" => 11, "value" => 2},
       { "day" => "2015-04-03", "id" => 12, "value" => 3},
     ]
-    input = ETL::Input::Array.new({data: data})
+    input = ETL::Input::Array.new(data)
     job = TestSequelLoad1.new(input, :insert_append, table_name)
     job.batch = batch
     jr = job.run
@@ -464,7 +458,7 @@ SQL
       { "day" => "2015-04-02", "id" => 13, "value" => 5},
       { "day" => "2015-04-05", "id" => 12, "value" => 6},
     ]
-    input = ETL::Input::Array.new({data: data})
+    input = ETL::Input::Array.new(data)
     job = TestSequelLoad1.new(input, :upsert, table_name)
     job.batch = batch
     jr = job.run
@@ -506,7 +500,7 @@ SQL
       { "day" => "2015-04-02", "id" => 13, "value" => 5},
       { "day" => "2015-04-03", "id" => 10, "value" => 6},
     ]
-    input = ETL::Input::Array.new({data: data})
+    input = ETL::Input::Array.new(data)
     job = TestSequelLoad1.new(input, :upsert, table_name)
     job.schema.primary_key = [:day, :id]
     job.batch = batch
@@ -520,7 +514,7 @@ SQL
       { "day" => "2015-04-03", "id" => 11, "value" => 12},
       { "day" => "2015-04-04", "id" => 11, "value" => 13},
     ]
-    input = ETL::Input::Array.new({data: data})
+    input = ETL::Input::Array.new(data)
     job = TestSequelLoad1.new(input, :upsert, table_name)
     job.schema.primary_key = [:day, :id]
     job.batch = batch
@@ -571,7 +565,7 @@ SQL
       { "day" => "2015-04-02", "city_name" => "Portland", "value" => 2},
       { "day" => "2015-04-03", "city_name" => "Seattle", "value" => 3},
     ]
-    input = ETL::Input::Array.new({data: data})
+    input = ETL::Input::Array.new(data)
     job = TestSequelPartition1.new(input, :insert_partition, table_name)
     job.batch = batch
     jr = job.run
@@ -584,7 +578,7 @@ SQL
       { "day" => "2015-04-02", "city_name" => "Seattle", "value" => 4},
       { "day" => "2015-04-02", "city_name" => "Portland", "value" => 5},
     ]
-    input = ETL::Input::Array.new({data: data})
+    input = ETL::Input::Array.new(data)
     job = TestSequelPartition1.new(input, :insert_partition, table_name)
     job.batch = batch
     jr = job.run
@@ -612,7 +606,7 @@ SQL
       { "day" => "2015-04-01", "city_name" => "Seattle", "value" => 4},
       { "day" => "2015-04-01", "city_name" => "Seattle", "value" => 5},
     ]
-    input = ETL::Input::Array.new({data: data})
+    input = ETL::Input::Array.new(data)
     job = TestSequelPartition1.new(input, :insert_partition, table_name)
     job.batch = batch
     jr = job.run
