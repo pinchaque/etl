@@ -13,6 +13,7 @@ RSpec.describe "batch_factory/time" do
       it klass do
         pretend_now_is(curr_time) do
           expect(klass.new.generate.to_h).to eq(exp)
+          expect(klass.new.generate.start_time).to eq(exp[:time])
         end
       end
     end
@@ -101,6 +102,7 @@ RSpec.describe "batch_factory/time" do
         }.each do |input_hash, exp_hash|
           it input_hash do
             batch = fact.from_hash(input_hash)
+            expect(batch.start_time).to_not be_nil
             expect(batch.to_h).to eq(exp_hash)
             expect { fact.validate!(batch) }.to raise_error(ETL::BatchError)
             expect(fact.validate(batch)).to be_nil
@@ -252,6 +254,19 @@ RSpec.describe "batch_factory/time" do
         pretend_now_is(curr_time) do
           expect(tm.generate.to_h).to eq({ time: exp })
         end
+      end
+    end
+  end
+    
+  describe "parses key=value strings" do
+    let(:bf) { ETL::BatchFactory::Day.new }
+    {
+      "date=2016-03-01T10:11:12Z" => { date: "2016-03-01T10:11:12Z" },
+      "time=2016-03-01T10:11:12Z" => { time: DateTime.parse("2016-03-01T10:11:12Z").to_time.utc },
+      "k=v" => { k: "v" },
+    }.each do |inp, exp|
+      it inp do
+        expect(bf.parse!(inp).to_h).to eq(exp)
       end
     end
   end

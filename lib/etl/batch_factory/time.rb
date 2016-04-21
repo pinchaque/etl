@@ -18,7 +18,10 @@ module ETL::BatchFactory
     def generate
       # generate from how the derived class creates the hash from the adjusted
       # local time
-      ETL::Batch.new(hash_from_time(adj_local_time))
+      h = hash_from_time(adj_local_time)
+      b = ETL::Batch.new(h)
+      b.start_time = h[:time]
+      b
     end
     
     # Converts times in our hash to Time objects
@@ -31,7 +34,9 @@ module ETL::BatchFactory
           # ignore
         end
       end
-      super(h)
+      b = super(h)
+      b.start_time = h[:time]
+      b
     end
     
     def validate!(batch)

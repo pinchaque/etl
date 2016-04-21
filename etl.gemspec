@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
-  spec.bindir        = "bin"
+  spec.bindir        = "exe"
   spec.executables   = "etl"
   spec.require_paths = ["lib"]
 
@@ -23,12 +23,12 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'sequel'
   spec.add_dependency 'tzinfo'
   spec.add_dependency 'tzinfo-data'
+  spec.add_dependency 'influxdb'
+  spec.add_dependency 'pg'
 
   spec.add_development_dependency 'bunny'
   spec.add_development_dependency 'factory_girl'
   spec.add_development_dependency 'forgery'
-  spec.add_development_dependency 'influxdb'
-  spec.add_development_dependency 'pg'
   spec.add_development_dependency 'rspec-core'
   spec.add_development_dependency 'rspec-expectations'
   spec.add_development_dependency 'rspec-mocks'

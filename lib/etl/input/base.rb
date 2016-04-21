@@ -19,7 +19,7 @@ module ETL::Input
     
     # Reads each row from the input file and passes it to the specified
     # block. By default does nothing, which is likely an error.
-    def each_row
+    def each_row(batch = ETL::Batch.new)
       log.warning("Called ETL::Input::Base::each_row()")
     end
 
@@ -28,9 +28,9 @@ module ETL::Input
     # put a wrapper around each_row that collects rows into an array. 
     # Derived classes can implement more intelligent slicing logic if the 
     # input source supports it.
-    def each_row_slice(slice_size = 100)
+    def each_row_slice(batch = ETL::Batch.new, slice_size = 100)
       slice = []
-      each_row do |row_in|
+      each_row(batch) do |row_in|
         slice << row_in
         if slice.length >= slice_size
           yield slice

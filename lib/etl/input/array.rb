@@ -11,7 +11,7 @@ module ETL::Input
     end
 
     # Regurgitates data from array passed on construction
-    def each_row
+    def each_row(batch = ETL::Batch.new)
       @rows_processed = 0
       @data.each do |h|
         h = h.clone

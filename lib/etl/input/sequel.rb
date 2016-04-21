@@ -43,7 +43,7 @@ module ETL::Input
     end
 
     # Reads each row from the query and passes it to the specified block.
-    def each_row
+    def each_row(batch = ETL::Batch.new)
       log.debug(query_debug_str)
       
       # block used to process each row

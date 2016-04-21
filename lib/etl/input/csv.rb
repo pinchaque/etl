@@ -32,7 +32,7 @@ module ETL::Input
 
     # Reads each row from the input file and passes it to the specified
     # block.
-    def each_row
+    def each_row(batch = ETL::Batch.new)
       log.debug("Reading from CSV input file #{file_name}")
       @rows_processed = 0
       ::CSV.foreach(file_name, csv_options) do |row_in|

@@ -23,7 +23,7 @@ module ETL::Input
     end
         
     # Reads each row from the query and passes it to the specified block.
-    def each_row
+    def each_row(batch = ETL::Batch.new)
       log.debug("Executing InfluxDB query #{iql}")
       # We are expecting a result like:
       # [{"name"=>"time_series_1", "tags"=>{"region"=>"uk"}, "columns"=>["time", "count", "value"], "values"=>[["2015-07-09T09:03:31Z", 32, 0.9673], ["2015-07-09T09:03:49Z", 122, 0.4444]]},

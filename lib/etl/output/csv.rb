@@ -73,7 +73,7 @@ module ETL::Output
         open_opts = "w"
       else
         # Other load strategies not supported by CSV
-        raise ETL::OutputError, "Invalid load strategy '#{load_strategy}'"
+        raise ETL::OutputError, "Invalid file mode '#{@file_mode}'"
       end
 
       # Open output CSV file for writing
@@ -84,7 +84,7 @@ module ETL::Output
       ::CSV.open(tf.path, open_opts, out_opts) do |csv_out|
 
         # Iterate through each row in input
-        reader.each_row do |row_in|
+        reader.each_row(@batch) do |row_in|
           
           log.debug("Processing input row #{row_in}")
 

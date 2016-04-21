@@ -7,8 +7,11 @@ module ETL
   # that way we can compare the to_json and to_s representations and they
   # will be equal if-and-only-if the batches are equal.
   class Batch
+    attr_accessor :start_time
+    
     def initialize(h = {})
       @hash = h.keys.sort.each_with_object({}) { |k, hash| hash[k] = h[k] }
+      @start_time = nil
     end
     
     # Returns hash representation of batch

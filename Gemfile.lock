@@ -3,7 +3,9 @@ PATH
   specs:
     etl (0.1.0)
       clamp
+      influxdb
       mysql2
+      pg
       sequel
       tzinfo
       tzinfo-data
@@ -59,8 +61,6 @@ DEPENDENCIES
   etl!
   factory_girl
   forgery
-  influxdb
-  pg
   rspec-core
   rspec-expectations
   rspec-mocks

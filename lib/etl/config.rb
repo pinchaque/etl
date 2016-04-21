@@ -29,9 +29,9 @@ module ETL
     end
     
     def core(&b)
-      @core ||= self.class.load_file(core_file)
-      yield @core if block_given?
-      @core
+      c = self.class.load_file(core_file)
+      yield c if block_given?
+      c
     end
     
     def self.load_file(file)
