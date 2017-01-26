@@ -9,7 +9,7 @@ RSpec.describe "batch" do
     expect(b.to_json).to eq('{"foo":"bar","quux":123}')
     expect(b.to_s).to eq('Batch<foo=bar,quux=123>')
     expect(b.id).to eq('bar_123')
-    expect(b.start_date).to be_nil
+    expect(b.start_time).to be_nil
   end
   
   it "batch has deterministic ordering" do

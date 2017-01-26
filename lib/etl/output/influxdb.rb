@@ -37,7 +37,7 @@ module ETL::Output
     # Runs the ETL job
     def run_internal
       log.debug("Loading in slices of #{@row_slice_size} rows")
-      reader.each_row_slice(@batch, @row_slice_size) do |rows|
+      reader.each_row_slice(@row_slice_size, @batch) do |rows|
         load_slice(rows)
       end
       msg = "Processed #{reader.rows_processed} input rows for #{@series}"

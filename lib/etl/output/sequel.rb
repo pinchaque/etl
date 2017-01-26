@@ -127,7 +127,7 @@ module ETL::Output
     def load_temp_data(conn, temp_table_name)
       log.debug("Loading temp table #{temp_table_name} in slices " + 
         "of #{@row_slice_size} rows")
-      reader.each_row_slice(@batch, @row_slice_size) do |rows|
+      reader.each_row_slice(@row_slice_size, @batch) do |rows|
         load_temp_data_slice(conn, temp_table_name, rows)
       end
       reader.rows_processed

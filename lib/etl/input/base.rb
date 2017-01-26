@@ -28,7 +28,7 @@ module ETL::Input
     # put a wrapper around each_row that collects rows into an array. 
     # Derived classes can implement more intelligent slicing logic if the 
     # input source supports it.
-    def each_row_slice(batch = ETL::Batch.new, slice_size = 100)
+    def each_row_slice(slice_size = 100, batch = ETL::Batch.new)
       slice = []
       each_row(batch) do |row_in|
         slice << row_in
