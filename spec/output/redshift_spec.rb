@@ -56,7 +56,7 @@ RSpec.describe "redshift output" do
 
   # helper function for comparing expected and actual results from Redshift
   def compare_db_results(e, result, debug = false)
-  	results = result.values
+    results = result.values
 
     if (debug)
       puts("Expected:")
