@@ -50,36 +50,6 @@ SQL
       ETL::Schema::Table.from_redshift_schema(redshift_schema.values)
     end
 
-    def get_primarykey
-      sql = <<SQL
-      SELECT conkey 
-      FROM pg_constraint
-      WHERE contype='p' and conrelid=(select oid from pg_class where relname='#{dest_table}')
-SQL
-      log.debug(sql)
-
-      result = conn.exec(sql)
-      if result.values.empty?
-        return []
-        
-      else
-        #get column name by result
-        column_indx = []
-        result.values[0].map do |r|
-          r.delete! '{}'
-          pp r
-          column_indx.push(r.to_i)
-        end
-      end
-
-      columns = []
-      allcolumns = schema.columns.keys  
-      column_indx.map do |ind| 
-        columns.push(allcolumns[ind])
-      end
-      schema.set_primarykey(columns)
-    end
-
     # create dest table if it doesn't exist
     def create_table
       type_ary = []
