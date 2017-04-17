@@ -1,0 +1,6 @@
+test:
+  host: redshift_host
+  port: redshift_port
+  user: redshift_user
+  password: redshift_password
+  dbname: redshift_database
