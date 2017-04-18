@@ -79,7 +79,7 @@ SQL
           if !col.width.nil? || !col.precision.nil?
             s += "("
             s += col.width.nil? ? "0" : col.width.to_s()
-            if not col.precision.nil?
+            if !col.precision.nil?
               s += ", #{col.precision}"
             end
             s += ")"
@@ -146,7 +146,7 @@ SQL
         #get_primarykey
         pks = schema.primary_key 
 
-        if pks.nil? or pks.empty?
+        if pks.nil? || pks.empty?
           raise ETL::SchemaError, "Table '#{dest_table}' does not have a primary key"
         elsif !pks.is_a?(Array)
           # convert to array
