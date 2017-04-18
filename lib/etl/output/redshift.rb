@@ -6,21 +6,22 @@ module ETL::Output
 
   # Class that contains shared logic for loading data from S3 to Redshift.
   class Redshift < Base
-    attr_accessor :load_strategy, :conn_params, :staging_s3key, :staging_bucket
+    attr_accessor :load_strategy, :conn_params, :aws_params
 
-    def initialize(load_strategy, conn_params={}, aws_param={})
+    def initialize(load_strategy, conn_params={}, aws_params={})
       super()
-      @aws_param = aws_param
+
+      @aws_params = aws_params
       Aws.config.update({
-        region: @aws_param[:region],
+        region: @aws_params[:region],
         credentials: Aws::Credentials.new(
-          @aws_param[:access_key_ID],
-          @aws_param[:secret_access_key])
+          @aws_params[:access_key_ID],
+          @aws_params[:secret_access_key])
       })
       @load_strategy = load_strategy
       @conn = nil
       @conn_params = conn_params
-      @bucket = @aws_param[:s3_bucket] 
+      @bucket = @aws_params[:s3_bucket] 
     end
 
     def conn
@@ -102,10 +103,10 @@ SQL
       sql =<<SQL
         COPY #{staging_table}
         FROM 's3://#{@bucket}/#{dest_table}'
-        CREDENTIALS 'aws_iam_role=#{@aws_param[:iam]}'
+        CREDENTIALS 'aws_iam_role=#{@aws_params[:iam]}'
         DELIMITER ','
         IGNOREHEADER 1 
-        REGION '#{@aws_param[:region]}'
+        REGION '#{@aws_params[:region]}'
 SQL
 
       log.debug(sql)
@@ -203,10 +204,10 @@ SQL
         sql = <<SQL
         COPY #{@dest_table}
         FROM 's3://#{@bucket}/#{@dest_table}'
-        CREDENTIALS 'aws_iam_role=#{@aws_param[:iam]}'
+        CREDENTIALS 'aws_iam_role=#{@aws_params[:iam]}'
         DELIMITER ','
         IGNOREHEADER 1 
-        REGION '#{@aws_param[:region]}'
+        REGION '#{@aws_params[:region]}'
 SQL
         log.debug(sql)
         conn.exec(sql)

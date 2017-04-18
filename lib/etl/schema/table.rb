@@ -53,15 +53,15 @@ module ETL::Schema
         col_skey = col[3]
 
         # translate the database type from Sequel to our types
-        type = case col_opts[:type]
-        when :integer 
+        type = case col_opts
+        when "integer" 
           :int
-        when :datetime
+        when "datetime"
           :date
         when nil
           :string
         else
-          col_opts[:type]
+          col_opts.to_s
         end
 
         if col_dkey == 't'
@@ -113,6 +113,11 @@ module ETL::Schema
 
     def boolean(name,  &block)
       add_column(name, :boolean, nil, nil, &block)
+    end
+
+    def varchar(name, range, &block)
+      sym = "varchar (#{range})".to_sym
+      add_column(name, sym, nil, nil, &block)
     end
 
     def add_distkey(column)
