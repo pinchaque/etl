@@ -44,7 +44,6 @@ module ETL::Schema
     end
 
     def self.from_redshift_schema(schema)
-      puts "from_redshift_schema #{schema}"
       t = Table.new
       schema.each do |col|
         col_name = col[0]

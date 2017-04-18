@@ -81,7 +81,7 @@ RSpec.describe "redshift output" do
     Aws.config.update({
       region: rspec_aws_params[:region],
       credentials: Aws::Credentials.new(
-        rspec_aws_params[:access_key_ID],
+        rspec_aws_params[:access_key_id],
         rspec_aws_params[:secret_access_key])
     })
     s3 = Aws::S3::Resource.new
@@ -93,11 +93,11 @@ RSpec.describe "redshift output" do
     Aws.config.update({
       region: rspec_aws_params[:region],
       credentials: Aws::Credentials.new(
-        rspec_aws_params[:access_key_ID],
+        rspec_aws_params[:access_key_id],
         rspec_aws_params[:secret_access_key])
     })
     s3 = Aws::S3::Resource.new
-    obj = s3.bucket(ENV['REDSHIFT_BUCKET']).object(s3key)
+    obj = s3.bucket(rspec_aws_params[:s3_bucket]).object(s3key)
     obj.put(body: str)
   end
 
