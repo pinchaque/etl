@@ -111,6 +111,10 @@ module ETL::Schema
       add_column(name, :numeric, width, precision, &block)
     end
 
+    def boolean(name,  &block)
+      add_column(name, :boolean, nil, nil, &block)
+    end
+
     def add_distkey(column)
       @dist_key.push(column)
     end
