@@ -15,7 +15,7 @@ module ETL::Output
       Aws.config.update({
         region: @aws_params[:region],
         credentials: Aws::Credentials.new(
-          @aws_params[:access_key_ID],
+          @aws_params[:access_key_id],
           @aws_params[:secret_access_key])
       })
       @load_strategy = load_strategy
@@ -76,7 +76,7 @@ SQL
           "timestamp"
         when :numeric
           s = "numeric"
-          if not col.width.nil? or not col.precision.nil?
+          if !col.width.nil? || !col.precision.nil?
             s += "("
             s += col.width.nil? ? "0" : col.width.to_s()
             if not col.precision.nil?
@@ -147,8 +147,8 @@ SQL
         pks = schema.primary_key 
 
         if pks.nil? or pks.empty?
-          raise ETL::SchemaErorr, "Table '#{dest_table}' does not have a primary key"
-        elsif not pks.is_a?(Array)
+          raise ETL::SchemaError, "Table '#{dest_table}' does not have a primary key"
+        elsif !pks.is_a?(Array)
           # convert to array
           pks = [pks]
         end
