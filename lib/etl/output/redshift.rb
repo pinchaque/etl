@@ -6,7 +6,7 @@ module ETL::Output
 
   # Class that contains shared logic for loading data from S3 to Redshift.
   class Redshift < Base
-    attr_accessor :load_strategy, :conn_params, :aws_params
+    attr_accessor :load_strategy, :conn_params, :aws_params, :dest_table
 
     def initialize(load_strategy, conn_params={}, aws_params={})
       super()
