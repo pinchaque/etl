@@ -15,6 +15,8 @@ module ETL::Schema
       @columns = {}
       @partition_columns = {}
       @primary_key = []
+      @dist_key = []
+      @sort_key = []
     end
     
     def self.from_sequel_schema(schema)
@@ -35,6 +37,38 @@ module ETL::Schema
           col_opts[:type]
         end
         
+        # TODO need to handle width and precision properly
+        t.add_column(col_name, type, nil, nil)
+      end
+      return t
+    end
+
+    def self.from_redshift_schema(schema)
+      t = Table.new
+      schema.each do |col|
+        col_name = col[0]
+        col_opts = col[1]
+        col_dkey = col[2]
+        col_skey = col[3]
+
+        # translate the database type from Sequel to our types
+        type = case col_opts
+        when "integer" 
+          :int
+        when "datetime"
+          :date
+        when nil
+          :string
+        else
+          col_opts.to_s
+        end
+
+        if col_dkey == 't'
+          if col_skey == '1'
+            add_sortkey(col_name)
+          end
+          add_distkey(col_name)
+        end 
         # TODO need to handle width and precision properly
         t.add_column(col_name, type, nil, nil)
       end
@@ -75,5 +109,27 @@ module ETL::Schema
     def numeric(name, width, precision, &block)
       add_column(name, :numeric, width, precision, &block)
     end
+
+    def boolean(name,  &block)
+      add_column(name, :boolean, nil, nil, &block)
+    end
+
+    def varchar(name, range, &block)
+      sym = "varchar (#{range})".to_sym
+      add_column(name, sym, nil, nil, &block)
+    end
+
+    def add_distkey(column)
+      @dist_key.push(column)
+    end
+
+    def add_sortkey(column)
+      @sort_key.push(column)
+    end
+
+    def set_primarykey(pks)
+      @primary_key = pks 
+    end
+
   end
 end
