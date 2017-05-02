@@ -103,7 +103,7 @@ SQL
       sql =<<SQL
         COPY #{staging_table}
         FROM 's3://#{@bucket}/#{dest_table}'
-        CREDENTIALS 'aws_iam_role=#{@aws_params[:iam]}'
+        CREDENTIALS 'aws_access_key_id=#{@aws_params[:access_key_id]};aws_secret_access_key=#{@aws_params[:secret_access_key]}'
         DELIMITER ','
         IGNOREHEADER 1 
         REGION '#{@aws_params[:region]}'
@@ -204,7 +204,7 @@ SQL
         sql = <<SQL
         COPY #{@dest_table}
         FROM 's3://#{@bucket}/#{@dest_table}'
-        CREDENTIALS 'aws_iam_role=#{@aws_params[:iam]}'
+        CREDENTIALS 'aws_access_key_id=#{@aws_params[:access_key_id]};aws_secret_access_key=#{@aws_params[:secret_access_key]}'
         DELIMITER ','
         IGNOREHEADER 1 
         REGION '#{@aws_params[:region]}'
