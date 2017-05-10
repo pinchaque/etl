@@ -30,7 +30,7 @@ module ETL::Job
       # set up our output object
       out = output
       out.log = log
-      out.reader = input
+      out.reader = inp
       log.debug("Output: #{out.feed_name}")
       
       # run this batch

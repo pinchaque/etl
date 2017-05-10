@@ -49,7 +49,7 @@ module ETL::Output
     def col_type_str(col)
       case col.type
         when :string
-          "varchar(255)"
+          "text"
         when :date
           "timestamp"
         when :numeric
