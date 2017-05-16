@@ -18,7 +18,10 @@ module ETL::Output
       @conn_params = conn_params
       @bucket = @aws_params[:s3_bucket]
       @random_key = [*('a'..'z'),*('0'..'9')].shuffle[0,10].join
-      @csv_file = Tempfile.new(dest_table) 
+    end
+
+    def csv_file 
+      @csv_file ||= Tempfile.new(dest_table) 
     end
 
     def conn
@@ -101,6 +104,7 @@ SQL
         COPY #{tmp_table}
         FROM 's3://#{@bucket}/#{tmp_table}'
         IAM_ROLE '#{@aws_params[:role_arn]}'
+        TIMEFORMAT AS 'auto'
         DELIMITER ','
         REGION '#{@aws_params[:region]}'
 SQL
@@ -124,7 +128,7 @@ SQL
 
     def upload_to_s3
       s3_resource = Aws::S3::Resource.new(region: @aws_params[:region], credentials: creds)
-      s3_resource.bucket(@bucket).object(tmp_table).upload_file(@csv_file.path)
+      s3_resource.bucket(@bucket).object(tmp_table).upload_file(csv_file.path)
     end
 
     def delete_object_from_s3
@@ -216,6 +220,7 @@ SQL
         COPY #{@dest_table}
         FROM 's3://#{@bucket}/#{tmp_table}'
         IAM_ROLE '#{@aws_params[:role_arn]}'
+        TIMEFORMAT AS 'auto'
         DELIMITER ','
         REGION '#{@aws_params[:region]}'
 SQL
@@ -235,7 +240,7 @@ SQL
         create_table
 
         # Load data into temp csv
-        ::CSV.open(@csv_file.path, "w") do |c|
+        ::CSV.open(csv_file.path, "w") do |c|
           reader.each_row do |row|
             c << row.values unless row.nil?
           end

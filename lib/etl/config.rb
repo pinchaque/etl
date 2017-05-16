@@ -43,7 +43,16 @@ module ETL
       yield @redshift if block_given?
       @redshift
     end
-
+    
+    def influx_file
+      @config_dir + "/influx.yml"
+    end
+    
+    def influx(&b)
+      @influx ||= self.class.load_file(influx_file)
+      yield @influx if block_given?
+      @influx
+    end
     
     def core_file
       @config_dir + "/core.yml"

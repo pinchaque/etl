@@ -31,6 +31,7 @@ module ETL::Input
       # XXX for now this is all going into memory before we can iterate it.
       # It would be nice to switch this to streaming REST call. 
       rows = with_retry { conn.query(iql, denormalize: false) } || [].each
+      puts "rows #{rows}"
       
       @rows_processed = 0
       # each row we get back from influx can have multiple value sets assoc
