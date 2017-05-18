@@ -9,7 +9,7 @@ module ETL::Output
   class Redshift < Base
     attr_accessor :load_strategy, :conn_params, :aws_params, :dest_table
 
-    def initialize(load_strategy, conn_params={}, aws_params={})
+    def initialize(load_strategy, conn_params={}, aws_params={}, header=nil)
       super()
 
       @aws_params = aws_params
@@ -18,6 +18,7 @@ module ETL::Output
       @conn_params = conn_params
       @bucket = @aws_params[:s3_bucket]
       @random_key = [*('a'..'z'),*('0'..'9')].shuffle[0,10].join
+      @header = header
     end
 
     def csv_file 
@@ -242,7 +243,12 @@ SQL
         # Load data into temp csv
         ::CSV.open(csv_file.path, "w") do |c|
           reader.each_row do |row|
-            c << row.values unless row.nil?
+            if !@header.nil?
+              s = @header.map{|k| row[k.to_s]}
+              c << s unless s.nil?
+            else
+              c << row.values unless row.nil?
+            end
           end
         end
        
