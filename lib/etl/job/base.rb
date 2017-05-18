@@ -79,6 +79,10 @@ module ETL::Job
       ETL::Output::Null.new
     end
 
+    def metrics
+      @metrics ||= ETL.create_metrics
+    end
+
     protected
     def log_context
       {

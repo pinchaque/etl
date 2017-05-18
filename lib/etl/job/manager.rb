@@ -33,18 +33,5 @@ module ETL::Job
         yield klass
       end
     end
-    
-    # Function to load all job classes in the specified directory
-    def self.load_job_classes(class_dir)
-      unless class_dir.start_with?("/")
-        class_dir = ETL.root + "/" + class_dir
-      end
-      ::Dir.new(class_dir).each do |file|
-        next unless file =~ /\.rb$/
-        path = class_dir + "/" + file
-        ETL.logger.debug("Loading user job file #{path}")
-        require path
-      end
-    end
   end
 end

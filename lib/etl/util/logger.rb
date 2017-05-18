@@ -2,7 +2,6 @@ require 'time'
 require 'logger'
 
 module ETL
-
   # Logger class that includes time stamp and severity for all messages
   class Logger < ::Logger
     attr_accessor :formatter
@@ -68,7 +67,7 @@ module ETL
         a = @context.to_a.map{ |x| x.join(':') }.join(", ")
         a.empty? ? "" : "{#{a}} "
       end
-      
+
       def call(severity, timestamp, progname, msg)
         str = String === msg ? msg : msg.inspect
         timestr = timestamp.strftime("%F %T.%L")

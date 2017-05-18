@@ -62,12 +62,21 @@ module ETL::Job
         # for all other exceptions: save the message
         jr.exception(ex)
       end
-      
+
+      metrics.point(
+        { duration: (jr.ended_at - jr.started_at) },
+        tags: {
+          status: jr.status,
+          job_id: jr.job_id
+        },
+        time: jr.ended_at
+      )
+
       return jr
     end
-    
+
     private
-    
+
     def log_context
       {
         job: @payload.job_id,
@@ -78,7 +87,11 @@ module ETL::Job
     def log
       @log ||= ETL.create_logger(log_context)
     end
-      
+
+    def metrics
+      @metrics ||= ETL.create_metrics
+    end
+
     def job_manager
       ETL::Job::Manager.instance
     end
