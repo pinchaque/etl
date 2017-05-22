@@ -57,7 +57,7 @@ SQL
       type_ary = []
       schema.columns.each do |name, column|
         t = col_type_str(column)
-        type_ary << "#{name} #{t}"
+        type_ary << "\"#{name}\" #{t}"
       end
 
       sql = <<SQL
@@ -116,10 +116,18 @@ SQL
 
     def creds
       sts = Aws::STS::Client.new(region: @aws_params[:region])
-      session = sts.assume_role(
-        role_arn: @aws_params[:role_arn],
-        role_session_name: "circle-#{tmp_table}-upload-s3"
-      )
+      if tmp_table.length > 50
+        session = sts.assume_role(
+          role_arn: @aws_params[:role_arn],
+          role_session_name: "circle-#{tmp_table[0..49]}-upload"
+        )
+      else
+        session = sts.assume_role(
+          role_arn: @aws_params[:role_arn],
+          role_session_name: "circle-#{tmp_table}-upload"
+        )
+      end
+
       Aws::Credentials.new(
         session.credentials.access_key_id,
         session.credentials.secret_access_key,
