@@ -20,7 +20,7 @@ module ETL::Cli::Cmd
     end
 
     class Run < ETL::Cli::Command
-      parameter "JOB_ID", "ID of job we are running", required: true
+      parameter "JOB_ID", "ID of job we are running", required: false, default: ''
 
       option ['-b', '--batch'], "BATCH", "Batch for the job in JSON or 'key1=value1;key2=value2' format", attribute_name: :batch_str
       option ['-q', '--queue'], :flag, "Queue the job instead of running now"

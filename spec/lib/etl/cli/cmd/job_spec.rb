@@ -55,8 +55,17 @@ RSpec.describe ETL::Cli::Cmd::Job::Run do
       end
       context 'matching none' do
         let(:job_expr) { 'maze' }
-        it 'runs job' do
+        it 'runs no jobs' do
           expect{ subject.execute }.to raise_error(/no job/i)
+        end
+      end
+      context 'matching all' do
+        let(:args) { ['--match'] }
+        it 'runs all jobs' do
+          expect(subject).to receive(:run_batch)
+            .exactly(2).times
+            .with(anything, an_instance_of(ETL::Batch))
+          subject.execute
         end
       end
     end
