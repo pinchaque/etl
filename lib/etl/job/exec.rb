@@ -69,7 +69,8 @@ module ETL::Job
           status: jr.status,
           job_id: jr.job_id
         },
-        time: jr.ended_at
+        time: jr.ended_at,
+        type: :timer
       )
 
       return jr

@@ -14,4 +14,8 @@ module ETL
   # Exception while parsing or validating batches
   class BatchError < ::RuntimeError
   end
+
+  # Exception in CLI command usage
+  class UsageError < ::RuntimeError
+  end
 end
