@@ -6,7 +6,7 @@ module ETL::Cli::Cmd
 
     class List < ETL::Cli::Command
       option ['-m', '--match'], "REGEX", "List only jobs matching regular expression",
-             attribute_name: :regex do |r| /#{r}/ end
+             attribute_name: :regex, default: // do |r| /#{r}/ end
 
       def execute
         ETL.load_user_classes

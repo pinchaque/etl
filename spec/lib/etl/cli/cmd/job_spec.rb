@@ -7,6 +7,31 @@ RSpec::Matchers.define :batch_equivalent_to do |expected|
   match { |actual| actual.to_json == expected.to_json }
 end
 
+RSpec.describe ETL::Cli::Cmd::Job::List do
+  subject(:described_instance) do
+    described_class.new('etl job run', {}).tap do |cmd|
+      cmd.parse(args)
+    end
+  end
+  let(:args) { [] }
+
+  context 'with no args' do
+    it 'lists all' do
+      expect(STDOUT).to receive(:puts).with(/ * /).exactly(2).times
+      subject.execute
+    end
+  end
+
+  context 'with a filter' do
+    let(:filter) { 'days' }
+    let(:args) { ['--match', filter] }
+    it 'lists matches' do
+      expect(STDOUT).to receive(:puts).with(/ * #{filter}/)
+      subject.execute
+    end
+  end
+end
+
 RSpec.describe ETL::Cli::Cmd::Job::Run do
   subject(:described_instance) do
     described_class.new('etl job run', {}).tap do |cmd|
@@ -63,8 +88,8 @@ RSpec.describe ETL::Cli::Cmd::Job::Run do
         let(:args) { ['--match'] }
         it 'runs all jobs' do
           expect(subject).to receive(:run_batch)
-            .exactly(2).times
             .with(anything, an_instance_of(ETL::Batch))
+            .exactly(2).times
           subject.execute
         end
       end
