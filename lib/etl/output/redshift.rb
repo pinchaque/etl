@@ -253,9 +253,15 @@ SQL
           reader.each_row do |row|
             if !@header.nil?
               s = @header.map{|k| row[k.to_s]}
-              c << s unless s.nil?
+              if !s.nil?
+                c << s
+                rows_processed += 1
+              end
             else
-              c << row.values unless row.nil?
+              if !row.nil?
+                c << row.values
+                rows_processed += 1
+              end
             end
           end
         end
