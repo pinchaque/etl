@@ -19,19 +19,21 @@ module ETL::Job
     def run
       retries = 0
       retry_wait = @params[:retry_wait]
-      
+
+      # Collect metrics
+      measurements = {}
       # get batch and job model out of the payload
       batch, job = extract_payload
-        
       # get a run for this job
       jr = ETL::Model::JobRun.create_for_job(job, batch)
-      
+
       # change status to running
       jr.running()
-        
       begin
         result = job.run()
         jr.success(result)
+        measurements[:rows_processed] = result.rows_processed
+
       rescue Sequel::DatabaseError => ex
         # By default we want to retry database errors...
         do_retry = true
@@ -64,7 +66,10 @@ module ETL::Job
       end
 
       metrics.point(
-        { duration: (jr.ended_at - jr.started_at) },
+        measurements.merge(
+          job_time_secs: (jr.ended_at - jr.started_at),
+          retries: retries
+        ),
         tags: {
           status: jr.status,
           job_id: jr.job_id
