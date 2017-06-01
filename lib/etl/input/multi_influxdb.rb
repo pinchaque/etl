@@ -20,7 +20,7 @@ module ETL::Input
       @series = series
       @where = keyword_args[:where] if keyword_args.include?(:where)
       @group_by = keyword_args[:group_by] if keyword_args.include?(:group_by)
-      @limit = keyword_args[:limit] if keyword_args.include?(:limit) 
+      @limit = keyword_args[:limit] if keyword_args.include?(:limit)
       @conn = nil
       @params = params
       @today = Time.now.getutc
@@ -35,8 +35,24 @@ module ETL::Input
       @limit ||= 10000
     end
 
+    def schema_map
+      @schema_map ||= get_schema_map
+    end
+
     def field_keys 
       @field_keys ||= get_field_keys
+    end
+
+    def tag_keys 
+      @tag_keys ||= get_tag_keys
+    end
+
+    def get_schema_map
+      schema = field_keys
+      tag_keys.each do |tag|
+        schema[tag.to_sym] = :string if !schema.keys.include?(tag.to_sym)
+      end
+      {:time => :date}.merge(schema)
     end
 
     def get_field_keys 
@@ -45,10 +61,23 @@ module ETL::Input
 EOS
       log.debug("Executing InfluxDB query #{query}")
       row = with_retry { conn.query(query, denormalize: false) } || []
-      if !row.nil? && row[0]["columns"] && row[0]["values"]
-        return Hash.new{ |h,k| h[k]="" }.tap{ |h| row[0]["values"].each{ |k,v| h[k.to_sym] << v } }
+      h = Hash.new
+      if !row.nil? && row[0]["values"]
+        row[0]["values"].each{ |k,v| h[k.to_sym] = v.to_sym }
       end
-      {}
+      h
+    end
+
+    def get_tag_keys 
+      query = <<-EOS
+        show tag keys from #{@series}
+EOS
+      log.debug("Executing InfluxDB query #{query}")
+      row = with_retry { conn.query(query, denormalize: false) } || []
+      if !row.nil? && row[0]["values"]
+        return row[0]["values"].flatten(1)
+      end
+      []
     end
 
     def first_timestamp 
