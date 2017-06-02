@@ -14,17 +14,30 @@ module ETL::Input
     
     attr_accessor :params
 
+    # start_date : integer representing # days we gonna go back (default is 30)
+    # time_interval : integer representing seconds (default is 1d (60*60*24))
     def initialize(params, select, series, **keyword_args) 
       super()
+      @params = params
       @select = select
       @series = series
       @where = keyword_args[:where] if keyword_args.include?(:where)
       @group_by = keyword_args[:group_by] if keyword_args.include?(:group_by)
       @limit = keyword_args[:limit] if keyword_args.include?(:limit)
-      @conn = nil
-      @params = params
-      @today = Time.now.getutc
       @last_stamp = keyword_args[:last_stamp] if keyword_args.include?(:last_stamp) 
+      @time_interval = if keyword_args.include?(:time_interval) 
+                         keyword_args[:time_interval]
+                       else
+                         60*60*24
+                       end
+
+      @backfill_days = if keyword_args.include?(:backfill_days)
+                         keyword_args[:backfill_days] 
+                       else
+                         30
+                       end
+      @conn = nil
+      @today = Time.now.getutc
     end
 
     def last_stamp
@@ -39,11 +52,11 @@ module ETL::Input
       @schema_map ||= get_schema_map
     end
 
-    def field_keys 
+    def field_keys
       @field_keys ||= get_field_keys
     end
 
-    def tag_keys 
+    def tag_keys
       @tag_keys ||= get_tag_keys
     end
 
@@ -91,10 +104,13 @@ EOS
 
         if !row.nil? && row[0]["columns"] && row[0]["values"]
           h = Hash[row[0]["columns"].zip(row[0]["values"][0])]
-          return Time.parse(h["time"])
+          oldest_date = Time.parse(h["time"])
+          if ( today - oldest_date ) <= 60*60*24*@backfill_days
+            return oldest_date
+          end
         end
       end
-      @today - 60*60*24*100
+      @today - 60*60*24*@backfill_days
     end
     
     # Display connection string for this input
@@ -104,7 +120,7 @@ EOS
 
     def time_range(start_date)
       from_date = (start_date).to_s[0..18].gsub("T", " ")
-      to_date = (start_date + (60*60*24)).to_s[0..18].gsub("T", " ")
+      to_date = (start_date + @time_interval).to_s[0..18].gsub("T", " ")
       "time > '#{from_date}' AND time < '#{to_date}'"
     end
         
@@ -169,7 +185,7 @@ EOS
         @rows_processed += rows_count
 
         if rows_count < limit
-          start_date += 60*60*24 
+          start_date += @time_interval
           query_sql.offset = nil
         else
           query_sql.offset = limit
