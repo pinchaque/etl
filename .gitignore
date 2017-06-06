@@ -16,5 +16,10 @@
 !/log/.keep
 /tmp
 
+aws.yml
+core.yml
+redshift.yml
+database.yml
+
 # Editor stuff
 .*.sw[op]
