@@ -105,7 +105,7 @@ EOS
         if !row.nil? && row[0]["columns"] && row[0]["values"]
           h = Hash[row[0]["columns"].zip(row[0]["values"][0])]
           oldest_date = Time.parse(h["time"])
-          if ( today - oldest_date ) <= 60*60*24*@backfill_days
+          if ( @today - oldest_date ) <= 60*60*24*@backfill_days
             return oldest_date
           end
         end
