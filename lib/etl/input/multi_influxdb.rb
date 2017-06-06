@@ -36,6 +36,12 @@ module ETL::Input
                        else
                          30
                        end
+
+      @sleep_seconds = if keyword_args.include?(:sleep_seconds)
+                         keyword_args[:sleep_seconds] 
+                       else
+                         0
+                       end
       @conn = nil
       @today = Time.now.getutc
     end
@@ -190,6 +196,7 @@ EOS
         else
           query_sql.offset = limit
         end
+        sleep(@sleep_seconds)
       end
     end
   end
