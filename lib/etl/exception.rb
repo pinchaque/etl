@@ -1,4 +1,8 @@
 module ETL
+  # Exception in schema definition
+  class SchemaError < ::RuntimeError
+  end
+
   # Exception in processing input data
   class InputError < ::RuntimeError
   end

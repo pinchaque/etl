@@ -54,8 +54,13 @@ module ETL::Cli::Cmd
       end
 
       def job_classes(job_expr, fuzzy)
+        klasses = ETL::Job::Manager.instance.job_classes
+        if klasses.empty?
+          log.warn("No registered jobs")
+          exit(0)
+        end
         if fuzzy
-          ETL::Job::Manager.instance.job_classes.select do |id, klass|
+          klasses.select do |id, klass|
             id =~ /#{job_expr}/
           end.tap do |ks|
             raise "Found no job IDs matching '#{job_expr}'" if ks.empty?
