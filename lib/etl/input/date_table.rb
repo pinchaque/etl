@@ -1,6 +1,6 @@
 module ETL::Input
 
-  class FiscalQuarter < Base
+  class FiscalQuarter
     attr_accessor :quarter_lookup, :quarter_month_num_lookup
 
     def initialize(fiscal_start_month)
@@ -26,12 +26,10 @@ module ETL::Input
           curr_month = 1
         end
       end
-      #puts @quarter_lookup.map{|k,v| "#{k}=#{v}"}.join('&')
-      puts @quarter_month_num_lookup.map{|k,v| "#{k}=#{v}"}.join('&')
     end
   end
 
-  class Day < Base
+  class Day
     attr_accessor :fiscal_start_month, :full_date, :day_of_week_number, :day_of_week_name, :day_of_month, :day_of_year, :weekday_flag, :weekend_flag, :week_number, :month_number, :month_name, :quarter, :quarter_month,:year, :year_month, :year_quarter, :fiscal_year, :fiscal_quarter, :fiscal_quarter_month
 
     def initialize(fiscal_start_month, d, fiscal_map)
@@ -87,17 +85,9 @@ module ETL::Input
     def each_row(batch = ETL::Batch.new)
       fiscal_map = FiscalQuarter.new(@fiscal_start_month)
       log.debug("Building date table starting from date #{start_date} to #{end_date}\n")
-      days = []
       for d in start_date..end_date
         yield Day.new(fiscal_start_month, d, fiscal_map)
       end
-      days
-    end
-
-    # Builds the date rows based on the start and end date provided.
-    def build_day(d)
-      # We are expecting a result like:
-      @day = Day.new(d)
     end
   end
 end

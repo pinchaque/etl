@@ -31,7 +31,7 @@ RSpec.describe "DateTable" do
         end_date = Date.new(2018, 12, 01)
         dt = ETL::Input::DateTable.new(11, start_date, end_date)
         days= []
-        rows = dt.each_row do |d|
+        dt.each_row do |d|
           days << d
         end
         expect(days.length).to eq 427
@@ -48,7 +48,7 @@ RSpec.describe "DateTable" do
         end_date = Date.new(2017, 11, 24)
         dt = ETL::Input::DateTable.new(1, start_date, end_date)
         days= []
-        rows = dt.each_row do |d|
+        dt.each_row do |d|
           days << d
         end
         expect(days.length).to eq 0
