@@ -30,13 +30,16 @@ RSpec.describe "DateTable" do
         start_date = Date.new(2017, 10, 01)
         end_date = Date.new(2018, 12, 01)
         dt = ETL::Input::DateTable.new(11, start_date, end_date)
-        rows = dt.each_row().collect{|x| x}
-        expect(rows.length).to eq 427
-        row = rows[0]
+        days= []
+        rows = dt.each_row do |d|
+          days << d
+        end
+        expect(days.length).to eq 427
+        row = days[0]
         expect(row.fiscal_year).to eq 2016
-        row = rows[40]
+        row = days[40]
         expect(row.fiscal_year).to eq 2017
-        row = rows[396]
+        row = days[396]
         expect(row.full_date).to eq "2018/11/01"
         expect(row.fiscal_year).to eq 2018
       end
@@ -44,8 +47,11 @@ RSpec.describe "DateTable" do
         start_date = Date.new(2017, 11, 25)
         end_date = Date.new(2017, 11, 24)
         dt = ETL::Input::DateTable.new(1, start_date, end_date)
-        rows = dt.each_row().collect{|x| x}
-        expect(rows.length).to eq 0
+        days= []
+        rows = dt.each_row do |d|
+          days << d
+        end
+        expect(days.length).to eq 0
       end
     end
   end

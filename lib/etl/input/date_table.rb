@@ -87,11 +87,9 @@ module ETL::Input
     def each_row(batch = ETL::Batch.new)
       fiscal_map = FiscalQuarter.new(@fiscal_start_month)
       log.debug("Building date table starting from date #{start_date} to #{end_date}\n")
-      current_date = @start_date
       days = []
-      while current_date <= @end_date
-        days << Day.new(fiscal_start_month, current_date, fiscal_map)
-        current_date = current_date.next_day(1)
+      for d in start_date..end_date
+        yield Day.new(fiscal_start_month, d, fiscal_map)
       end
       days
     end
