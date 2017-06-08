@@ -1,11 +1,16 @@
 module ETL::Input
 
   class FiscalQuarter
-    attr_accessor :quarter_lookup, :quarter_month_num_lookup
+    attr_accessor :quarter_lookup, :quarter_month_num_lookup, :fiscal_start_month
 
     def initialize(fiscal_start_month)
+      if fiscal_start_month < 1 || fiscal_start_month > 12
+        raise ArgumentError "Argument is not a valid month between 1 to 12"
+      end
+
       @quarter_lookup = {}
       @quarter_month_num_lookup = {}
+      @fiscal_start_month = fiscal_start_month
       curr_month = fiscal_start_month
       curr_quarter = 1
       curr_quarter_mon_num = 1
@@ -27,18 +32,21 @@ module ETL::Input
         end
       end
     end
+
+    def calculate_fiscal_year(d)
+      calc_year = d.year + 1
+      if d.mon < @fiscal_start_month or @fiscal_start_month == 1
+          calc_year = d.year
+      end
+      calc_year
+    end
   end
 
   class Day
-    ATTRS = [:fiscal_start_month, :full_date, :day_of_week_number, :day_of_week_name, :day_of_month, :day_of_year, :weekday_flag, :weekend_flag, :week_number, :month_number, :month_name, :quarter, :quarter_month,:year, :year_month, :year_month_int, :year_quarter, :fiscal_year, :fiscal_quarter, :fiscal_quarter_month]
+    ATTRS = [:full_date, :day_of_week_number, :day_of_week_name, :day_of_month, :day_of_year, :weekday_flag, :weekend_flag, :week_number, :month_number, :month_name, :quarter, :quarter_month,:year, :year_month, :year_month_int, :year_quarter, :fiscal_year, :fiscal_quarter, :fiscal_quarter_month]
     attr_accessor *ATTRS
 
-    def initialize(fiscal_start_month, d, fiscal_map)
-
-      if fiscal_start_month < 1 || fiscal_start_month > 12
-        raise ArgumentError "Argument is not a valid month between 1 to 12"
-      end
-
+    def initialize(d, fiscal_map)
       quarter_num = ((d.mon) / 3.0 ).ceil
       quarter_month = (d.mon + 2) % 3  + 1
       fiscal_quarter_num = fiscal_map.quarter_lookup.fetch(d.mon)
@@ -60,8 +68,7 @@ module ETL::Input
       @year_month = d.strftime('%Y/%m')
       @year_month_int = d.strftime('%Y%m').to_i
       @year_quarter = d.strftime("%Y/Q#{quarter_num}")
-      @fiscal_start_month = fiscal_start_month
-      @fiscal_year = self.calculate_fiscal_year(fiscal_start_month, d)
+      @fiscal_year = fiscal_map.calculate_fiscal_year(d)
       @fiscal_quarter = "#{@fiscal_year}/Q#{fiscal_quarter_num}"
       @fiscal_quarter_month = fiscal_quarter_mon_num
     end
@@ -72,13 +79,6 @@ module ETL::Input
       end
     end
 
-    def calculate_fiscal_year(fiscal_start_month, d)
-      calc_year = d.year + 1
-      if d.mon < fiscal_start_month or fiscal_start_month == 1
-          calc_year = d.year
-      end
-      calc_year
-    end
   end
 
   class DateTable < Base
@@ -95,7 +95,7 @@ module ETL::Input
       fiscal_map = FiscalQuarter.new(@fiscal_start_month)
       log.debug("Building date table starting from date #{start_date} to #{end_date}\n")
       for d in start_date..end_date
-        day = Day.new(fiscal_start_month, d, fiscal_map)
+        day = Day.new(d, fiscal_map)
         yield day
       end
     end

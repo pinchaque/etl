@@ -63,7 +63,7 @@ RSpec.describe "Day" do
       it "Weekday with Quarter starting in Jan" do
         d = Date.new(2017, 11, 22)
         fq = ETL::Input::FiscalQuarter.new(1)
-        v = ETL::Input::Day.new(1, d, fq)
+        v = ETL::Input::Day.new(d, fq)
         expect(v.full_date).to eq '2017/11/22'
         expect(v.day_of_week_number).to eq 3
         expect(v.day_of_week_name).to eq "Wednesday"
@@ -87,7 +87,7 @@ RSpec.describe "Day" do
       it "Fiscal Year starting in June with May Date" do
         d = Date.new(2016, 5, 22)
         fq = ETL::Input::FiscalQuarter.new(6)
-        v = ETL::Input::Day.new(6, d, fq)
+        v = ETL::Input::Day.new(d, fq)
         expect(v.fiscal_year).to eq 2016
         expect(v.fiscal_quarter).to eq "2016/Q4"
         expect(v.fiscal_quarter_month).to eq 3
@@ -96,7 +96,7 @@ RSpec.describe "Day" do
       it "Fiscal Year starting in June with June Date" do
         d = Date.new(2016, 6, 22)
         fq = ETL::Input::FiscalQuarter.new(6)
-        v = ETL::Input::Day.new(6, d, fq)
+        v = ETL::Input::Day.new(d, fq)
         expect(v.fiscal_year).to eq 2017
         expect(v.fiscal_quarter).to eq "2017/Q1"
         expect(v.fiscal_quarter_month).to eq 1
@@ -105,7 +105,7 @@ RSpec.describe "Day" do
       it "Fiscal Year starting in June with July Date" do
         d = Date.new(2016, 7, 22)
         fq = ETL::Input::FiscalQuarter.new(6)
-        v = ETL::Input::Day.new(6, d, fq)
+        v = ETL::Input::Day.new(d, fq)
         expect(v.fiscal_year).to eq 2017
         expect(v.fiscal_quarter).to eq "2017/Q1"
         expect(v.fiscal_quarter_month).to eq 2
@@ -114,7 +114,7 @@ RSpec.describe "Day" do
       it "Weekend with Quarter starting in Dec" do
         d = Date.new(2017, 11, 26)
         fq = ETL::Input::FiscalQuarter.new(12)
-        v = ETL::Input::Day.new(12, d, fq)
+        v = ETL::Input::Day.new(d, fq)
         expect(v.full_date).to eq '2017/11/26'
         expect(v.day_of_week_number).to eq 0
         expect(v.day_of_week_name).to eq "Sunday"
@@ -137,7 +137,7 @@ RSpec.describe "Day" do
       it "Can use get accessor for day" do
         d = Date.new(2017, 11, 26)
         fq = ETL::Input::FiscalQuarter.new(12)
-        v = ETL::Input::Day.new(12, d, fq)
+        v = ETL::Input::Day.new(d, fq)
         # Testing that the values array that is returned
         # can be put into a hash and the specific values 
         # are correct.
