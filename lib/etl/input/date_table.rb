@@ -30,9 +30,11 @@ module ETL::Input
   end
 
   class Day
-    attr_accessor :fiscal_start_month, :full_date, :day_of_week_number, :day_of_week_name, :day_of_month, :day_of_year, :weekday_flag, :weekend_flag, :week_number, :month_number, :month_name, :quarter, :quarter_month,:year, :year_month, :year_quarter, :fiscal_year, :fiscal_quarter, :fiscal_quarter_month
+    ATTRS = [:fiscal_start_month, :full_date, :day_of_week_number, :day_of_week_name, :day_of_month, :day_of_year, :weekday_flag, :weekend_flag, :week_number, :month_number, :month_name, :quarter, :quarter_month,:year, :year_month, :year_month_int, :year_quarter, :fiscal_year, :fiscal_quarter, :fiscal_quarter_month]
+    attr_accessor *ATTRS
 
     def initialize(fiscal_start_month, d, fiscal_map)
+
       if fiscal_start_month < 1 || fiscal_start_month > 12
         raise ArgumentError "Argument is not a valid month between 1 to 12"
       end
@@ -56,6 +58,7 @@ module ETL::Input
       @quarter_month = quarter_month
       @year = d.year
       @year_month = d.strftime('%Y/%m')
+      @year_month_int = d.strftime('%Y%m').to_i
       @year_quarter = d.strftime("%Y/Q#{quarter_num}")
       @fiscal_start_month = fiscal_start_month
       @fiscal_year = self.calculate_fiscal_year(fiscal_start_month, d)
@@ -63,10 +66,18 @@ module ETL::Input
       @fiscal_quarter_month = fiscal_quarter_mon_num
     end
 
+    def values
+      h = Hash.new
+      values_arr = ATTRS.map do |a| 
+        h[a.to_s] = public_send(a)
+      end
+      return h
+    end
+
     def calculate_fiscal_year(fiscal_start_month, d)
-      calc_year = d.year
-      if d.mon < fiscal_start_month
-          calc_year = d.year-1
+      calc_year = d.year + 1
+      if d.mon < fiscal_start_month or fiscal_start_month == 1
+          calc_year = d.year
       end
       calc_year
     end
@@ -86,7 +97,8 @@ module ETL::Input
       fiscal_map = FiscalQuarter.new(@fiscal_start_month)
       log.debug("Building date table starting from date #{start_date} to #{end_date}\n")
       for d in start_date..end_date
-        yield Day.new(fiscal_start_month, d, fiscal_map)
+        day = Day.new(fiscal_start_month, d, fiscal_map)
+        yield day
       end
     end
   end
