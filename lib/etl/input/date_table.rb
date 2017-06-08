@@ -67,11 +67,9 @@ module ETL::Input
     end
 
     def values
-      h = Hash.new
-      values_arr = ATTRS.map do |a| 
-        h[a.to_s] = public_send(a)
+      ATTRS.map do |a| 
+        [a.to_s, send(a)]
       end
-      return h
     end
 
     def calculate_fiscal_year(fiscal_start_month, d)
