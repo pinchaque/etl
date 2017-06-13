@@ -54,16 +54,6 @@ module ETL
       @influx
     end
 
-    def pagerduty_file
-      @config_dir + "/pagerduty.yml"
-    end
-
-    def pagerduty(&b)
-      @pagerduty ||= self.class.load_file(pagerduty_file)
-      yield @pagerduty if block_given?
-      @pagerduty
-    end
-
     def core_file
       @config_dir + "/core.yml"
     end
