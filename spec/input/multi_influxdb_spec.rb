@@ -11,14 +11,17 @@ RSpec.describe "influxdb inputs" do
       :database => "test"
     } 
   }
-  let(:iql) { '' }
-  let(:idb) { ETL::Input::Influxdb.new(dbconfig, iql) }
+  let(:idb) { ETL::Input::MultiInfluxdb.new(dbconfig, '', '') }
   let(:ts) { Time.parse('2015-01-10T23:00:50Z').utc } # changing this will break tests
+  let(:today) { Time.parse('2015-01-30T23:01:10Z').utc } # changing this will break tests
+  let(:option) {
+    { :today => today } 
+  }
   let(:series) { 'input_test' }
   let(:container) { 'influx_input_test' }
 
   before(:all) do
-    system("docker run -d -t -p 8086:8086 --name influx_input_test influxdb:1.2")
+    system("docker run -d -t -p 8086:8086 --name multiinflux_input_test influxdb:1.2")
 
     sleep(0.5) # Give things a second to spin up.
 
@@ -31,7 +34,8 @@ RSpec.describe "influxdb inputs" do
 
     data = []
 
-    for i in 1..1000 do
+    # Data for about 20 days (2015-01-10T23:00 - 2015-01-30T23:00)
+    for i in 1..1440 do
       h = Hash.new
       h[:series] = series
       h[:timestamp] = ts.to_i + 20*(i-1) 
@@ -56,8 +60,8 @@ RSpec.describe "influxdb inputs" do
   end
   
   after(:all) do
-    system("docker stop influx_input_test")
-    system("docker rm influx_input_test")
+    system("docker stop multiinflux_input_test")
+    system("docker rm multiinflux_input_test")
   end
 
   describe 'dummy parameters' do
@@ -70,18 +74,18 @@ RSpec.describe "influxdb inputs" do
         username: 'test_user',
         password: 'xyz',
       }
-      i = ETL::Input::Influxdb.new(p)
+      i = ETL::Input::MultiInfluxdb.new(p, "", series)
       expect(i.name).to eq("influxdb://test_user@127.0.0.1/metrics")
     end
   end
   
   describe 'test database - first two rows' do
-    let(:iql) { "select * from #{series}" }
+    let(:midb) { ETL::Input::MultiInfluxdb.new(dbconfig, ["*"], series, option) }
     
     it 'returns correct rows' do
       rows = []
-      idb.each_row { |row| rows << row }
-      expect(idb.rows_processed).to eq(1000)
+      midb.each_row { |row| rows << row }
+      expect(midb.rows_processed).to eq(1440)
 
       expected = []
 
@@ -104,15 +108,16 @@ RSpec.describe "influxdb inputs" do
     end
   end
   
-  describe 'test database - aggregated by minute' do
-    let(:iql) { 
-      "select sum(value) as v, count(n) as n from #{series} where time > '2015-01-10T23:00:00Z' and time < '2015-01-10T23:03:00Z' group by time(1m)"
+  describe 'test database - aggregated by minute and check first three minutes' do
+    let(:testoption) {
+      option.merge({ :group_by => ["time(1m)"], :where => " time > '2015-01-10T23:00:00Z' and time < '2015-01-10T23:03:00Z' ", :limit => 100})
     }
-    
+    let(:midb) { ETL::Input::MultiInfluxdb.new(dbconfig, ["sum(value) as v", "count(n) as n"], series, testoption) }
+
     it 'returns correct rows' do
       rows = []
-      idb.each_row { |row| rows << row }
-      expect(idb.rows_processed).to eq(3)
+      midb.each_row { |row| rows << row }
+      expect(midb.rows_processed).to eq(3)
       
       expected = [
         {
@@ -137,9 +142,11 @@ RSpec.describe "influxdb inputs" do
   end
   
   describe 'test database - aggregated by color' do
-    let(:iql) { 
-      "select sum(value) as v, sum(n) as n from #{series} where time >= '2015-01-10T23:00:50Z' and time < '2015-01-25T23:00:00Z' group by color"
+    let(:testoption) {
+      option.merge({ :group_by => ["color"], :where => " time >= '2015-01-10T23:00:50Z' and time < '2015-01-30T23:01:10Z' ", :limit => 100})
     }
+    let(:midb) { ETL::Input::MultiInfluxdb.new(dbconfig, ["sum(value) as v", "sum(n) as n"], series, testoption) }
+
     # influx gets a bit weird here - we don't ask for a time but it gives us one
     # anyway. we don't have a good way of deciding whether or not the user
     # has given us a time w/o parsing the query, which I want to stay away
@@ -148,22 +155,22 @@ RSpec.describe "influxdb inputs" do
     
     it 'returns correct rows' do
       rows = []
-      idb.each_row { |row| rows << row }
+      midb.each_row { |row| rows << row }
 
-      expect(idb.rows_processed).to eq(2)
+      expect(midb.rows_processed).to eq(2)
       
       expected = [
         {
           "color" => "blue",
-          "n" => 501000,
+          "n" => 1038240,
           "time" => "2015-01-10T23:00:50Z",
-          "v" => 250500,
+          "v" => 519120,
         },
         {
           "color" => "red",
-          "n" => 500000,
+          "n" => 1036800,
           "time" => "2015-01-10T23:00:50Z",
-          "v" => 250000,
+          "v" => 518400,
         },
       ]
       

@@ -43,7 +43,11 @@ module ETL::Input
                          0
                        end
       @conn = nil
-      @today = Time.now.getutc
+      @today = if keyword_args.include?(:today)
+                 keyword_args[:today] 
+               else
+                 Time.now.getutc
+               end 
     end
 
     def last_stamp
@@ -127,7 +131,7 @@ EOS
     def time_range(start_date)
       from_date = (start_date).to_s[0..18].gsub("T", " ")
       to_date = (start_date + @time_interval).to_s[0..18].gsub("T", " ")
-      "time > '#{from_date}' AND time < '#{to_date}'"
+      "time >= '#{from_date}' AND time < '#{to_date}'"
     end
         
     # Reads each row from the query and passes it to the specified block.
