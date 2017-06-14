@@ -181,4 +181,17 @@ RSpec.describe "influxdb inputs" do
       expect(sort_rows).to eq(expected)
     end
   end
+
+  describe 'test database - #rows_processed' do
+    context 'when there is no data in the time range' do
+      let(:testoption) {
+        option.merge({ :group_by => ["time(1m)"], :where => " time > '2015-02-10T23:00:00Z' and time < '2015-02-10T23:03:00Z' ", :limit => 100})
+      }
+      let(:midb) { ETL::Input::MultiInfluxdb.new(dbconfig, ["value"], series, testoption) }
+    
+      it '#rows_processed is zero' do
+        expect(midb.rows_processed).to eq(0)
+      end
+    end
+  end
 end

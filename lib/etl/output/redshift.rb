@@ -266,14 +266,16 @@ SQL
           end
         end
        
-        #To-do: load data into S3
-        upload_to_s3
+        if rows_processed > 0
+          #To-do: load data into S3
+          upload_to_s3
 
-        # Load s3 data into destination table
-        load_from_s3
+          # Load s3 data into destination table
+          load_from_s3
 
-        # delete s3 data
-        delete_object_from_s3
+          # delete s3 data
+          delete_object_from_s3
+        end
 
         msg = "Processed #{rows_processed} input rows for #{dest_table}"
       end

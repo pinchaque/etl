@@ -164,31 +164,28 @@ EOS
         rows.each do |row_in|
           # use the same set of tags for each value set
           tag_row = row_in["tags"] || {}
-          
+
           # do we have a bunch of values to go with these tags?
           if row_in["values"]
             # iterate over all the value sets
             row_in["values"].each do |va|
-              # each value set should zip up to same number of items as the 
-              # column labels we got back
-              if va.count != row_in["columns"].count
-                raise "# of columns (#{row_in["columns"]}) does not match values (#{row_in["values"]})" 
+              if !va.include?(nil)
+                # each value set should zip up to same number of items as the 
+                # column labels we got back
+                if va.count != row_in["columns"].count
+                  raise "# of columns (#{row_in["columns"]}) does not match values (#{row_in["values"]})" 
+                end
+                
+                # build our row by combining tags and value columns. note that if
+                # they are named the same then tags will get overwritten
+                row = tag_row.merge(Hash[row_in["columns"].zip(va)])
+                
+                # boilerplate processing
+                transform_row!(row)
+                yield row
+                rows_count += 1
               end
-              
-              # build our row by combining tags and value columns. note that if
-              # they are named the same then tags will get overwritten
-              row = tag_row.merge(Hash[row_in["columns"].zip(va)])
-              
-              # boilerplate processing
-              transform_row!(row)
-              yield row
-              rows_count += 1
             end
-          else
-            # no values? kinda weird, but process it anyway
-            transform_row!(tag_row)
-            yield tag_row
-            rows_count += 1
           end
         end
 

@@ -460,4 +460,24 @@ SQL
 
     compare_db_results(exp_values, result)
   end
+
+  it "redshift - no data to be loaded" do
+    table_name = "test_2"
+    conn = init_conn_table(table_name)
+
+    batch = ETL::Batch.new({ :day => "2015-04-02" })
+
+    data = []
+
+    make_csv('/tmp/test2.txt', data)
+    input = ETL::Input::CSV.new('/tmp/test2.txt')
+
+    job = TestRedshiftLoad1.new(input, :upsert, table_name)
+    job.schema.primary_key = [:day, :id]
+    job.batch = batch
+    jr = job.run
+    expect(jr.rows_processed).to eq(0)
+    expect(job).not_to receive(:upload_to_s3)
+    expect(job).not_to receive(:load_from_s3)
+  end
 end
