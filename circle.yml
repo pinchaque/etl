@@ -6,21 +6,25 @@ machine:
   hosts:
     circlehost: 127.0.0.1
   environment:
+    ETL_CONFIG_DIR: "$HOME/config"
     REDSHIFT_PASSWORD: "$REDSHIFT_PASSWORD"
     INFLUXDB_PASSWORD: "$INFLUXDB_PASSWORD"
     DATABASE_PASSWORD: "$DATABASE_PASSWORD"
+  # services:
+  #   - postgresql
 
 dependencies:
   pre:
     - gem update --system
     - gem install bundler
-
-test:
-  pre:
     - mkdir "$HOME/empty"        # Use an empty directory for jobs
     - mkdir "$HOME/config"
     - "$HOME/etl/bin/generate_config_files -i $HOME/etl/etc/erb_templates/ -o $HOME/config/ --job-dir $HOME/empty --class-dir $HOME/empty":
+
+database:
+  override:
+    - 'bundle exec etl schema create'
+
+test:
   override:
     - 'bundle exec rspec --color --require spec_helper spec --format progress':
-        environment:
-          ETL_CONFIG_DIR: "$HOME/config"
