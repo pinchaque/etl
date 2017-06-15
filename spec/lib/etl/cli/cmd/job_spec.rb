@@ -90,8 +90,8 @@ RSpec.describe ETL::Cli::Cmd::Job::Run do
         let(:args) { ['--match'] }
         it 'runs all jobs' do
           expect(subject).to receive(:run_batch)
-            .with(anything, an_instance_of(ETL::Batch))
-            .exactly(2).times
+            .with(an_instance_of(String), an_instance_of(ETL::Batch))
+            .exactly(8).times
           subject.execute
         end
       end
