@@ -8,6 +8,7 @@ PATH
       mysql2
       pg
       sequel
+      slack-notifier
       tzinfo
       tzinfo-data
 
@@ -20,13 +21,13 @@ GEM
       minitest (~> 5.1)
       tzinfo (~> 1.1)
     amq-protocol (2.2.0)
-    aws-sdk (2.9.40)
-      aws-sdk-resources (= 2.9.40)
-    aws-sdk-core (2.9.40)
+    aws-sdk (2.9.41)
+      aws-sdk-resources (= 2.9.41)
+    aws-sdk-core (2.9.41)
       aws-sigv4 (~> 1.0)
       jmespath (~> 1.0)
-    aws-sdk-resources (2.9.40)
-      aws-sdk-core (= 2.9.40)
+    aws-sdk-resources (2.9.41)
+      aws-sdk-core (= 2.9.41)
     aws-sigv4 (1.0.0)
     bunny (2.7.0)
       amq-protocol (>= 2.2.0)
@@ -75,7 +76,6 @@ DEPENDENCIES
   rspec-core
   rspec-expectations
   rspec-mocks
-  slack-notifier
   time-warp
 
 BUNDLED WITH
