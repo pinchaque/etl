@@ -2,7 +2,7 @@ require 'influxdb'
 require 'securerandom'
 require 'etl/core'
 
-RSpec.describe "influxdb output" do
+RSpec.describe "influxdb output", skip: true do
   
   let(:rnd_str) { SecureRandom.hex }
   let(:dbconfig) { ETL.config.db[:influxdb] }

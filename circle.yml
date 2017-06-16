@@ -11,7 +11,6 @@ machine:
     INFLUXDB_PASSWORD: "$INFLUXDB_PASSWORD"
     DATABASE_PASSWORD: "$DATABASE_PASSWORD"
   services:
-    - postgresql
     - docker
 
 dependencies:
@@ -22,10 +21,11 @@ dependencies:
     - mkdir "$HOME/config"
     - "$HOME/etl/bin/generate_config_files -i $HOME/etl/etc/erb_templates/ -o $HOME/config/ --job-dir $HOME/empty --class-dir $HOME/empty"
     - docker
+    - "docker run --name outreach-dw -p 127.0.0.1:5433:5432 -e POSTGRES_PASSWORD=${DATABASE_PASSWORD} -e POSTGRES_USER=postgres -e POSTGRES_DB=test -d postgres"
+    - docker ps -a
 
 database:
   override:
-    - "docker run --name outreach-dw -p 5432:5432 -e POSTGRES_PASSWORD=${DATABASE_PASSWORD} -e POSTGRES_USER=root -e POSTGRES_DB=test -d postgres"
     - bundle exec etl schema create
 
 

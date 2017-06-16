@@ -23,9 +23,10 @@ database:
   reconnect: false
   database: test
   pool: 5
-  username: root
+  username: postgres
   password: '<%= @database_password %>'
   host: 127.0.0.1
+  port: 5433
 
 queue:
   class: ETL::Queue::File

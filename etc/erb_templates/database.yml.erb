@@ -4,13 +4,14 @@ test:
   reconnect: false
   database: test
   pool: 5
-  username: root
+  username: postgres
   password: '<%= @database_password %>'
-  host: 127.0.0.1
+  host: localhost
+  port: 5433
 
 influxdb:
   port: 8086
-  host: '127.0.0.1'
+  host: localhost
   database: 'test'
   username: 'app'
   password: '<%= @influxdb_password %>'
@@ -23,4 +24,4 @@ test_mysql:
   pool: 5
   username: root
   password: root
-  host: 127.0.0.1
+  host: localhost
