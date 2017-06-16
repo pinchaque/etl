@@ -19,12 +19,15 @@ dependencies:
     - gem install bundler
     - mkdir "$HOME/empty"        # Use an empty directory for jobs
     - mkdir "$HOME/config"
-    - "$HOME/etl/bin/generate_config_files -i $HOME/etl/etc/erb_templates/ -o $HOME/config/ --job-dir $HOME/empty --class-dir $HOME/empty":
+    - "$HOME/etl/bin/generate_config_files -i $HOME/etl/etc/erb_templates/ -o $HOME/config/ --job-dir $HOME/empty --class-dir $HOME/empty"
 
 database:
+  pre:
+    - bundle exec etl schema create
   override:
-    - 'bundle exec etl schema create'
+    - "docker run --name outreach-dw -p 5432:5432 -e POSTGRES_PASSWORD=${DATABASE_PASSWORD} -e POSTGRES_USER=root -e POSTGRES_DB=test -d postgres"
+
 
 test:
   override:
-    - 'bundle exec rspec --color --require spec_helper spec --format progress':
+    - bundle exec rspec --color --require spec_helper spec --format progress --tag '~skip'

@@ -25,15 +25,15 @@ op = OptionParser.new do |opts|
 end
 op.parse!
 
-@job_dir = options.fetch(:job_dir)
-@class_dir = options.fetch(:class_dir)
+input_dir, output_dir, @job_dir, @class_dir = [
+  :input, :output, :job_dir, :class_dir
+].map do |key|
+  Pathname.new(options.fetch(key)).expand_path
+end
 
 @redshift_password = ENV.fetch('REDSHIFT_PASSWORD')
 @database_password = ENV.fetch('DATABASE_PASSWORD')
 @influxdb_password = ENV.fetch('INFLUXDB_PASSWORD')
-
-input_dir = Pathname.new(options.fetch(:input)).cleanpath
-output_dir = Pathname.new(options.fetch(:output)).cleanpath
 
 FileUtils.mkdir_p(output_dir)
 

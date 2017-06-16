@@ -1,10 +1,10 @@
-dev:
+test:
   adapter: postgresql
   encoding: utf8
   reconnect: false
-  database: dw_dev
+  database: test
   pool: 5
-  username: dw
+  username: root
   password: <%= @database_password %>
   host: 127.0.0.1
 
@@ -14,3 +14,13 @@ influxdb:
   database: 'test'
   username: 'app'
   password: <%= @influxdb_password %>
+
+test_mysql:
+  adapter: mysql
+  encoding: utf8
+  reconnect: false
+  database: test
+  pool: 5
+  username: root
+  password: root
+  host: 127.0.0.1

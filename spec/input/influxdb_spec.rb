@@ -35,6 +35,7 @@ RSpec.describe "influxdb inputs" do
       },
     ]
 
+    c.create_database(dbconfig[:database])
     c.write_points(data)
     # > select * from input_test
     # name: input_test
