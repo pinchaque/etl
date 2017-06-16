@@ -16,10 +16,11 @@
 !/log/.keep
 /tmp
 
-aws.yml
-core.yml
-redshift.yml
-database.yml
+# Ignore all config files/templates except circle.yml 
+*.yml
+/etc/*.yml
+/spec/etc/*.yml
+!circle.yml
 
 # Editor stuff
 .*.sw[op]
