@@ -10,8 +10,9 @@ machine:
     REDSHIFT_PASSWORD: "$REDSHIFT_PASSWORD"
     INFLUXDB_PASSWORD: "$INFLUXDB_PASSWORD"
     DATABASE_PASSWORD: "$DATABASE_PASSWORD"
-  # services:
-  #   - postgresql
+  services:
+    - postgresql
+    - docker
 
 dependencies:
   pre:
@@ -20,6 +21,7 @@ dependencies:
     - mkdir "$HOME/empty"        # Use an empty directory for jobs
     - mkdir "$HOME/config"
     - "$HOME/etl/bin/generate_config_files -i $HOME/etl/etc/erb_templates/ -o $HOME/config/ --job-dir $HOME/empty --class-dir $HOME/empty"
+    - docker
 
 database:
   override:
