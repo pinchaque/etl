@@ -22,10 +22,9 @@ dependencies:
     - "$HOME/etl/bin/generate_config_files -i $HOME/etl/etc/erb_templates/ -o $HOME/config/ --job-dir $HOME/empty --class-dir $HOME/empty"
 
 database:
-  pre:
-    - bundle exec etl schema create
   override:
     - "docker run --name outreach-dw -p 5432:5432 -e POSTGRES_PASSWORD=${DATABASE_PASSWORD} -e POSTGRES_USER=root -e POSTGRES_DB=test -d postgres"
+    - bundle exec etl schema create
 
 
 test:
