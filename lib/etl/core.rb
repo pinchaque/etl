@@ -87,10 +87,10 @@ module ETL
   
   # load all user job classes
   def ETL.load_user_classes
-    if c = ETL.config.core[:job][:class_dir]
+    if c = ETL.config.core.fetch(:default, {})[:class_dir]
       load_class_dir(c)
     end
-    if c = ETL.config.core[:default][:class_dir]
+    if c = ETL.config.core[:job][:class_dir]
       load_class_dir(c)
     end
   end

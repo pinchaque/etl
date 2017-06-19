@@ -1,11 +1,21 @@
 require 'spec_helper'
 require 'etl/cli/cmd/job'
 require 'json'
+require_relative '../../../jobs/days_in_future'
+require_relative '../../../jobs/null'
 
 # Matcher for checking batch equivalence
 RSpec::Matchers.define :batch_equivalent_to do |expected|
   match { |actual| actual.to_json == expected.to_json }
 end
+
+# When run independently, the job manager loads only these jobs; but when run with
+# other specs, other classes (like in spec/job_spec.rb) register themselves and change
+# the behavior. Stub the registered jobs to avoid that.
+REGISTERED_JOBS = {
+  'days_in_future' => ETL::Test::DaysInFuture,
+  'null' => ETL::Test::Null
+}
 
 RSpec.describe ETL::Cli::Cmd::Job::List do
   subject(:described_instance) do
@@ -15,9 +25,13 @@ RSpec.describe ETL::Cli::Cmd::Job::List do
   end
   let(:args) { [] }
 
+  before(:each) do
+    allow(ETL::Job::Manager.instance).to receive(:job_classes).and_return(REGISTERED_JOBS)
+  end
+
   context 'with no args' do
     it 'lists all' do
-      expect(STDOUT).to receive(:puts).with(/ * /).exactly(2).times
+      expect(STDOUT).to receive(:puts).with(/ * /).exactly(REGISTERED_JOBS.size).times
       subject.execute
     end
   end
@@ -39,6 +53,10 @@ RSpec.describe ETL::Cli::Cmd::Job::Run do
     end
   end
   let(:args) { [job_expr] }
+
+  before(:each) do
+    allow(ETL::Job::Manager.instance).to receive(:job_classes).and_return(REGISTERED_JOBS)
+  end
 
   let(:job_expr) { 'days_in_future' }
 
@@ -90,8 +108,8 @@ RSpec.describe ETL::Cli::Cmd::Job::Run do
         let(:args) { ['--match'] }
         it 'runs all jobs' do
           expect(subject).to receive(:run_batch)
-            .with(anything, an_instance_of(ETL::Batch))
-            .exactly(2).times
+            .with(an_instance_of(String), an_instance_of(ETL::Batch))
+            .exactly(REGISTERED_JOBS.size).times
           subject.execute
         end
       end

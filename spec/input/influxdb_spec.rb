@@ -2,7 +2,7 @@ require 'influxdb'
 
 require 'etl/core'
 
-RSpec.describe "influxdb inputs" do
+RSpec.describe "influxdb inputs", skip: true do
   
   let (:dbconfig) {
     { 
@@ -45,6 +45,7 @@ RSpec.describe "influxdb inputs" do
       data.push(h)
     end
 
+    c.create_database(dbconfig[:database])
     c.write_points(data)
     # > select * from input_test
     # name: input_test

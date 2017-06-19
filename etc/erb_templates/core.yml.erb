@@ -1,0 +1,33 @@
+default:
+  class_dir: <%= @class_dir %>
+
+job:
+  class_dir: <%= @job_dir %>
+  data_dir: "/var/tmp/etl_test_output"
+  retry_max: 5 # maximum times retrying jobs
+  retry_wait: 4 # seconds
+  retry_mult: 2.0 # exponential backoff multiplier
+
+log:
+  class: ETL::Logger
+  level: debug
+
+metrics:
+  class: ETL::Metrics
+  file: "/tmp/etl-metrics.log"
+  series: etl_job_run
+
+database:
+  adapter: postgres
+  encoding: utf8
+  reconnect: false
+  database: test
+  pool: 5
+  username: postgres
+  password: '<%= @database_password %>'
+  host: 127.0.0.1
+  port: 5433
+
+queue:
+  class: ETL::Queue::File
+  path: "/var/tmp/etl_queue"

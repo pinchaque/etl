@@ -51,7 +51,7 @@ class TestRedshiftLoad1 < ETL::Output::Redshift
   end
 end
 
-RSpec.describe "redshift output" do
+RSpec.describe "redshift output", skip: true do
 
   def get_conn
     PG.connect(rspec_redshift_params)

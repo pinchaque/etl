@@ -1,3 +1,6 @@
+default:
+  class_dir: "/usr/share/etl/classes"
+
 job:
   class_dir: "/usr/share/etl/jobs" # path to all your jobs classes
   data_dir: "/var/tmp/etl_output"
