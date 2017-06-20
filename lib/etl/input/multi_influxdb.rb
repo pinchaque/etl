@@ -82,7 +82,7 @@ module ETL::Input
       query = <<-EOS
         show field keys from #{@series}
 EOS
-      log.debug("Executing InfluxDB query #{query}")
+      log.debug("Executing InfluxDB query to get field keys: #{query}")
       row = with_retry { conn.query(query, denormalize: false) } || []
       h = Hash.new
       if !row.nil? && row[0]["values"]
@@ -95,7 +95,7 @@ EOS
       query = <<-EOS
         show tag keys from #{@series}
 EOS
-      log.debug("Executing InfluxDB query #{query}")
+      log.debug("Executing InfluxDB query to get tag keys: #{query}")
       row = with_retry { conn.query(query, denormalize: false) } || []
       if !row.nil? && row[0]["values"]
         return row[0]["values"].flatten(1)
@@ -109,7 +109,7 @@ EOS
         query = <<-EOS
           select first(#{measurement}) from #{@series}
 EOS
-        log.debug("Executing InfluxDB query #{query}")
+        log.debug("Executing InfluxDB query to get first timestamp: #{query}")
         row = with_retry { conn.query(query, denormalize: false) } || []
 
         if !row.nil? && row[0]["columns"] && row[0]["values"]
@@ -188,6 +188,8 @@ EOS
             end
           end
         end
+
+        log.debug("#{rows_count} rows processed for query: #{query_sql.query}")
 
         @rows_processed += rows_count
 
