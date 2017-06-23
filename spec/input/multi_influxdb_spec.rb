@@ -79,8 +79,11 @@ RSpec.describe "influxdb inputs" do
     end
   end
   
-  describe 'test database - first two rows' do
-    let(:midb) { ETL::Input::MultiInfluxdb.new(dbconfig, ["*"], series, option) }
+  describe 'test database - first two rows with pagination' do
+    let(:testoption) {
+      option.merge({:limit => 100})
+    }
+    let(:midb) { ETL::Input::MultiInfluxdb.new(dbconfig, ["*"], series, testoption) }
     
     it 'returns correct rows' do
       rows = []
@@ -110,7 +113,7 @@ RSpec.describe "influxdb inputs" do
   
   describe 'test database - aggregated by minute and check first three minutes' do
     let(:testoption) {
-      option.merge({ :group_by => ["time(1m)"], :where => " time > '2015-01-10T23:00:00Z' and time < '2015-01-10T23:03:00Z' ", :limit => 100})
+      option.merge({ :group_by => ["time(1m)"], :where => " time > '2015-01-10T23:00:00Z' and time < '2015-01-10T23:03:00Z' "})
     }
     let(:midb) { ETL::Input::MultiInfluxdb.new(dbconfig, ["sum(value) as v", "count(n) as n"], series, testoption) }
 
@@ -143,7 +146,7 @@ RSpec.describe "influxdb inputs" do
   
   describe 'test database - aggregated by color' do
     let(:testoption) {
-      option.merge({ :group_by => ["color"], :where => " time >= '2015-01-10T23:00:50Z' and time < '2015-01-30T23:01:10Z' ", :limit => 100})
+      option.merge({ :group_by => ["color"], :where => " time >= '2015-01-10T23:00:50Z' and time < '2015-01-30T23:01:10Z' "})
     }
     let(:midb) { ETL::Input::MultiInfluxdb.new(dbconfig, ["sum(value) as v", "sum(n) as n"], series, testoption) }
 
@@ -185,7 +188,7 @@ RSpec.describe "influxdb inputs" do
   describe 'test database - #rows_processed' do
     context 'when there is no data in the time range' do
       let(:testoption) {
-        option.merge({ :group_by => ["time(1m)"], :where => " time > '2015-02-10T23:00:00Z' and time < '2015-02-10T23:03:00Z' ", :limit => 100})
+        option.merge({ :group_by => ["time(1m)"], :where => " time > '2015-02-10T23:00:00Z' and time < '2015-02-10T23:03:00Z' "})
       }
       let(:midb) { ETL::Input::MultiInfluxdb.new(dbconfig, ["value"], series, testoption) }
     

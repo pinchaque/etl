@@ -107,6 +107,14 @@ RSpec.describe "sequel query" do
   	expect( sequel_query.query ).to eq("SELECT #{select[0]} FROM #{from} LIMIT 20 OFFSET #{os}")
   end
 
+  it "offset - move to next point" do
+    os = 10
+    sequel_query = ETL::Query::Sequel.new(select, from, where, group_by, 20)
+    sequel_query.set_offset(os)
+    sequel_query.set_offset(os)
+    expect( sequel_query.query ).to eq("SELECT #{select[0]} FROM #{from} LIMIT 20 OFFSET #{os*2}")
+  end
+
   it "offset - cancel" do
   	os = 10
   	sequel_query = ETL::Query::Sequel.new(select, from, where, group_by, 20)

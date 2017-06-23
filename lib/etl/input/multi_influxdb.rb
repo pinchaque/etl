@@ -157,8 +157,8 @@ EOS
 
       while start_date < @today do
         query_sql.append_replaceable_where(time_range(start_date))
-        rows = with_retry { conn.query(query_sql.query, denormalize: false) } || [].each
         log.debug("Executing InfluxDB query #{query_sql.query}")
+        rows = with_retry { conn.query(query_sql.query, denormalize: false) } || [].each
 
         rows_count = 0
         rows.each do |row_in|
@@ -195,9 +195,9 @@ EOS
 
         if rows_count < limit
           start_date += @time_interval
-          query_sql.offset = nil
+          query_sql.cancel_offset
         else
-          query_sql.offset = limit
+          query_sql.set_offset(limit)
         end
         sleep(@sleep_seconds)
       end
