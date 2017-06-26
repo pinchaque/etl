@@ -64,6 +64,7 @@ RSpec.describe "Day" do
         d = Date.new(2017, 11, 22)
         fq = ETL::Input::FiscalQuarter.new(1)
         v = ETL::Input::Day.new(d, fq)
+        expect(v.id).to eq 20171122
         expect(v.full_date).to eq '2017/11/22'
         expect(v.day_of_week_number).to eq 3
         expect(v.day_of_week_name).to eq "Wednesday"
@@ -115,6 +116,7 @@ RSpec.describe "Day" do
         d = Date.new(2017, 11, 26)
         fq = ETL::Input::FiscalQuarter.new(12)
         v = ETL::Input::Day.new(d, fq)
+        expect(v.id).to eq 20171126
         expect(v.full_date).to eq '2017/11/26'
         expect(v.day_of_week_number).to eq 0
         expect(v.day_of_week_name).to eq "Sunday"
@@ -139,10 +141,11 @@ RSpec.describe "Day" do
         fq = ETL::Input::FiscalQuarter.new(12)
         v = ETL::Input::Day.new(d, fq)
         # Testing that the values array that is returned
-        # can be put into a hash and the specific values 
+        # can be put into a hash and the specific values
         # are correct.
         h = Hash[v.values]
 
+        expect(h["id"]).to eq 20171126
         expect(h["full_date"]).to eq '2017/11/26'
         expect(h["day_of_week_number"]).to eq 0
         expect(h["day_of_week_name"]).to eq "Sunday"

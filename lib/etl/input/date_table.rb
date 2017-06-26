@@ -43,7 +43,7 @@ module ETL::Input
   end
 
   class Day
-    ATTRS = [:full_date, :day_of_week_number, :day_of_week_name, :day_of_month, :day_of_year, :weekday_flag, :weekend_flag, :week_number, :month_number, :month_name, :quarter, :quarter_month,:year, :year_month, :year_month_int, :year_quarter, :fiscal_year, :fiscal_quarter, :fiscal_quarter_month]
+    ATTRS = [:id, :full_date, :day_of_week_number, :day_of_week_name, :day_of_month, :day_of_year, :weekday_flag, :weekend_flag, :week_number, :month_number, :month_name, :quarter, :quarter_month,:year, :year_month, :year_month_int, :year_quarter, :fiscal_year, :fiscal_quarter, :fiscal_quarter_month]
     attr_accessor *ATTRS
 
     def initialize(d, fiscal_map)
@@ -52,6 +52,7 @@ module ETL::Input
       fiscal_quarter_num = fiscal_map.quarter_lookup.fetch(d.mon)
       fiscal_quarter_mon_num = fiscal_map.quarter_month_num_lookup.fetch(d.mon)
 
+      @id = d.strftime('%Y%m%d').to_i
       @full_date = d.strftime('%Y/%m/%d')
       @day_of_week_number = d.wday
       @day_of_week_name = d.strftime('%A')
@@ -74,7 +75,7 @@ module ETL::Input
     end
 
     def values
-      ATTRS.map do |a| 
+      ATTRS.map do |a|
         [a.to_s, send(a)]
       end
     end
