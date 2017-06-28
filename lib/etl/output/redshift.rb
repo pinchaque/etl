@@ -29,6 +29,11 @@ module ETL::Output
       @conn ||= PG.connect(@conn_params)
     end
 
+    def exec_query(sql)
+      log.debug(sql)
+      conn.exec(sql)
+    end
+
     # Name of the destination table. By default we assume this is the class
     # name but you can override this in the parameters.
     def dest_table
@@ -46,25 +51,63 @@ module ETL::Output
       sql = <<SQL
       SELECT "column", type, distkey, sortkey FROM pg_table_def WHERE tablename = '#{dest_table}'
 SQL
-      log.debug(sql)
       redshift_schema = conn.exec(sql)
 
       ETL::Schema::Table.from_redshift_schema(redshift_schema.values)
     end
 
     # create dest table if it doesn't exist
-    def create_table
+    def create_table_schema
       type_ary = []
       schema.columns.each do |name, column|
-        t = col_type_str(column)
-        type_ary << "\"#{name}\" #{t}"
+        column_type = col_type_str(column)
+        column_statement = "\"#{name}\" #{column_type}"
+        column_statement += " NOT NULL" if primary_keys.include?(name.to_sym)
+          
+        type_ary << column_statement
       end
 
+      pk = if primary_keys.empty?
+             ""
+           else
+             pks = primary_keys.join(",")
+             ", primary key(#{pks})"
+           end
+
+      dk = if dist_keys.empty?
+             ""
+           else
+             dks = dist_keys.join(",")
+             "distkey(#{dks})"
+           end
+
+      sk = if sort_keys.empty?
+             ""
+           else
+             sks = sort_keys.join(",")
+             "sortkey(#{sks})"
+           end
+
       sql = <<SQL
-      CREATE TABLE IF NOT EXISTS #{dest_table} (#{type_ary.join(', ')})
+      CREATE TABLE IF NOT EXISTS #{dest_table} (#{type_ary.join(', ')} #{pk}) #{dk} #{sk}
 SQL
-      log.debug(sql)
-      conn.exec(sql)
+    end
+
+    def create_table
+      sql = create_table_schema
+      exec_query(sql)
+    end
+
+    def primary_keys 
+      @primary_keys ||= schema.primary_key
+    end
+
+    def dist_keys 
+      @dist_keys ||= schema.dist_key
+    end
+
+    def sort_keys 
+      @sort_keys ||= schema.sort_key
     end
 
     # Returns string that can be used as the database type given the
@@ -98,8 +141,7 @@ SQL
       sql = <<SQL
         CREATE TEMP TABLE #{tmp_table} (like #{dest_table})
 SQL
-      log.debug(sql)
-      conn.exec(sql)
+      exec_query(sql)
 
       sql =<<SQL
         COPY #{tmp_table}
@@ -110,8 +152,7 @@ SQL
         REGION '#{@aws_params[:region]}'
 SQL
 
-      log.debug(sql)
-      conn.exec(sql)
+      exec_query(sql)
     end
 
     def creds
@@ -162,8 +203,7 @@ SQL
         sql = <<SQL
 delete from #{dest_table};
 SQL
-        log.debug(sql)
-        conn.exec(sql)
+        exec_query(sql)
       else
         raise ETL::OutputError, "Invalid load strategy '#{load_strategy}'"
       end
@@ -171,7 +211,7 @@ SQL
       # handle upsert/update
       if [:update, :upsert].include?(@load_strategy)
         #get_primarykey
-        pks = schema.primary_key
+        pks = primary_keys
 
         if pks.nil? || pks.empty?
           raise ETL::SchemaError, "Table '#{dest_table}' does not have a primary key"
@@ -187,7 +227,7 @@ SQL
         select * from #{tmp_table}
 SQL
 
-        r = conn.exec(sql)
+        r = exec_query(sql)
 
         if @load_strategy == :upsert
           sql = <<SQL
@@ -195,15 +235,13 @@ SQL
           USING #{tmp_table} s
           WHERE #{pks.collect{ |pk| "#{dest_table}.#{pk} = s.#{pk}" }.join(" and ")}
 SQL
-          log.debug(sql)
-          conn.exec(sql)
+          exec_query(sql)
 
           sql = <<SQL
           INSERT INTO #{dest_table}
           SELECT * FROM #{tmp_table}
 SQL
-          log.debug(sql)
-          conn.exec(sql)
+          exec_query(sql)
 
         # handle upsert(primary key is required)
         elsif @load_strategy == :update
@@ -220,8 +258,7 @@ SQL
   where #{pks.collect{ |pk| "#{dest_table}.#{pk} = s.#{pk}" }.join(" and ")}
 SQL
 
-          log.debug(sql)
-          conn.exec(sql)
+          exec_query(sql)
         end
 
       else
@@ -233,8 +270,7 @@ SQL
         DELIMITER ','
         REGION '#{@aws_params[:region]}'
 SQL
-        log.debug(sql)
-        conn.exec(sql)
+        exec_query(sql)
       end
     end
 

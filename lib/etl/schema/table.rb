@@ -9,7 +9,7 @@ module ETL::Schema
   # primary_key: Array of columns that are primary keys; used for upsert
   #   and update loads
   class Table
-    attr_accessor :columns, :partition_columns, :primary_key
+    attr_accessor :columns, :partition_columns, :primary_key, :dist_key, :sort_key
 
     def initialize
       @columns = {}
@@ -132,8 +132,8 @@ module ETL::Schema
       @sort_key.push(column)
     end
 
-    def set_primarykey(pks)
-      @primary_key = pks 
+    def add_primarykey(pks)
+      @primary_key.push(pks) 
     end
 
   end
