@@ -36,12 +36,12 @@ RSpec.describe "DateTable" do
         end
         expect(days.length).to eq 427
         row = days[0]
-        expect(row.fiscal_year).to eq 2017
+        expect(row["fiscal_year"]).to eq 2017
         row = days[40]
-        expect(row.fiscal_year).to eq 2018
+        expect(row["fiscal_year"]).to eq 2018
         row = days[396]
-        expect(row.full_date).to eq "2018/11/01"
-        expect(row.fiscal_year).to eq 2019
+        expect(row["full_date"]).to eq "2018/11/01"
+        expect(row["fiscal_year"]).to eq 2019
       end
       it "Build rows with end_date before start_date" do
         start_date = Date.new(2017, 11, 25)

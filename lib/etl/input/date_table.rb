@@ -75,9 +75,11 @@ module ETL::Input
     end
 
     def values
+      h = Hash.new
       ATTRS.map do |a|
-        [a.to_s, send(a)]
+        h[a.to_s] = send(a)
       end
+      h
     end
 
   end
@@ -97,7 +99,7 @@ module ETL::Input
       log.debug("Building date table starting from date #{start_date} to #{end_date}\n")
       for d in start_date..end_date
         day = Day.new(d, fiscal_map)
-        yield day
+        yield day.values
       end
     end
   end
