@@ -9,7 +9,7 @@ module ETL::Output
   class Redshift < Base
     attr_accessor :load_strategy, :conn_params, :aws_params, :dest_table
 
-    def initialize(load_strategy, conn_params={}, aws_params={}, header=nil)
+    def initialize(load_strategy, conn_params={}, aws_params={})
       super()
 
       @aws_params = aws_params
@@ -18,7 +18,6 @@ module ETL::Output
       @conn_params = conn_params
       @bucket = @aws_params[:s3_bucket]
       @random_key = [*('a'..'z'),*('0'..'9')].shuffle[0,10].join
-      @header = header
     end
 
     def csv_file 
@@ -45,15 +44,13 @@ module ETL::Output
       dest_table+"_"+@random_key
     end
 
-    # Returns the default schema based on the table in the destination db
-    def default_schema
-      return nil unless dest_table && conn
-      sql = <<SQL
-      SELECT "column", type, distkey, sortkey FROM pg_table_def WHERE tablename = '#{dest_table}'
+    def table_schema 
+      @table_schema ||= if dest_table && conn
+                     sql = <<SQL
+        SELECT "column", type FROM pg_table_def WHERE tablename = '#{dest_table}'
 SQL
-      redshift_schema = conn.exec(sql)
-
-      ETL::Schema::Table.from_redshift_schema(redshift_schema.values)
+                     exec_query(sql)
+                   end
     end
 
     # create dest table if it doesn't exist
@@ -285,19 +282,13 @@ SQL
         create_table
 
         # Load data into temp csv
+        # If the table exists, use the order of columns. Otherwise, use @header
         ::CSV.open(csv_file.path, "w") do |c|
           reader.each_row do |row|
-            if !@header.nil?
-              s = @header.map{|k| row[k.to_s]}
-              if !s.nil?
-                c << s
-                rows_processed += 1
-              end
-            else
-              if !row.nil?
-                c << row.values
-                rows_processed += 1
-              end
+            s = schema.columns.keys.map{|k| row[k.to_s]}
+            if !s.nil?
+              c << s
+              rows_processed += 1
             end
           end
         end
