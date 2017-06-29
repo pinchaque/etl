@@ -9,7 +9,7 @@ module ETL::Output
   class Redshift < Base
     attr_accessor :load_strategy, :conn_params, :aws_params, :dest_table, :delimiter
 
-    def initialize(load_strategy, conn_params={}, aws_params={})
+    def initialize(load_strategy, conn_params={}, aws_params={}, delimiter='|')
       super()
 
       @aws_params = aws_params
@@ -18,7 +18,7 @@ module ETL::Output
       @conn_params = conn_params
       @bucket = @aws_params[:s3_bucket]
       @random_key = [*('a'..'z'),*('0'..'9')].shuffle[0,10].join
-      @delimiter = "|"
+      @delimiter = delimiter
     end
 
     def csv_file 
