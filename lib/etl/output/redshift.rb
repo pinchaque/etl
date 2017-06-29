@@ -7,9 +7,9 @@ module ETL::Output
 
   # Class that contains shared logic for loading data from S3 to Redshift.
   class Redshift < Base
-    attr_accessor :load_strategy, :conn_params, :aws_params, :dest_table
+    attr_accessor :load_strategy, :conn_params, :aws_params, :dest_table, :delimiter
 
-    def initialize(load_strategy, conn_params={}, aws_params={})
+    def initialize(load_strategy, conn_params={}, aws_params={}, delimiter='|')
       super()
 
       @aws_params = aws_params
@@ -18,6 +18,7 @@ module ETL::Output
       @conn_params = conn_params
       @bucket = @aws_params[:s3_bucket]
       @random_key = [*('a'..'z'),*('0'..'9')].shuffle[0,10].join
+      @delimiter = delimiter
     end
 
     def csv_file 
@@ -145,7 +146,7 @@ SQL
         FROM 's3://#{@bucket}/#{tmp_table}'
         IAM_ROLE '#{@aws_params[:role_arn]}'
         TIMEFORMAT AS 'auto'
-        DELIMITER ','
+        DELIMITER '#{@delimiter}'
         REGION '#{@aws_params[:region]}'
 SQL
 
@@ -264,7 +265,7 @@ SQL
         FROM 's3://#{@bucket}/#{tmp_table}'
         IAM_ROLE '#{@aws_params[:role_arn]}'
         TIMEFORMAT AS 'auto'
-        DELIMITER ','
+        DELIMITER '#{@delimiter}'
         REGION '#{@aws_params[:region]}'
 SQL
         exec_query(sql)
@@ -283,7 +284,7 @@ SQL
 
         # Load data into temp csv
         # If the table exists, use the order of columns. Otherwise, use @header
-        ::CSV.open(csv_file.path, "w") do |c|
+        ::CSV.open(csv_file.path, "w", {:col_sep => @delimiter } ) do |c|
           reader.each_row do |row|
             s = schema.columns.keys.map{|k| row[k.to_s]}
             if !s.nil?
