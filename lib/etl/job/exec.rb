@@ -1,7 +1,6 @@
-require 'slack-notifier'
+require_relative '../slack/notifier'
 
 module ETL::Job
-
   # Class that runs jobs given a payload
   class Exec
     # Initialize with payload we received from the queue
@@ -16,11 +15,8 @@ module ETL::Job
       @notifier ||= begin 
         if ETL.config.core[:slack]
           slack_config = ETL.config.core[:slack]
-          if slack_config[:url] && slack_config[:channel] && slack_config[:username]
-            Slack::Notifier.new slack_config[:url] do
-              defaults channel: slack_config[:channel],
-                username: slack_config[:username] 
-            end
+          if slack_config[:url] && slack_config[:channel] && @payload.job_id 
+            ETL::Slack::Notifier.new(slack_config[:url], slack_config[:channel], @payload.job_id)
           end
         end
       end
@@ -44,17 +40,18 @@ module ETL::Job
       # change status to running
       jr.running()
       begin
-        @notifier.ping "#{@payload.job_id} starts running" unless @notifier.nil?
+        @notifier.notify("Starts running") unless @notifier.nil?
         result = job.run()
         jr.success(result)
         if !@notifier.nil?
-          message = if jr.success?
-                      "succeeded"
-                    else
-                      "failed"
-                    end
-          @notifier.ping "#{@payload.job_id} #{message}" 
+          if jr.success?
+            @notifier.set_color("#36a64f") 
+            @notifier.add_text_to_attachments("# Processed rows: #{result.rows_processed}")
+          else
+            @notifier.set_color("#ff0000") 
+          end 
         end
+
         measurements[:rows_processed] = result.rows_processed
 
       rescue Sequel::DatabaseError => ex
@@ -83,11 +80,16 @@ module ETL::Job
         
         # we aren't retrying anymore - log this error
         jr.exception(ex)
-        @notifier.ping "#{@payload.job_id} failed: DatabaseError #{ex}" unless @notifier.nil?
+        @notifier.add_field_to_attachments({ "title" => "Error message", "value" => "DatabaseError #{ex}"}) unless @notifier.nil?
       rescue StandardError => ex
         # for all other exceptions: save the message
         jr.exception(ex)
-        @notifier.ping "#{@payload.job_id} failed: #{ex}" unless @notifier.nil?
+        @notifier.add_text_to_attachments({ "title" => "Error message", "value" => "#{ex}"}) unless @notifier.nil?
+      end
+
+      if !@notifier.nil?
+        @notifier.add_text_to_attachments("Job duration: #{jr.ended_at - jr.started_at}")
+        @notifier.notify("#{@payload.job_id} summary")
       end
 
       metrics.point(
