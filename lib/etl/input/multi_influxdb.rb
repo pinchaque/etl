@@ -12,7 +12,7 @@ module ETL::Input
   # Client lib: https://github.com/influxdata/influxdb-ruby
     include ETL::InfluxdbConn
     
-    attr_accessor :params
+    attr_accessor :params, :input_end_time
 
     # start_date : integer representing # days we gonna go back (default is 30)
     # time_interval : integer representing seconds (default is 1d (60*60*24))
@@ -24,7 +24,11 @@ module ETL::Input
       @where = keyword_args[:where] if keyword_args.include?(:where)
       @group_by = keyword_args[:group_by] if keyword_args.include?(:group_by)
       @limit = keyword_args[:limit] if keyword_args.include?(:limit)
-      @last_stamp = keyword_args[:last_stamp] if keyword_args.include?(:last_stamp) 
+      @input_start_time = if keyword_args.include?(:last_stamp) 
+                            last_stamp = keyword_args[:last_stamp]
+                            last_stamp += " UTC" unless last_stamp.include? "UTC"
+                            Time.parse(last_stamp)
+                          end
       @time_interval = if keyword_args.include?(:time_interval) 
                          keyword_args[:time_interval]
                        else
@@ -43,15 +47,21 @@ module ETL::Input
                          0
                        end
       @conn = nil
-      @today = if keyword_args.include?(:today)
-                 keyword_args[:today] 
-               else
-                 Time.now.getutc
-               end 
+      @input_end_time = if keyword_args.include?(:today)
+                          today = keyword_args[:today].to_s 
+                          today += " UTC" unless today.include? "UTC"
+                          Time.parse(today)
+                        else
+                          Time.now.getutc
+                        end 
     end
 
-    def last_stamp
-      @last_stamp ||= first_timestamp
+    def slack_tags
+      [:input_start_time, :input_end_time].each_with_object({}) { |atr, slack_hash| slack_hash[atr] = send(atr) }
+    end
+
+    def input_start_time
+      @input_start_time ||= first_timestamp
     end
 
     def limit
@@ -72,9 +82,7 @@ module ETL::Input
 
     def get_schema_map
       schema = field_keys
-      tag_keys.each do |tag|
-        schema[tag.to_sym] = :string if !schema.keys.include?(tag.to_sym)
-      end
+      tag_keys.each { |tag| schema[tag.to_sym] = :string if !schema.keys.include?(tag.to_sym) }
       {:time => :date}.merge(schema)
     end
 
@@ -85,9 +93,7 @@ EOS
       log.debug("Executing InfluxDB query to get field keys: #{query}")
       row = with_retry { conn.query(query, denormalize: false) } || []
       h = Hash.new
-      if !row.nil? && row[0]["values"]
-        row[0]["values"].each{ |k,v| h[k.to_sym] = v.to_sym }
-      end
+      row[0]["values"].each{ |k,v| h[k.to_sym] = v.to_sym } if !row.nil? && row[0]["values"]
       h
     end
 
@@ -97,9 +103,7 @@ EOS
 EOS
       log.debug("Executing InfluxDB query to get tag keys: #{query}")
       row = with_retry { conn.query(query, denormalize: false) } || []
-      if !row.nil? && row[0]["values"]
-        return row[0]["values"].flatten(1)
-      end
+      return row[0]["values"].flatten(1) if !row.nil? && row[0]["values"]
       []
     end
 
@@ -114,13 +118,13 @@ EOS
 
         if !row.nil? && row[0]["columns"] && row[0]["values"]
           h = Hash[row[0]["columns"].zip(row[0]["values"][0])]
-          oldest_date = Time.parse(h["time"])
-          if ( @today - oldest_date ) <= 60*60*24*@backfill_days
-            return oldest_date
-          end
+          first_time = h["time"]
+          first_time += " UTC" unless first_time.include? "UTC"
+          oldest_date = Time.parse(first_time)
+          return oldest_date if ( @input_end_time - oldest_date ) <= 60*60*24*@backfill_days
         end
       end
-      @today - 60*60*24*@backfill_days
+      @input_end_time - 60*60*24*@backfill_days
     end
     
     # Display connection string for this input
@@ -143,19 +147,14 @@ EOS
       # XXX for now this is all going into memory before we can iterate it.
       # It would be nice to switch this to streaming REST call. 
 
-      start_date = 
-        if last_stamp.is_a?(String)
-          Time.parse(last_stamp)
-        else
-          last_stamp
-        end
+      start_date = input_start_time
 
       query_sql = ETL::Query::Sequel.new(@select, @series, @where, @group_by, limit)
 
       @rows_processed = 0
       rows_count = limit
 
-      while start_date < @today do
+      while start_date < @input_end_time do
         query_sql.append_replaceable_where(time_range(start_date))
         log.debug("Executing InfluxDB query #{query_sql.query}")
         rows = with_retry { conn.query(query_sql.query, denormalize: false) } || [].each
@@ -172,9 +171,7 @@ EOS
               if !va.include?(nil)
                 # each value set should zip up to same number of items as the 
                 # column labels we got back
-                if va.count != row_in["columns"].count
-                  raise "# of columns (#{row_in["columns"]}) does not match values (#{row_in["values"]})" 
-                end
+                raise "# of columns (#{row_in["columns"]}) does not match values (#{row_in["values"]})" if va.count != row_in["columns"].count
                 
                 # build our row by combining tags and value columns. note that if
                 # they are named the same then tags will get overwritten
