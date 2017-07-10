@@ -1,37 +1,36 @@
 require 'tempfile'
 require 'aws-sdk'
-require 'pg'
 require 'csv'
+require_relative '../redshift/client'
 
 module ETL::Output
 
   # Class that contains shared logic for loading data from S3 to Redshift.
   class Redshift < Base
-    attr_accessor :load_strategy, :conn_params, :aws_params, :dest_table, :delimiter
+    attr_accessor :load_strategy, :client, :aws_params, :dest_table, :delimiter
 
-    def initialize(load_strategy, conn_params={}, aws_params={}, delimiter='|')
+    def initialize(load_strategy, conn_params, aws_params={}, delimiter='|')
       super()
 
+      @client = ::ETL::Redshift::Client.new(conn_params)
       @aws_params = aws_params
       @load_strategy = load_strategy
       @conn = nil
-      @conn_params = conn_params
       @bucket = @aws_params[:s3_bucket]
       @random_key = [*('a'..'z'),*('0'..'9')].shuffle[0,10].join
       @delimiter = delimiter
     end
 
-    def csv_file 
-      @csv_file ||= Tempfile.new(dest_table) 
+    def csv_file
+      @csv_file ||= Tempfile.new(dest_table)
     end
 
     def conn
-      @conn ||= PG.connect(@conn_params)
+      @client.connect
     end
 
     def exec_query(sql)
-      log.debug(sql)
-      conn.exec(sql)
+      @client.exec(sql)
     end
 
     # Name of the destination table. By default we assume this is the class
@@ -45,12 +44,12 @@ module ETL::Output
       dest_table+"_"+@random_key
     end
 
-    def table_schema 
+    def table_schema
       @table_schema ||= if dest_table && conn
                      sql = <<SQL
         SELECT "column", type FROM pg_table_def WHERE tablename = '#{dest_table}'
 SQL
-                     exec_query(sql)
+                     @client.execute(sql)
                    end
     end
 
@@ -61,7 +60,7 @@ SQL
         column_type = col_type_str(column)
         column_statement = "\"#{name}\" #{column_type}"
         column_statement += " NOT NULL" if primary_keys.include?(name.to_sym)
-          
+
         type_ary << column_statement
       end
 
@@ -93,18 +92,18 @@ SQL
 
     def create_table
       sql = create_table_schema
-      exec_query(sql)
+      @client.execute(sql)
     end
 
-    def primary_keys 
+    def primary_keys
       @primary_keys ||= schema.primary_key
     end
 
-    def dist_keys 
+    def dist_keys
       @dist_keys ||= schema.dist_key
     end
 
-    def sort_keys 
+    def sort_keys
       @sort_keys ||= schema.sort_key
     end
 
@@ -139,7 +138,7 @@ SQL
       sql = <<SQL
         CREATE TEMP TABLE #{tmp_table} (like #{dest_table})
 SQL
-      exec_query(sql)
+      client.execute(sql)
 
       sql =<<SQL
         COPY #{tmp_table}
@@ -150,7 +149,7 @@ SQL
         REGION '#{@aws_params[:region]}'
 SQL
 
-      exec_query(sql)
+      @client.execute(sql)
     end
 
     def creds
@@ -201,7 +200,7 @@ SQL
         sql = <<SQL
 delete from #{dest_table};
 SQL
-        exec_query(sql)
+        @client.execute(sql)
       else
         raise ETL::OutputError, "Invalid load strategy '#{load_strategy}'"
       end
@@ -225,7 +224,7 @@ SQL
         select * from #{tmp_table}
 SQL
 
-        r = exec_query(sql)
+        r = @client.execute(sql)
 
         if @load_strategy == :upsert
           sql = <<SQL
@@ -233,13 +232,13 @@ SQL
           USING #{tmp_table} s
           WHERE #{pks.collect{ |pk| "#{dest_table}.#{pk} = s.#{pk}" }.join(" and ")}
 SQL
-          exec_query(sql)
+          @client.execute(sql)
 
           sql = <<SQL
           INSERT INTO #{dest_table}
           SELECT * FROM #{tmp_table}
 SQL
-          exec_query(sql)
+          @client.execute(sql)
 
         # handle upsert(primary key is required)
         elsif @load_strategy == :update
@@ -256,7 +255,7 @@ SQL
   where #{pks.collect{ |pk| "#{dest_table}.#{pk} = s.#{pk}" }.join(" and ")}
 SQL
 
-          exec_query(sql)
+          @client.execute(sql)
         end
 
       else
@@ -268,7 +267,7 @@ SQL
         DELIMITER '#{@delimiter}'
         REGION '#{@aws_params[:region]}'
 SQL
-        exec_query(sql)
+        @client.execute(sql)
       end
     end
 
@@ -293,7 +292,7 @@ SQL
             end
           end
         end
-       
+
         if rows_processed > 0
           #To-do: load data into S3
           upload_to_s3
