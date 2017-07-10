@@ -53,7 +53,7 @@ LogPath=[LogPath]
 ODBCInstLib=libiodbcinst.so
 EOF
 
-echo "write odbc envvarsi"
+echo "write odbc envvars.sh"
 cat << EOF > $odbc_dir/envvars.sh
 export LD_LIBRARY_PATH=/opt/amazon/redshift/lib
 export ODBCINI=$HOME/odbc/odbc.ini

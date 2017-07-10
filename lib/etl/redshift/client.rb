@@ -4,14 +4,15 @@ require 'mixins/cached_logger'
 
 module ETL::Redshift
 
-  REDSHIFT_ODBC_DRIVER_NAME="MyRealRedshift"
+  # when the odbc driver is setup in chef this is the driver's name
+  REDSHIFT_ODBC_DRIVER_NAME="MyRedshiftDriver"
 
   # Class that contains shared logic for accessing Redshift.
   class Client
     include ETL::CachedLogger
     attr_accessor :driver, :server, :db, :port, :username, :password
     def initialize(conn_params={})
-      @driver = conn_params[:driver] || "MyRedshiftDriver"
+      @driver = conn_params[:driver] || REDSHIFT_ODBC_DRIVER_NAME
       @server = conn_params[:host] || "localhost"
       @db_name = conn_params[:database] || "dev"
       @port =  conn_params[:port] || 5439
@@ -26,7 +27,6 @@ module ETL::Redshift
     end
     
     def execute(sql)
-      puts "SQL: #{sql}"
       log.debug(sql)
       @db.execute(sql)
     end
