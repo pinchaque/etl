@@ -2,18 +2,18 @@ set -e
 
 export odbc_dir=$HOME/odbc
 
-echo $odbc_dir
 if [ -d "$HOME/odbc" ]; then
   rm -rdf $HOME/odbc
 fi
 
+sudo apt-get update; sudo apt-get install unixodbc-dev
+
 mkdir -p $odbc_dir
 
-wget https://s3.amazonaws.com/redshift-downloads/drivers/AmazonRedshiftODBC-1.3.1.1000.dmg -O $odbc_dir/AmazonRedshiftODBC-1.3.1.1000.dmg
+wget https://s3-us-west-2.amazonaws.com/outreach-builds/redshift/amazonredshiftodbc-64-bit_1.3.1-2_amd64.deb -O $odbc_dir/amazonredshiftodbc-64-bit_1.3.1-2_amd64.deb
 
-sudo hdiutil attach $odbc_dir/AmazonRedshiftODBC-1.3.1.1000.dmg
-sudo installer -package /Volumes/AmazonRedshiftODBC-1.3.1.1000/AmazonRedshiftODBC-1.3.1.1000.pkg -target /
-sudo hdiutil detach /Volumes/AmazonRedshiftODBC-1.3.1.1000
+sudo dpkg -i $odbc_dir/amazonredshiftodbc-64-bit_1.3.1-2_amd64.deb
+
 
 echo "write odbc.ini"
 cat << EOF > $odbc_dir/odbc.ini
@@ -22,7 +22,7 @@ MyRealRedshift=MyRedshiftDriver
 
 [MyRealRedshift]
 # Driver: The location where the ODBC driver is installed to.
-Driver=/opt/amazon/redshift/lib/libamazonredshiftodbc.dylib
+Driver=/opt/amazon/redshiftodbc/lib/64/libamazonredshiftodbc64.so
 
 # Required: These values can also be specified in the connection string.
 Server=[Server]
@@ -38,7 +38,7 @@ Amazon Redshift=Installed
 
 [MyRedshiftDriver]
 Description=Amazon Redshift ODBC Driver
-Driver=/opt/amazon/redshift/lib/libamazonredshiftodbc.dylib
+Driver=/opt/amazon/redshiftodbc/lib/64/libamazonredshiftodbc64.so
 EOF
 
 echo "write amazon.redshiftodbc.ini"
@@ -50,21 +50,13 @@ ErrorMessagesPath=/opt/amazon/redshiftodbc/ErrorMessages
 LogLevel=0
 LogPath=[LogPath]
 
-ODBCInstLib=libiodbcinst.dylib
+ODBCInstLib=libiodbcinst.so
 EOF
 
 echo "write odbc envvarsi"
 cat << EOF > $odbc_dir/envvars.sh
-export DYLD_LIBRARY_PATH=/opt/amazon/redshift/lib
+export LD_LIBRARY_PATH=/opt/amazon/redshift/lib
 export ODBCINI=$HOME/odbc/odbc.ini
 export AMAZONREDSHIFTODBCINI=$HOME/odbc/amazon.redshiftodbc.ini
 export ODBCSYSINI=$HOME/odbc
 EOF
-
-brew install unixodbc
-
-echo "-----------------------"
-echo "IMPORTANT"
-echo "$odbc_dir/envvars.sh needs to be sourced to enable redshift odbc driver to work"
-echo "~~~~~~~~~~~~~~~~~~~~~~~"
-

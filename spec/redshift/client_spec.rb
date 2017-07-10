@@ -1,7 +1,7 @@
 #require 'etl/redshift/client'
 require 'etl/core'
 
-RSpec.describe "redshift" do
+RSpec.describe "redshift", skip: true do
   it "Create a new client" do
     conn_params = ETL.config.redshift[:test]
     ::ETL::Redshift::Client.new(conn_params)

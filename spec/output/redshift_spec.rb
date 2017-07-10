@@ -117,7 +117,7 @@ RSpec.describe "redshift create table" do
   end
 end
 
-RSpec.describe "redshift output" do
+RSpec.describe "redshift output", skip: true do
 
   def get_conn
     client = ::ETL::Redshift::Client.new(rspec_redshift_params)
@@ -128,7 +128,6 @@ RSpec.describe "redshift output" do
   # helper function for comparing expected and actual results from Redshift
   def compare_db_results(e, result, debug = true)
     results = result
-   # results = if defined? result.values
 
     if (debug)
       puts("Expected:")

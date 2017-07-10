@@ -10,6 +10,11 @@ machine:
     REDSHIFT_PASSWORD: "$REDSHIFT_PASSWORD"
     INFLUXDB_PASSWORD: "$INFLUXDB_PASSWORD"
     DATABASE_PASSWORD: "$DATABASE_PASSWORD"
+    ODBCINI: "$HOME/odbc/odbc.ini"
+    AMAZONREDSHIFTODBCINI: "$HOME/odbc/amazon.redshiftodbc.ini"
+    ODBCSYSINI: "$HOME/odbc"
+    LD_LIBRARY_PATH: "/opt/amazon/redshift/lib/64"
+    
   services:
     - docker
 
@@ -24,11 +29,14 @@ dependencies:
     - docker
     - "docker run --name outreach-dw -p 127.0.0.1:5433:5432 -e POSTGRES_PASSWORD=${DATABASE_PASSWORD} -e POSTGRES_USER=postgres -e POSTGRES_DB=test -d postgres"
     - docker ps -a
+    - "bash $HOME/etl/linux_redshift_odbc_driver_setup.sh"
+    - ls $HOME/odbc
+    - bundle install
+
 
 database:
   override:
     - bundle exec etl schema create
-
 
 test:
   override:
