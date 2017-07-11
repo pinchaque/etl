@@ -2,6 +2,7 @@ require 'tempfile'
 require 'aws-sdk'
 require 'csv'
 require_relative '../redshift/client'
+require_relative '../redshift/table'
 
 module ETL::Output
 
@@ -43,46 +44,8 @@ module ETL::Output
       @table_schema ||= @client.table_schema(dest_table)
     end
 
-    # create dest table if it doesn't exist
-    def create_table_schema
-      type_ary = []
-      schema.columns.each do |name, column|
-        column_type = col_type_str(column)
-        column_statement = "\"#{name}\" #{column_type}"
-        column_statement += " NOT NULL" if primary_keys.include?(name.to_sym)
-
-        type_ary << column_statement
-      end
-
-      pk = if primary_keys.empty?
-             ""
-           else
-             pks = primary_keys.join(",")
-             ", primary key(#{pks})"
-           end
-
-      dk = if dist_keys.empty?
-             ""
-           else
-             dks = dist_keys.join(",")
-             "distkey(#{dks})"
-           end
-
-      sk = if sort_keys.empty?
-             ""
-           else
-             sks = sort_keys.join(",")
-             "sortkey(#{sks})"
-           end
-
-      sql = <<SQL
-      CREATE TABLE IF NOT EXISTS #{dest_table} (#{type_ary.join(', ')} #{pk}) #{dk} #{sk}
-SQL
-    end
-
-    def create_table
-      sql = create_table_schema
-      @client.execute(sql)
+    def schema
+      @schema ||= (default_schema || ETL::Redshift::Table.new(dest_table))
     end
 
     def primary_keys
@@ -125,10 +88,9 @@ SQL
     end
 
     def create_staging_table
-      sql = <<SQL
-        CREATE TEMP TABLE #{tmp_table} (like #{dest_table})
-SQL
-      @client.execute(sql)
+      # create temp table to add data to.
+      temp_table = ::ETL::Redshift::Table.new(tmp_table, { temp: true, like: dest_table })
+      @client.create_table(temp_table)
 
       sql =<<SQL
         COPY #{tmp_table}
@@ -266,37 +228,34 @@ SQL
       rows_processed = 0
       msg = ''
 
-      # Perform all steps within a transaction
-      @client.db.transaction do
-        # create destination table if it doesn't exist
-        create_table
+      # Not sure how odbc uses a transation so skipping this for now.
 
-        # Load data into temp csv
-        # If the table exists, use the order of columns. Otherwise, use @header
-        ::CSV.open(csv_file.path, "w", {:col_sep => @delimiter } ) do |c|
-          reader.each_row do |row|
-            s = schema.columns.keys.map{|k| row[k.to_s]}
-            if !s.nil?
-              c << s
-              rows_processed += 1
-            end
+      # create destination table if it doesn't exist
+      @client.create_table(schema)
+      # Load data into temp csv
+      # If the table exists, use the order of columns. Otherwise, use @header
+      ::CSV.open(csv_file.path, "w", {:col_sep => @delimiter } ) do |c|
+        reader.each_row do |row|
+          s = schema.columns.keys.map{|k| row[k.to_s]}
+          if !s.nil?
+            c << s
+            rows_processed += 1
           end
         end
-
-        if rows_processed > 0
-          #To-do: load data into S3
-          upload_to_s3
-
-          # Load s3 data into destination table
-          load_from_s3
-
-          # delete s3 data
-          delete_object_from_s3
-        end
-
-        msg = "Processed #{rows_processed} input rows for #{dest_table}"
       end
 
+      if rows_processed > 0
+        #To-do: load data into S3
+        upload_to_s3
+
+        # Load s3 data into destination table
+        load_from_s3
+
+        # delete s3 data
+        delete_object_from_s3
+      end
+
+      msg = "Processed #{rows_processed} input rows for #{dest_table}"
       ETL::Job::Result.success(rows_processed, msg)
     end
   end

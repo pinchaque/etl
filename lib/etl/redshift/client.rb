@@ -43,12 +43,18 @@ module ETL::Redshift
       execute(sql)
     end
 
+    def create_table(table)
+      sql = table.create_table_sql
+      execute(sql)
+    end
+
     def columns(table_name)
       sql = <<SQL
       SELECT "column", type FROM pg_table_def WHERE tablename = '#{table_name}'
 SQL
       fetch(sql).all
     end
+
   end
 
 end
