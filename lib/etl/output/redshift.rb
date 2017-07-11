@@ -12,25 +12,21 @@ module ETL::Output
     def initialize(load_strategy, conn_params, aws_params={}, delimiter='|')
       super()
 
-      @client = ::ETL::Redshift::Client.new(conn_params)
       @aws_params = aws_params
       @load_strategy = load_strategy
-      @conn = nil
       @bucket = @aws_params[:s3_bucket]
       @random_key = [*('a'..'z'),*('0'..'9')].shuffle[0,10].join
       @delimiter = delimiter
+      @client = ::ETL::Redshift::Client.new(conn_params)
+      @client.connect
     end
 
     def csv_file
       @csv_file ||= Tempfile.new(dest_table)
     end
 
-    def conn
-      @client.connect
-    end
-
     def exec_query(sql)
-      @client.exec(sql)
+      @client.execute(sql)
     end
 
     # Name of the destination table. By default we assume this is the class
@@ -45,12 +41,7 @@ module ETL::Output
     end
 
     def table_schema
-      @table_schema ||= if dest_table && conn
-                     sql = <<SQL
-        SELECT "column", type FROM pg_table_def WHERE tablename = '#{dest_table}'
-SQL
-                     @client.execute(sql)
-                   end
+      @table_schema ||= @client.table_schema(dest_table)
     end
 
     # create dest table if it doesn't exist
@@ -138,7 +129,7 @@ SQL
       sql = <<SQL
         CREATE TEMP TABLE #{tmp_table} (like #{dest_table})
 SQL
-      client.execute(sql)
+      @client.execute(sql)
 
       sql =<<SQL
         COPY #{tmp_table}
@@ -277,7 +268,7 @@ SQL
       msg = ''
 
       # Perform all steps within a transaction
-      conn.transaction do
+      @client.db.transaction do
         # create destination table if it doesn't exist
         create_table
 

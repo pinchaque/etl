@@ -46,7 +46,7 @@ cat << EOF > $odbc_dir/amazon.redshiftodbc.ini
 [Driver]
 #EG# DriverManagerEncoding=UTF-32
 DriverManagerEncoding=UTF-16
-ErrorMessagesPath=/opt/amazon/redshiftodbc/ErrorMessages
+ErrorMessagesPath=/opt/amazon/redshift/ErrorMessages
 LogLevel=0
 LogPath=[LogPath]
 
