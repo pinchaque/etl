@@ -28,15 +28,6 @@ module ETL::Redshift
               end
     end
 
-    def connect
-      if !@connected then
-        connect_str = "Driver={#{@driver}}; Servername=#{@server}; Database=#{@db_name}; UID=#{@user}; PWD=#{@password}; Port=#{@port}"
-        puts "connect str:#{connect_str}"
-        @db = Sequel.odbc(:drvconnect=> connect_str)
-        @connected = true
-      end
-    end
-
     def execute(sql)
       log.debug(sql)
       db.execute(sql)
