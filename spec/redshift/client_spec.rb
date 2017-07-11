@@ -1,4 +1,5 @@
-#require 'etl/redshift/client'
+require 'etl/redshift/client'
+require 'etl/redshift/table'
 require 'etl/core'
 
 RSpec.describe "redshift", skip: true do
@@ -7,17 +8,15 @@ RSpec.describe "redshift", skip: true do
     it "connect and create and delete a table" do
       table_name = "test_table_1"
       client.drop_table(table_name)
+      table = ETL::Redshift::Table.new(table_name, { backup: false, dist_style: 'All'})
+      table.string("name")
+      table.int("id")
+      table.add_primarykey("id")
 
-      # TODO: Move create table to when that's
-      # implemented later when a new redshift table
-      # class has been implemented.
-      sql = <<SQL
-  create table #{table_name} (
-    day timestamp);
-SQL
-      client.execute(sql)
+      client.create_table(table)
       client.drop_table(table_name)
     end
+
     it "get table columns" do
       client.drop_table("test_table1")
       sql = <<SQL

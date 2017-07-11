@@ -9,16 +9,17 @@ module ETL::Schema
   # primary_key: Array of columns that are primary keys; used for upsert
   #   and update loads
   class Table
-    attr_accessor :columns, :partition_columns, :primary_key, :dist_key, :sort_key
+    attr_accessor :columns, :partition_columns, :primary_key, :name, :like, :temp
 
-    def initialize
+    def initialize(name = "", opts = {})
       @columns = {}
       @partition_columns = {}
       @primary_key = []
-      @dist_key = []
-      @sort_key = []
+      @name = name
+      @like = opts.fetch(:like, '')
+      @temp = opts.fetch(:temp, false)
     end
-    
+
     def self.from_sequel_schema(schema)
       t = Table.new
       schema.each do |col|
@@ -27,7 +28,7 @@ module ETL::Schema
 
         # translate the database type from Sequel to our types
         type = case col_opts[:type]
-        when :integer 
+        when :integer
           :int
         when :datetime
           :date
@@ -36,7 +37,7 @@ module ETL::Schema
         else
           col_opts[:type]
         end
-        
+
         # TODO need to handle width and precision properly
         t.add_column(col_name, type, nil, nil)
       end
@@ -53,7 +54,7 @@ module ETL::Schema
 
         # translate the database type from Sequel to our types
         type = case col_opts
-        when "integer" 
+        when "integer"
           :int
         when "datetime"
           :date
@@ -68,7 +69,7 @@ module ETL::Schema
             add_sortkey(col_name)
           end
           add_distkey(col_name)
-        end 
+        end
         # TODO need to handle width and precision properly
         t.add_column(col_name, type, nil, nil)
       end
@@ -79,7 +80,7 @@ module ETL::Schema
       a = Array.new
       @columns.each do |k, v|
         a << "#{k.to_s} #{v.to_s}"
-      end 
+      end
       "(\n  " + a.join(",\n  ") + "\n)\n"
     end
 
@@ -124,16 +125,8 @@ module ETL::Schema
       add_column(name, sym, nil, nil, &block)
     end
 
-    def add_distkey(column)
-      @dist_key.push(column)
-    end
-
-    def add_sortkey(column)
-      @sort_key.push(column)
-    end
-
     def add_primarykey(pks)
-      @primary_key.push(pks) 
+      @primary_key.push(pks)
     end
 
   end
