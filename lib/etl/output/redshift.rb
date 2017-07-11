@@ -18,7 +18,6 @@ module ETL::Output
       @random_key = [*('a'..'z'),*('0'..'9')].shuffle[0,10].join
       @delimiter = delimiter
       @client = ::ETL::Redshift::Client.new(conn_params)
-      @client.connect
     end
 
     def csv_file
