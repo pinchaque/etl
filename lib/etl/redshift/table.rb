@@ -10,6 +10,7 @@ module ETL
         super(name, opts)
         @dist_key = ""
         @sort_keys = []
+        @identity_key = {} 
         @backup = opts.fetch(:backup, true)
         @dist_style = opts.fetch(:dist_style, '')
       end
@@ -20,6 +21,10 @@ module ETL
 
       def add_sortkey(column)
         @sort_keys.push(column)
+      end
+
+      def set_identity(column, seed=1, step=1)
+        @identity_key = { column: column, seed: seed, step: step }
       end
 
       def create_table_sql
@@ -40,7 +45,8 @@ module ETL
         columns.each do |name, column|
           column_type = col_type_str(column)
           column_statement = "\"#{name}\" #{column_type}"
-          column_statement += " NOT NULL" if @primary_key.include?(name.to_sym)
+          column_statement += " IDENTITY(#{@identity_key[:seed]}, #{@identity_key[:step]})" unless @identity_key.empty?
+          column_statement += " NOT NULL" if @primary_key.include?(name.to_sym) || ( !@identity_key.empty? && @identity_key[:column] == name.to_sym )
 
           type_ary << column_statement
         end
