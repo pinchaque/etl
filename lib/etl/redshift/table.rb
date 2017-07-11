@@ -69,7 +69,7 @@ module ETL
         end
 
         if !@dist_style.empty?
-          sql << " diststyle #{@dist_style}"
+          sql << " DISTSTYLE #{@dist_style}"
         end
 
         sql

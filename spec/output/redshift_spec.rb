@@ -78,7 +78,7 @@ RSpec.describe "redshift create table" do
   let(:load_strategy) { :insert }
   let(:table_name) { "test_1" }
   let(:pks) { [:day, :id] }
-  let(:dk) { "id" }
+  let(:dk) { :id }
   let(:sks) { [:id] }
 
   describe 'create_table_schema' do
