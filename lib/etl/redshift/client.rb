@@ -34,7 +34,6 @@ module ETL::Redshift
     end
 
     def fetch(sql)
-      connect
       log.debug(sql)
       db.fetch(sql)
     end
