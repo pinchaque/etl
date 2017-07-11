@@ -10,7 +10,7 @@ module ETL::Redshift
   # Class that contains shared logic for accessing Redshift.
   class Client
     include ETL::CachedLogger
-    attr_accessor :driver, :server, :db, :port, :username, :password, :connected
+    attr_accessor :driver, :server, :port, :username, :password
     def initialize(conn_params={})
       @driver = conn_params[:driver] || REDSHIFT_ODBC_DRIVER_NAME
       @server = conn_params[:host] || "localhost"
@@ -18,8 +18,14 @@ module ETL::Redshift
       @port =  conn_params[:port] || 5439
       @password = conn_params[:password]
       @user = conn_params[:user]
-      ObjectSpace.define_finalizer(self, proc { @db.disconnect })
-      @connected = false
+      ObjectSpace.define_finalizer(self, proc { db.disconnect })
+    end
+
+    def db
+      @db ||= begin
+                connect_str = "Driver={#{@driver}}; Servername=#{@server}; Database=#{@db_name}; UID=#{@user}; PWD=#{@password}; Port=#{@port}"
+                Sequel.odbc(:drvconnect=> connect_str)
+              end
     end
 
     def connect
@@ -32,15 +38,14 @@ module ETL::Redshift
     end
 
     def execute(sql)
-      connect
       log.debug(sql)
-      @db.execute(sql)
+      db.execute(sql)
     end
 
     def fetch(sql)
       connect
       log.debug(sql)
-      @db.fetch(sql)
+      db.fetch(sql)
     end
 
     def drop_table(table_name)
