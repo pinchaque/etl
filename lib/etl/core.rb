@@ -87,15 +87,27 @@ module ETL
   
   # load all user job classes
   def ETL.load_user_classes
+    class_dirs_map = {}
     if c = ETL.config.core.fetch(:default, {})[:class_dir]
-      load_class_dir(c)
+      find_dirs(c, class_dirs_map)
     end
     if c = ETL.config.core[:job][:class_dir]
+      find_dirs(c, class_dirs_map)
+    end
+    class_dirs_map.keys.each do |c|
       load_class_dir(c)
     end
   end
 
   private
+
+  # loading the sub directories of the supplied base directory. Adding dirs to hash in case there are duplicates to remove them
+  def ETL.find_dirs(dir, dirs_map)
+      Dir.entries(dir).select {|entry| File.directory? File.join(dir ,entry) and !(entry =='.' || entry == '..') }.each  do | f|
+        dirs_map["#{dir}/#{f}"] = true
+      end
+      dirs_map[dir] = true
+  end
 
   # Function to load external classes in the specified directory
   def ETL.load_class_dir(class_dir)
