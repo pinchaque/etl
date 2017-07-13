@@ -58,6 +58,13 @@ To be completed before I'd consider this "alpha":
 * Provide documentation and examples of the API
 * Publish to RubyGems
 
+== To run the existing tests
+Run `docker build . -t outreach/etl-test`
+Run `docker run -it outreach/etl -v /MY_TEST_CONFIG_DIR:/etl_config bash`
+Run `service postgresql start`
+Run `bundle exec rspec`
+RUN `export ETL_CONFIG_DIR=/etl_config`
+
 == Copyright
 
 Copyright (c) 2015-2016 Charles Smith
