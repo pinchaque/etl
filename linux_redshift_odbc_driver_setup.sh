@@ -18,16 +18,16 @@ sudo dpkg -i $odbc_dir/amazonredshiftodbc-64-bit_1.3.1-2_amd64.deb
 echo "write odbc.ini"
 cat << EOF > $odbc_dir/odbc.ini
 [ODBC Data Sources]
-MyRealRedshift=MyRedshiftDriver
+MyRealRedshift=Amazon Redshift (x64)
 
 [MyRealRedshift]
 # Driver: The location where the ODBC driver is installed to.
 Driver=/opt/amazon/redshiftodbc/lib/64/libamazonredshiftodbc64.so
 
 # Required: These values can also be specified in the connection string.
-Server=[Server]
-Port=[Port]
-Database=[Database]
+Server=dw-testing.outreach-staging.com
+Port=5439
+Database=dev
 locale=en-US
 EOF
 
@@ -36,7 +36,7 @@ cat << EOF > $odbc_dir/odbcinst.ini
 [ODBC Drivers]
 Amazon Redshift=Installed
 
-[MyRedshiftDriver]
+[Amazon Redshift (x64)]
 Description=Amazon Redshift ODBC Driver
 Driver=/opt/amazon/redshiftodbc/lib/64/libamazonredshiftodbc64.so
 EOF
