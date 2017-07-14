@@ -5,37 +5,30 @@ require 'mixins/cached_logger'
 module ETL::Redshift
 
   # when the odbc driver is setup in chef this is the driver's name
-  REDSHIFT_ODBC_DRIVER_NAME="MyRedshiftDriver"
+  REDSHIFT_ODBC_DRIVER_NAME="Amazon Redshift (x64)"
 
   # Class that contains shared logic for accessing Redshift.
   class Client
     include ETL::CachedLogger
-    attr_accessor :driver, :server, :port, :username, :password
+    attr_accessor :db
     def initialize(conn_params={})
-      @driver = conn_params.fetch(:driver, REDSHIFT_ODBC_DRIVER_NAME)
-      @server = conn_params.fetch(:host, "localhost")
-      @db_name = conn_params.fetch(:database, "dev")
-      @port =  conn_params.fetch(:port, 5439)
-      @password = conn_params.fetch(:password, '')
-      @user = conn_params.fetch(:user, "masteruser")
+      @conn_params = conn_params
       ObjectSpace.define_finalizer(self, proc { db.disconnect })
     end
 
     def db
       @db ||= begin
-                conn_str = "Driver={#{@driver}}; Servername=#{@server}; Database=#{@db_name}; UID=#{@user}; PWD=#{@password}; Port=#{@port}"
-                log.debug("ODBC Connection String: #{conn_str}")
-                Sequel.odbc(:drvconnect=> conn_str)
+                Sequel.odbc(@conn_params)
               end
     end
 
     def execute(sql)
-      log.debug(sql)
+      log.debug("SQL: '#{sql}'")
       db.execute(sql)
     end
 
     def fetch(sql)
-      log.debug(sql)
+      log.debug("SQL: '#{sql}'")
       db.fetch(sql)
     end
 
@@ -57,5 +50,4 @@ SQL
     end
 
   end
-
 end
