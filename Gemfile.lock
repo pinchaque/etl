@@ -7,7 +7,6 @@ PATH
       influxdb
       mysql2
       pg
-      ruby-odbc
       sequel
       slack-notifier
       tzinfo
@@ -22,13 +21,13 @@ GEM
       minitest (~> 5.1)
       tzinfo (~> 1.1)
     amq-protocol (2.2.0)
-    aws-sdk (2.10.11)
-      aws-sdk-resources (= 2.10.11)
-    aws-sdk-core (2.10.11)
+    aws-sdk (2.10.12)
+      aws-sdk-resources (= 2.10.12)
+    aws-sdk-core (2.10.12)
       aws-sigv4 (~> 1.0)
       jmespath (~> 1.0)
-    aws-sdk-resources (2.10.11)
-      aws-sdk-core (= 2.10.11)
+    aws-sdk-resources (2.10.12)
+      aws-sdk-core (= 2.10.12)
     aws-sigv4 (1.0.1)
     bunny (2.7.0)
       amq-protocol (>= 2.2.0)
@@ -57,7 +56,6 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.6.0)
     rspec-support (3.6.0)
-    ruby-odbc (0.99998)
     sequel (4.48.0)
     slack-notifier (2.2.2)
     thread_safe (0.3.6)

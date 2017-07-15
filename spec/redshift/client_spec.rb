@@ -24,10 +24,11 @@ RSpec.describe "redshift", skip: true do
     day timestamp);
 SQL
       client.execute(sql)
-      r = client.columns("test_table1")
-      expect(r.length).to eq(1)
-      expect(r[0][:column]).to eq("day")
-      expect(r[0][:type]).to eq("timestamp without time zone")
+      rows = []
+      r = client.columns("test_table1").each do |r|
+        rows << r
+      end
+      expect(rows.to_s).to eq("[{\"column\"=>\"day\", \"type\"=>\"timestamp without time zone\"}]")
     end
   end
 end

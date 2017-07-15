@@ -27,7 +27,7 @@ module ETL
         @identity_key = { column: column, seed: seed, step: step }
       end
 
-      def create_table_sql
+      def create_table_sql(using_redshift_odbc_driver = true)
         temp =""
         temp = if @temp
                  " TEMPORARY"
@@ -65,19 +65,22 @@ module ETL
                  sql << " BACKUP NO"
         end
 
-        if !@dist_key.empty?
-          sql << " DISTKEY(#{@dist_key})"
-        end
+        # If the sql provider doesn't support redshift specific
+        # create table pieces don't add them in.
+        if using_redshift_odbc_driver then
+          if !@dist_key.empty?
+            sql << " DISTKEY(#{@dist_key})"
+          end
 
-        if @sort_keys.length > 0
-          sks = @sort_keys.join(",")
-          sql << " SORTKEY(#{sks})"
-        end
+          if @sort_keys.length > 0
+            sks = @sort_keys.join(",")
+            sql << " SORTKEY(#{sks})"
+          end
 
-        if !@dist_style.empty?
-          sql << " DISTSTYLE #{@dist_style}"
+          if !@dist_style.empty?
+            sql << " DISTSTYLE #{@dist_style}"
+          end
         end
-
         sql
       end
 

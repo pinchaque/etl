@@ -7,12 +7,12 @@ end
 def rspec_redshift_params
   ETL.config.redshift[:test]
 end
-  
+
 # Test loading into Redshift
 class TestRedshiftCreate1 < ETL::Output::Redshift
   def initialize(input, table_name)
-    super(:insert_append, rspec_redshift_params, rspec_aws_params) 
-    @dest_table = table_name 
+    super(:insert_append, rspec_redshift_params, rspec_aws_params)
+    @dest_table = table_name
     @reader = input
 
     define_schema do |s|
@@ -23,7 +23,7 @@ class TestRedshiftCreate1 < ETL::Output::Redshift
       s.float("average")
     end
   end
-  
+
   def default_schema
     nil
   end
@@ -44,7 +44,7 @@ class TestRedshiftLoad1 < ETL::Output::Redshift
       s.add_primarykey(:id)
     end
   end
-  
+
   def default_schema
     nil
   end
@@ -68,7 +68,7 @@ class TestRedshiftCreatetable1 < ETL::Output::Redshift
       sks.each {|sk| s.add_sortkey(sk) }
     end
   end
-  
+
   def default_schema
     nil
   end
@@ -189,7 +189,7 @@ RSpec.describe "redshift output", skip: true do
     sql = <<SQL
 drop table if exists #{table_name};
 create table #{table_name} (
-  day timestamp, 
+  day timestamp,
   id int,
   value int,
   dw_created timestamp,
@@ -224,9 +224,9 @@ SQL
 
     data = []
     data.push(["day", "id", "value", "dw_created", "dw_updated"])
-    data.push(["2015-04-01", 10, 1, d1, d2])
-    data.push(["2015-04-02", 11, 2, d1, d2])
-    data.push(["2015-04-03", 12, 3, d1, d2])
+    data.push(["2015-04-01", "10", "1", d1, d2])
+    data.push(["2015-04-02", "11", "2", d1, d2])
+    data.push(["2015-04-03", "12", "3", d1, d2])
 
     #upload_string_to_s3(table_name, data)
     make_csv('/tmp/test2.txt', data)
@@ -241,8 +241,8 @@ SQL
 
     data = []
     data.push(["day", "id", "value", "dw_created", "dw_updated"])
-    data.push(["2015-04-02", 11, 4, today, today])
-    data.push(["2015-04-02", 13, 5, today, today])
+    data.push(["2015-04-02", "11", "4", today, today])
+    data.push(["2015-04-02", "13", "5", today, today])
 
     make_csv('/tmp/test2.txt', data)
 
@@ -257,17 +257,17 @@ select to_char(day, 'YYYY-MM-DD HH24:MI:SS') as day
   , value
   , to_char(dw_created, 'YYYY-MM-DD HH24:MI:SS') as dw_created
   , to_char(dw_updated, 'YYYY-MM-DD HH24:MI:SS') as dw_updated
-from #{table_name} 
+from #{table_name}
 order by day, id, value;
 SQL
-    result = conn.fetch(sql).map { |h| h.values }
+    result = conn.execute(sql).map { |h| h.values }
 
     exp_values = [
-      ["2015-04-01 00:00:00", 10, 1, d1, d2],
-      ["2015-04-02 00:00:00", 11, 2, d1, d2],
-      ["2015-04-02 00:00:00", 11, 4, today, today],
-      ["2015-04-02 00:00:00", 13, 5, today, today],
-      ["2015-04-03 00:00:00", 12, 3, d1, d2],
+      ["2015-04-01 00:00:00", "10", "1", d1, d2],
+      ["2015-04-02 00:00:00", "11", "2", d1, d2],
+      ["2015-04-02 00:00:00", "11", "4", today, today],
+      ["2015-04-02 00:00:00", "13", "5", today, today],
+      ["2015-04-03 00:00:00", "12", "3", d1, d2],
     ]
     compare_db_results(exp_values, result)
   end
@@ -281,9 +281,9 @@ SQL
 
     data = []
     data.push(["day", "id", "value", "dw_created", "dw_updated"])
-    data.push(["2015-04-01", 10, 1, d1, d2])
-    data.push(["2015-04-02", 11, 2, d1, d2])
-    data.push(["2015-04-03", 12, 3, d1, d2])
+    data.push(["2015-04-01", "10", "1", d1, d2])
+    data.push(["2015-04-02", "11", "2", d1, d2])
+    data.push(["2015-04-03", "12", "3", d1, d2])
 
     make_csv('/tmp/test2.txt', data)
     batch = ETL::Batch.new({ :day => "2015-04-03" })
@@ -300,8 +300,8 @@ SQL
 
     data = []
     data.push(["day", "id", "value", "dw_created", "dw_updated"])
-    data.push(["2015-04-02", 11, 4, today, today])
-    data.push(["2015-04-02", 13, 5, today, today])
+    data.push(["2015-04-02", "11", "4", today, today])
+    data.push(["2015-04-02", "13", "5", today, today])
 
     make_csv('/tmp/test2.txt', data)
 
@@ -316,14 +316,14 @@ select to_char(day, 'YYYY-MM-DD HH24:MI:SS') as day
   , value
   , to_char(dw_created, 'YYYY-MM-DD HH24:MI:SS') as dw_created
   , to_char(dw_updated, 'YYYY-MM-DD HH24:MI:SS') as dw_updated
-from #{table_name} 
+from #{table_name}
 order by day, id, value;
 SQL
-    result = conn.fetch(sql).map { |h| h.values }
+    result = conn.execute(sql).map { |h| h.values }
 
     exp_values = [
-      ["2015-04-02 00:00:00", 11, 4, today, today],
-      ["2015-04-02 00:00:00", 13, 5, today, today],
+      ["2015-04-02 00:00:00", "11", "4", today, today],
+      ["2015-04-02 00:00:00", "13", "5", today, today],
     ]
 
     compare_db_results(exp_values, result)
@@ -338,9 +338,9 @@ SQL
 
     data = []
     data.push(["day", "id", "value", "dw_created", "dw_updated"])
-    data.push(["2015-04-01", 10, 1, d1, d2])
-    data.push(["2015-04-02", 11, 2, d1, d2])
-    data.push(["2015-04-03", 12, 3, d1, d2])
+    data.push(["2015-04-01", "10", "1", d1, d2])
+    data.push(["2015-04-02", "11", "2", d1, d2])
+    data.push(["2015-04-03", "12", "3", d1, d2])
 
     make_csv('/tmp/test2.txt', data)
     input = ETL::Input::CSV.new('/tmp/test2.txt')
@@ -355,9 +355,9 @@ SQL
 
     data = []
     data.push(["day", "id", "value", "dw_created", "dw_updated"])
-    data.push(["2015-04-02", 11, 4, today, today])
-    data.push(["2015-04-02", 13, 5, today, today])
-    data.push(["2015-04-05", 12, 6, today, today])
+    data.push(["2015-04-02", "11", "4", today, today])
+    data.push(["2015-04-02", "13", "5", today, today])
+    data.push(["2015-04-05", "12", "6", today, today])
 
     make_csv('/tmp/test2.txt', data)
     input = ETL::Input::CSV.new('/tmp/test2.txt')
@@ -372,15 +372,15 @@ select to_char(day, 'YYYY-MM-DD HH24:MI:SS') as day
   , value
   , to_char(dw_created, 'YYYY-MM-DD HH24:MI:SS') as dw_created
   , to_char(dw_updated, 'YYYY-MM-DD HH24:MI:SS') as dw_updated
-from #{table_name} 
+from #{table_name}
 order by day, id, value;
 SQL
-    result = conn.fetch(sql).map { |h| h.values }
+    result = conn.execute(sql).map { |h| h.values }
 
     exp_values = [
-      ["2015-04-01 00:00:00", 10, 1, d1, d2],
-      ["2015-04-02 00:00:00", 11, 4, today, today],
-      ["2015-04-05 00:00:00", 12, 6, today, today],
+      ["2015-04-01 00:00:00", "10", "1", d1, d2],
+      ["2015-04-02 00:00:00", "11", "4", today, today],
+      ["2015-04-05 00:00:00", "12", "6", today, today],
     ]
 
     compare_db_results(exp_values, result)
@@ -397,9 +397,9 @@ SQL
 
     data = []
     data.push(["day", "id", "value", "dw_created", "dw_updated"])
-    data.push(["2015-04-01", 10, 1, d1, d2])
-    data.push(["2015-04-02", 11, 2, d1, d2])
-    data.push(["2015-04-03", 12, 3, d1, d2])
+    data.push(["2015-04-01", "10", "1", d1, d2])
+    data.push(["2015-04-02", "11", "2", d1, d2])
+    data.push(["2015-04-03", "12", "3", d1, d2])
 
     make_csv('/tmp/test2.txt', data)
     input = ETL::Input::CSV.new('/tmp/test2.txt')
@@ -412,9 +412,9 @@ SQL
 
     data = []
     data.push(["day", "id", "value", "dw_created", "dw_updated"])
-    data.push(["2015-04-02", 11, 4, today, today])
-    data.push(["2015-04-02", 13, 5, today, today])
-    data.push(["2015-04-05", 12, 6, today, today])
+    data.push(["2015-04-02", "11", "4", today, today])
+    data.push(["2015-04-02", "13", "5", today, today])
+    data.push(["2015-04-05", "12", "6", today, today])
 
     make_csv('/tmp/test2.txt', data)
     input = ETL::Input::CSV.new('/tmp/test2.txt')
@@ -429,16 +429,16 @@ select to_char(day, 'YYYY-MM-DD HH24:MI:SS') as day
   , value
   , to_char(dw_created, 'YYYY-MM-DD HH24:MI:SS') as dw_created
   , to_char(dw_updated, 'YYYY-MM-DD HH24:MI:SS') as dw_updated
-from #{table_name} 
+from #{table_name}
 order by id, day, value
 SQL
-    result = conn.fetch(sql).map { |h| h.values }
+    result = conn.execute(sql).map { |h| h.values }
 
     exp_values = [
-      ["2015-04-01 00:00:00", 10, 1, d1, d2],
-      ["2015-04-02 00:00:00", 11, 4, today, today],
-      ["2015-04-05 00:00:00", 12, 6, today, today],
-      ["2015-04-02 00:00:00", 13, 5, today, today],
+      ["2015-04-01 00:00:00", "10", "1", d1, d2],
+      ["2015-04-02 00:00:00", "11", "4", today, today],
+      ["2015-04-05 00:00:00", "12", "6", today, today],
+      ["2015-04-02 00:00:00", "13", "5", today, today],
     ]
 
     compare_db_results(exp_values, result)
@@ -455,12 +455,12 @@ SQL
 
     data = []
     data.push(["day", "id", "value", "dw_created", "dw_updated"])
-    data.push(["2015-04-01", 10, 1, d1, d2])
-    data.push(["2015-04-01", 11, 2, d1, d2])
-    data.push(["2015-04-02", 11, 3, d1, d2])
-    data.push(["2015-04-02", 12, 4, d1, d2])
-    data.push(["2015-04-02", 13, 5, d1, d2])
-    data.push(["2015-04-03", 10, 6, d1, d2])
+    data.push(["2015-04-01", "10", "1", d1, d2])
+    data.push(["2015-04-01", "11", "2", d1, d2])
+    data.push(["2015-04-02", "11", "3", d1, d2])
+    data.push(["2015-04-02", "12", "4", d1, d2])
+    data.push(["2015-04-02", "13", "5", d1, d2])
+    data.push(["2015-04-03", "10", "6", d1, d2])
 
     make_csv('/tmp/test2.txt', data)
     input = ETL::Input::CSV.new('/tmp/test2.txt')
@@ -472,10 +472,10 @@ SQL
 
     data = []
     data.push(["day", "id", "value", "dw_created", "dw_updated"])
-    data.push(["2015-04-02", 11, 10, d1, d2])
-    data.push(["2015-04-02", 14, 11, d1, d2])
-    data.push(["2015-04-03", 11, 12, d1, d2])
-    data.push(["2015-04-04", 11, 13, d1, d2])
+    data.push(["2015-04-02", "11", "10", d1, d2])
+    data.push(["2015-04-02", "14", "11", d1, d2])
+    data.push(["2015-04-03", "11", "12", d1, d2])
+    data.push(["2015-04-04", "11", "13", d1, d2])
 
     make_csv('/tmp/test2.txt', data)
     input = ETL::Input::CSV.new('/tmp/test2.txt')
@@ -489,21 +489,21 @@ SQL
 select to_char(day, 'YYYY-MM-DD HH24:MI:SS') as day
   , id
   , value
-from #{table_name} 
+from #{table_name}
 order by day, id, value
 SQL
-    result = conn.fetch(sql).map { |h| h.values }
+    result = conn.execute(sql).map { |h| h.values }
 
     exp_values = [
-      ["2015-04-01 00:00:00", 10, 1],
-      ["2015-04-01 00:00:00", 11, 2],
-      ["2015-04-02 00:00:00", 11, 10],
-      ["2015-04-02 00:00:00", 12, 4],
-      ["2015-04-02 00:00:00", 13, 5],
-      ["2015-04-02 00:00:00", 14, 11],
-      ["2015-04-03 00:00:00", 10, 6],
-      ["2015-04-03 00:00:00", 11, 12],
-      ["2015-04-04 00:00:00", 11, 13],
+      ["2015-04-01 00:00:00", "10", "1"],
+      ["2015-04-01 00:00:00", "11", "2"],
+      ["2015-04-02 00:00:00", "11", "10"],
+      ["2015-04-02 00:00:00", "12", "4"],
+      ["2015-04-02 00:00:00", "13", "5"],
+      ["2015-04-02 00:00:00", "14", "11"],
+      ["2015-04-03 00:00:00", "10", "6"],
+      ["2015-04-03 00:00:00", "11", "12"],
+      ["2015-04-04 00:00:00", "11", "13"],
     ]
 
     compare_db_results(exp_values, result)
