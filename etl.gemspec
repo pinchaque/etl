@@ -18,7 +18,9 @@ Gem::Specification.new do |spec|
   spec.executables   = "etl"
   spec.require_paths = ["lib"]
 
-  spec.add_dependency 'ruby-odbc'
+  # Removing as this is blocking chef
+  # deployments
+  #spec.add_dependency 'ruby-odbc'
   spec.add_dependency 'clamp'
   spec.add_dependency 'mysql2'
   spec.add_dependency 'sequel'
