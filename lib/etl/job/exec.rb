@@ -127,7 +127,7 @@ module ETL::Job
       raise ETL::JobError, "Failed to find job ID '#{@payload.job_id}' in manager when extracting payload" unless klass
       
       # instantiate and validate our batch class
-      bf = klass.batch_factory_class.new
+      bf = klass.batch_factory
       batch = bf.validate!(bf.from_hash(@payload.batch_hash))
 
       # instantiate the job class

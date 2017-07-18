@@ -41,8 +41,7 @@ module ETL::Cli::Cmd
     # we must generate all batches for this job class and instantiate jobs
     # for each to check if they're ready.
     def process_job_class(klass)
-      batch_fact = klass.batch_factory_class.new
-      batch_fact.each do |batch|
+      klass.batch_factory.each do |batch|
         process_job(klass.new(batch))
       end
     end
