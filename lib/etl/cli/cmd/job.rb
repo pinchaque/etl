@@ -36,8 +36,7 @@ module ETL::Cli::Cmd
           end
           _, klass = klasses.fetch(0)
           begin
-            batch_factory = klass.batch_factory_class.new
-            batch = batch_factory.parse!(@batch_str)
+            batch = klass.batch_factory.parse!(@batch_str)
           rescue StandardError => ex
             raise ETL::UsageError, "Invalid batch value specified (#{ex.message})"
           end
@@ -45,8 +44,7 @@ module ETL::Cli::Cmd
         else
           # No batch string
           klasses.each do |id, klass|
-            batch_factory = klass.batch_factory_class.new
-            batch_factory.each do |batch|
+            klass.batch_factory.each do |batch|
               run_batch(id, batch)
             end
           end

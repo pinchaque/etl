@@ -73,6 +73,10 @@ module ETL::Job
       ETL::Schedule::Never
     end
     
+    def self.batch_factory
+      batch_factory_class.new
+    end
+    
     def self.batch_factory_class
       ETL::BatchFactory::Base
     end
