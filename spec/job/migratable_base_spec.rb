@@ -4,10 +4,12 @@ require 'etl/job/migratable_base'
 class Job < ETL::Job::MigratableBase 
   register_job
 
-  def initialize(b)
-    super(b)
-    @target_version = 1
-    @migration_dir = "#{Dir.pwd}/db" 
+  def target_version
+    1
+  end
+
+  def migration_dir
+    "#{Dir.pwd}/db"
   end
 
   def output
@@ -79,13 +81,13 @@ END
     it { expect( job.migration_files.length ).to eq(2) }
     it "#migrate up to 2" do
       allow(job).to receive(:deploy_version).and_return(0)
-      job.target_version = 2
+      allow(job).to receive(:target_version).and_return(2)
       expect { job.migrate }.to output("test output up at version 1\ntest output up at version 2\n").to_stdout
     end 
 
     it "#migrate down to 1" do
       allow(job).to receive(:deploy_version).and_return(2)
-      job.target_version = 0
+      allow(job).to receive(:target_version).and_return(0)
       expect { job.migrate }.to output("test output down at version 2\ntest output down at version 1\n").to_stdout
     end 
   

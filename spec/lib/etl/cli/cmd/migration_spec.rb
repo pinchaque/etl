@@ -84,16 +84,20 @@ END
   end
 
   # Test with mysql format schema
-  context 'with mysql' do
+  context 'with mysql with primary keys' do
     before { allow(described_instance).to receive(:source_schema).and_return([[:attribute, {:primary_key=>false, :allow_null=>true, :default=>nil, :db_type=>"varchar(100)", :type=>:string, :ruby_default=>nil, :max_length=>100}],
-                                                                              [:day, {:primary_key=>false, :allow_null=>true, :default=>nil, :db_type=>"datetime", :type=>:datetime, :ruby_default=>nil}]] ) }
+                                                                              [:day, {:primary_key=>true, :allow_null=>true, :default=>nil, :db_type=>"datetime", :type=>:datetime, :ruby_default=>nil}]] ) }
 
     it '#schema_map' do
       expect( described_instance.schema_map ).to eq({ "day" => "datetime", "attr" => "varchar(100)" })
     end
 
+    it '#primary_keys' do
+      expect( described_instance.primary_keys ).to eq( [:day] )
+    end
+
     it '#up_sql' do
-      expect( described_instance.up_sql.lstrip.rstrip ).to eq( "@client.execute(\"create table test_table ( day datetime, attr varchar(100) )\")" )
+      expect( described_instance.up_sql.lstrip.rstrip ).to eq( "@client.execute(\"CREATE TABLE IF NOT EXISTS test_table( \"day\" timestamp NOT NULL, \"attr\" varchar (100), PRIMARY KEY(day) )\")" )
     end
 
     it '#down_sql' do
@@ -114,16 +118,40 @@ END
     end
   end
 
-  # Test with postgres format schema
-  context 'with postgres' do
+  context 'with mysql without primary keys' do
     before { allow(described_instance).to receive(:source_schema).and_return([[:attribute, {:primary_key=>false, :allow_null=>true, :default=>nil, :db_type=>"varchar(100)", :type=>:string, :ruby_default=>nil, :max_length=>100}],
                                                                               [:day, {:primary_key=>false, :allow_null=>true, :default=>nil, :db_type=>"datetime", :type=>:datetime, :ruby_default=>nil}]] ) }
     it '#schema_map' do
       expect( described_instance.schema_map ).to eq({ "day" => "datetime", "attr" => "varchar(100)" })
     end
 
+    it '#primary_keys' do
+      expect( described_instance.primary_keys ).to eq( [] )
+    end
+
     it '#up_sql' do
-      expect( described_instance.up_sql.lstrip.rstrip ).to eq( "@client.execute(\"create table test_table ( day datetime, attr varchar(100) )\")" )
+      expect( described_instance.up_sql.lstrip.rstrip ).to eq( "@client.execute(\"CREATE TABLE IF NOT EXISTS test_table( \"day\" timestamp, \"attr\" varchar (100) )\")" )
+    end
+
+    it '#down_sql' do
+      expect( described_instance.down_sql.lstrip.rstrip ).to eq( "@client.execute(\"drop table test_table\")" )
+    end
+  end
+
+  # Test with postgres format schema
+  context 'with postgres' do
+    before { allow(described_instance).to receive(:source_schema).and_return([[:attribute, {:primary_key=>false, :allow_null=>true, :default=>nil, :db_type=>"varchar(100)", :type=>:string, :ruby_default=>nil, :max_length=>100}],
+                                                                              [:day, {:primary_key=>true, :allow_null=>true, :default=>nil, :db_type=>"datetime", :type=>:datetime, :ruby_default=>nil}]] ) }
+    it '#schema_map' do
+      expect( described_instance.schema_map ).to eq({ "day" => "datetime", "attr" => "varchar(100)" })
+    end
+
+    it '#primary_keys' do
+      expect( described_instance.primary_keys ).to eq( [:day] )
+    end
+
+    it '#up_sql' do
+      expect( described_instance.up_sql.lstrip.rstrip ).to eq( "@client.execute(\"CREATE TABLE IF NOT EXISTS test_table( \"day\" timestamp NOT NULL, \"attr\" varchar (100), PRIMARY KEY(day) )\")" )
     end
 
     it '#down_sql' do

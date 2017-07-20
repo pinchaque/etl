@@ -2,12 +2,19 @@ module ETL::Job
 
   # Base class for all migratable jobs that are run
   class MigratableBase < Base
-    attr_accessor :migration_dir, :target_version
 
     def migration_files
-      Dir["#{@migration_dir}/#{id}_*.rb"]
+      Dir["#{migration_dir}/#{id}_*.rb"]
     end
 
+    def migration_dir
+      Dir.pwd 
+    end
+
+    def target_version
+      1
+    end
+      
     def deploy_version
       @deploy_version ||= begin
         env_name = "#{id.upcase}_SCHEMA_VERSION"
@@ -19,27 +26,27 @@ module ETL::Job
 
     def migrate
       # execute migration
-      return if deploy_version == @target_version
+      return if deploy_version == target_version
       # To-do: execute 'down' when the target version is smaller than deploy version 
       # To-do: execute 'up' when the target version is greater than deploy version 
-      if deploy_version < @target_version
+      if deploy_version < target_version
         start_version = deploy_version + 1
-        goal_version = @target_version
+        goal_version = target_version
         move = 1 
       else
         start_version = deploy_version
-        goal_version = @target_version + 1 
+        goal_version = target_version + 1 
         move = -1 
       end
 
       # Raise error message if the target version migration doesnt exist
-      raise "Migration for version #{goal_version} does not exist in #{@migration_dir}" unless migration_files.include? "#{@migration_dir}/#{id}_#{ETL::StringUtil.digit_str(goal_version)}.rb"
+      raise "Migration for version #{goal_version} does not exist in #{migration_dir}" unless migration_files.include? "#{migration_dir}/#{id}_#{ETL::StringUtil.digit_str(goal_version)}.rb"
        
       current_version = start_version
       while true
         version = ETL::StringUtil.digit_str(current_version) 
         file = "#{id}_#{version}"
-        load "#{@migration_dir}/#{file}.rb"
+        load "#{migration_dir}/#{file}.rb"
         clazz = "Migration::#{ETL::StringUtil::snake_to_camel(file)}".split('::').inject(Object) {|o,c| o.const_get c}
         m = clazz.new
         if move == 1 
