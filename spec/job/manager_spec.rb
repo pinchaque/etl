@@ -13,17 +13,14 @@ module ManagerTests
     def initialize(batch, id, p1)
       super(batch)
       @p1 = p1
-      @id = id
+      @job_id = id
     end
     def id
-      @id
+      @job_id
     end
   end
 
   class TestJob2 < ETL::Job::Base
-    def initialize(b)
-      super(b)
-    end
   end
 
   class TestJobFactory < ::ETL::JobFactory::Base
