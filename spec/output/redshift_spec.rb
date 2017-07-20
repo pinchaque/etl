@@ -74,7 +74,7 @@ class TestRedshiftCreatetable1 < ETL::Output::Redshift
   end
 end
 
-RSpec.describe "redshift create table" do
+RSpec.describe "redshift create table", skip:true do
   let(:load_strategy) { :insert }
   let(:table_name) { "test_1" }
   let(:pks) { [:day, :id] }

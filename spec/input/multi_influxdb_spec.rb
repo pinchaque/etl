@@ -7,7 +7,7 @@ RSpec.describe "influxdb inputs" do
   let (:dbconfig) {
     { 
       :port     => 8086,
-      :host     => "localhost",
+      :host     => "127.0.0.1",
       :database => "test"
     } 
   }
@@ -21,11 +21,11 @@ RSpec.describe "influxdb inputs" do
   let(:container) { 'influx_input_test' }
 
   before(:all) do
-    system("docker run -d -t -p 8086:8086 --name multiinflux_input_test influxdb:1.2")
+    system("docker run -d -t -p 127.0.0.1:8086:8086 --name multiinflux_input_test influxdb:1.2")
 
     sleep(0.5) # Give things a second to spin up.
 
-    system("curl -X POST http://localhost:8086/query --data-urlencode \"q=CREATE DATABASE test\"")
+    system("curl -X POST http://127.0.0.1:8086/query --data-urlencode \"q=CREATE DATABASE test\"")
   end
   
   before do

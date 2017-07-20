@@ -8,9 +8,9 @@ module ETL::Output
 
   # Class that contains shared logic for loading data from S3 to Redshift.
   class Redshift < Base
-    attr_accessor :load_strategy, :client, :aws_params, :dest_table, :delimiter
+    attr_accessor :load_strategy, :client, :aws_params, :dest_table, :delimiter, :create_table
 
-    def initialize(load_strategy, conn_params, aws_params={}, delimiter='|')
+    def initialize(load_strategy, conn_params, aws_params={}, delimiter: '|', create_table: true)
       super()
 
       @aws_params = aws_params
@@ -18,6 +18,7 @@ module ETL::Output
       @bucket = @aws_params[:s3_bucket]
       @random_key = [*('a'..'z'),*('0'..'9')].shuffle[0,10].join
       @delimiter = delimiter
+      @create_table = create_table
       @client = ::ETL::Redshift::Client.new(conn_params)
     end
 
@@ -231,14 +232,20 @@ SQL
       # Not sure how odbc uses a transation so skipping this for now.
 
       # create destination table if it doesn't exist
-      @client.create_table(schema)
+      # eventually we will remove this
+      @client.create_table(schema) if @create_table
       # Load data into temp csv
       # If the table exists, use the order of columns. Otherwise, use @header
       ::CSV.open(csv_file.path, "w", {:col_sep => @delimiter } ) do |c|
         reader.each_row do |row|
-          s = schema.columns.keys.map{|k| row[k.to_s]}
-          if !s.nil?
-            c << s
+          if schema && !schema.columns.empty? 
+            s = schema.columns.keys.map{|k| row[k.to_s]}
+            if !s.nil?
+              c << s
+              rows_processed += 1
+            end
+          else
+            c << row.values
             rows_processed += 1
           end
         end
