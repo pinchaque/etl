@@ -10,7 +10,7 @@ module ETL::Output
   class Redshift < Base
     attr_accessor :load_strategy, :client, :aws_params, :dest_table, :delimiter, :create_table
 
-    def initialize(load_strategy, conn_params, aws_params={}, delimiter: '|', create_table: true)
+    def initialize(load_strategy, conn_params, aws_params, delimiter: '|', create_table: true)
       super()
 
       @aws_params = aws_params
