@@ -80,7 +80,7 @@ module ETL
                       else
                         redshift_hash[:dsn] = ENV.fetch('ETL_REDSHIFT_DSN', 'MyRealRedshift')
                       end
-                      redshift
+                      redshift_hash
                     else
                       self.class.load_file(redshift_file)
                     end
