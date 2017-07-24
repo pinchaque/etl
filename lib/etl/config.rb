@@ -120,10 +120,10 @@ module ETL
       @c ||= if get_envvars
                 core_hash = {}
                 core_hash[:default] = {}
-                core_hash[:default][:class_dir] = ENV.fetch('ETL_CLASS_DIR', DIR.pwd)
+                core_hash[:default][:class_dir] = ENV.fetch('ETL_CLASS_DIR', ::Dir.pwd)
 
                 core_hash[:job] = {}
-                core_hash[:job][:class_dir] = ENV.fetch('ETL_CLASS_DIR', DIR.pwd)
+                core_hash[:job][:class_dir] = ENV.fetch('ETL_CLASS_DIR', ::Dir.pwd)
                 core_hash[:job][:data_dir] = ENV.fetch('ETL_DATA_DIR')
                 core_hash[:job][:retry_max] = 5 # max times retrying jobs
                 core_hash[:job][:retry_wait] = 4 # seconds
@@ -162,7 +162,7 @@ module ETL
         return false
       elsif v == false
         return false
-      elsif v.kind_of(String) && v.downcase == 'true'
+      elsif v.to_s.downcase == 'true'
         return true
       end
       return false
