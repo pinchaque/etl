@@ -66,9 +66,9 @@ module ETL
     end
 
     def redshift(&b)
-      get_envvars = is_true_value(env.fetch('etl_redshift_envvars', false))
+      get_envvars = is_true_value(ENV.fetch('etl_redshift_envvars', false))
       @redshift ||= if get_envvars
-                      use_odbc_dsn_connection = is_true_value(env.fetch('etl_redshift_odbc_connection', false))
+                      use_odbc_dsn_connection = is_true_value(ENV.fetch('etl_redshift_odbc_connection', false))
                       @redshift = {}
                       @redshift[:user] = ENV.fetch('ETL_REDSHIFT_USER', 'masteruser')
                       @redshift[:password] = ENV.fetch('ETL_REDSHIFT_PASSWORD', 'root')
@@ -79,7 +79,6 @@ module ETL
                       else
                         @redshift[:port] = ENV.fetch('ETL_REDSHIFT_DSN', 'MyRealRedshift')
                       end
-                    elsif
                     else
                       self.class.load_file(redshift_file)
                     end
