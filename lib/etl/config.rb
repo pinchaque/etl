@@ -162,7 +162,7 @@ module ETL
         return false
       elsif v == false
         return false
-      elsif v.kind_of(String) && v.downcase == 'true'
+      elsif v.to_s.downcase == 'true'
         return true
       end
       return false
