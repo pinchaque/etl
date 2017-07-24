@@ -21,9 +21,9 @@ module ETL
     def db(&b)
       get_envvars = is_true_value(ENV.fetch('ETL_DATABASE_ENVVARS', false))
       @db ||= if get_envvars
-                @db = database_env_vars
+                database_env_vars
               else
-                @db ||= self.class.load_file(db_file)
+                self.class.load_file(db_file)
               end
       yield @db if block_given?
       @db
@@ -50,10 +50,11 @@ module ETL
     def aws(&b)
       get_envvars = ENV.fetch('ETL_AWS_ENVVARS', false)
       @aws ||= if is_true_value(get_envvars)
-                @aws = {}
-                @aws[:aws_region] = ENV.fetch('ETL_AWS_REGION', 'us-west-2')
-                @aws[:s3_bucket] = ENV.fetch('ETL_AWS_S3_BUCKET')
-                @aws[:role_arn] = ENV.fetch('ETL_AWS_ROLE_ARN')
+                aws_hash = {}
+                aws_hash[:aws_region] = ENV.fetch('ETL_AWS_REGION', 'us-west-2')
+                aws_hash[:s3_bucket] = ENV.fetch('ETL_AWS_S3_BUCKET')
+                aws_hash[:role_arn] = ENV.fetch('ETL_AWS_ROLE_ARN')
+                aws_hash
               else
                 self.class.load_file(aws_file)
               end
@@ -69,16 +70,17 @@ module ETL
       get_envvars = is_true_value(ENV.fetch('etl_redshift_envvars', false))
       @redshift ||= if get_envvars
                       use_odbc_dsn_connection = is_true_value(ENV.fetch('etl_redshift_odbc_connection', false))
-                      @redshift = {}
-                      @redshift[:user] = ENV.fetch('ETL_REDSHIFT_USER', 'masteruser')
-                      @redshift[:password] = ENV.fetch('ETL_REDSHIFT_PASSWORD', 'root')
+                      redshift_hash = {}
+                      redshift_hash[:user] = ENV.fetch('ETL_REDSHIFT_USER', 'masteruser')
+                      redshift_hash[:password] = ENV.fetch('ETL_REDSHIFT_PASSWORD', 'root')
                       if !use_odbc_dsn_connection
-                        @redshift[:dbname] = ENV.fetch('ETL_REDSHIFT_DB_NAME', 'dev')
-                        @redshift[:host] = ENV.fetch('ETL_RESHIFT_HOST')
-                        @redshift[:port] = ENV.fetch('ETL_REDSHIFT_PORT', 5439)
+                        redshift_hash[:dbname] = ENV.fetch('ETL_REDSHIFT_DB_NAME', 'dev')
+                        redshift_hash[:host] = ENV.fetch('ETL_RESHIFT_HOST')
+                        redshift_hash[:port] = ENV.fetch('ETL_REDSHIFT_PORT', 5439)
                       else
-                        @redshift[:port] = ENV.fetch('ETL_REDSHIFT_DSN', 'MyRealRedshift')
+                        redshift_hash[:dsn] = ENV.fetch('ETL_REDSHIFT_DSN', 'MyRealRedshift')
                       end
+                      redshift
                     else
                       self.class.load_file(redshift_file)
                     end
@@ -93,11 +95,12 @@ module ETL
     def influx(&b)
       get_envvars = is_true_value(ENV.fetch('ETL_INFLUX_ENVVARS', false))
       @influx ||= if get_envvars
-                    @influx = {}
-                    @influx[:password] = ENV.fetch('ETL_INFLUXDB_PASSWORD')
-                    @influx[:port] = ENV.fetch('ETL_INFLUXDB_PORT', 8086)
-                    @influx[:host] = ENV.fetch('ETL_INFLUXDB_HOST', 'influxdb.service.consul')
-                    @influx[:database] = ENV.fetch('ETL_INFLUXDB_DB', 'metrics')
+                    influx_hash = {}
+                    influx_hash[:password] = ENV.fetch('ETL_INFLUXDB_PASSWORD')
+                    influx_hash[:port] = ENV.fetch('ETL_INFLUXDB_PORT', 8086)
+                    influx_hash[:host] = ENV.fetch('ETL_INFLUXDB_HOST', 'influxdb.service.consul')
+                    influx_hash[:database] = ENV.fetch('ETL_INFLUXDB_DB', 'metrics')
+                    influx_hash
                   else
                     self.class.load_file(influx_file)
                   end
@@ -112,45 +115,46 @@ module ETL
     def core(&b)
       get_envvars = is_true_value(ENV.fetch('ETL_CORE_ENVVARS', false))
       @c ||= if get_envvars
-                c = {}
-                c[:default] = {}
-                c[:default][:class_dir] = ENV.fetch('ETL_CLASS_DIR', DIR.pwd)
+                core_hash = {}
+                core_hash[:default] = {}
+                core_hash[:default][:class_dir] = ENV.fetch('ETL_CLASS_DIR', DIR.pwd)
 
-                c[:job] = {}
-                c[:job][:class_dir] = ENV.fetch('ETL_CLASS_DIR', DIR.pwd)
-                c[:job][:data_dir] = ENV.fetch('ETL_DATA_DIR')
-                c[:job][:retry_max] = 5 # max times retrying jobs
-                c[:job][:retry_wait] = 4 # seconds
-                c[:job][:retry_mult] = 2.0 # exponential backoff multiplier
+                core_hash[:job] = {}
+                core_hash[:job][:class_dir] = ENV.fetch('ETL_CLASS_DIR', DIR.pwd)
+                core_hash[:job][:data_dir] = ENV.fetch('ETL_DATA_DIR')
+                core_hash[:job][:retry_max] = 5 # max times retrying jobs
+                core_hash[:job][:retry_wait] = 4 # seconds
+                core_hash[:job][:retry_mult] = 2.0 # exponential backoff multiplier
 
-                c[:log] = {}
-                c[:class] = "ETL::Logger"
-                c[:level] = ENV.fetch('ETL_LOG_LEVEL', 'debug')
+                core_hash[:log] = {}
+                core_hash[:class] = "ETL::Logger"
+                core_hash[:level] = ENV.fetch('ETL_LOG_LEVEL', 'debug')
 
-                c[:database] = database_env_vars
+                core_hash[:database] = database_env_vars
 
-                c[:queue] = {}
-                c[:queue][:class] = ENV.fetch('ETL_QUEUE_CLASS', 'ETL::Queue::File')
-                c[:queue][:path] = ENV.fetch('ETL_QUEUE_PATH', "/var/tmp/etl_queue")
+                core_hash[:queue] = {}
+                core_hash[:queue][:class] = ENV.fetch('ETL_QUEUE_CLASS', 'ETL::Queue::File')
+                core_hash[:queue][:path] = ENV.fetch('ETL_QUEUE_PATH', "/var/tmp/etl_queue")
 
-                c[:metrics] = {}
-                c[:metrics][:class] = ENV.fetch('ETL_METRICS_CLASS', "ETL::Metrics")
-                c[:metrics][:file] = ENV.fetch('ETL_METRICS_FILE_PATH', '/tmp/etl-metrics.log')
-                c[:metrics][:series] = 'etlv2_job_run'
+                core_hash[:metrics] = {}
+                core_hash[:metrics][:class] = ENV.fetch('ETL_METRICS_CLASS', "ETL::Metrics")
+                core_hash[:metrics][:file] = ENV.fetch('ETL_METRICS_FILE_PATH', '/tmp/etl-metrics.log')
+                core_hash[:metrics][:series] = 'etlv2_job_run'
 
-                c[:slack] = {}
-                c[:slack][:url] = ENV.fetch('ETL_SLACK_URL')
-                c[:slack][:channel] = ENV.fetch('ETL_SLACK_CHANNEL')
-                c[:slack][:username] = ENV.fetch('ETL_SLACK_USERNAME')
-              else
+                core_hash[:slack] = {}
+                core_hash[:slack][:url] = ENV.fetch('ETL_SLACK_URL')
+                core_hash[:slack][:channel] = ENV.fetch('ETL_SLACK_CHANNEL')
+                core_hash[:slack][:username] = ENV.fetch('ETL_SLACK_USERNAME')
+                core_hash
+             else
                 self.class.load_file(core_file)
-              end
+             end
       yield @c if block_given?
       @c
     end
 
     # helper for env var values to ensure a string value is actually true
-    def is_true_value(v) 
+    def is_true_value(v)
       if v.nil?
         return false
       elsif v == false
