@@ -34,7 +34,7 @@ module ETL
       conn_params[:encoding] = "utf8"
       conn_params[:reconnect] = false
       conn_params[:pool] = 5
-      conn_params[:adapter] = ENV.fetch('ETL_DATABASE_DB_NAME', 'postgres')
+      conn_params[:adapter] = ENV.fetch('ETL_DATABASE_ADAPTER', 'postgres')
       conn_params[:dbname] = ENV.fetch('ETL_DATABASE_DB_NAME', 'postgres')
       conn_params[:username] = ENV.fetch('ETL_DATABASE_USER', 'root')
       conn_params[:password] = ENV.fetch('ETL_DATABASE_PASSWORD', 'root')
@@ -66,15 +66,20 @@ module ETL
     end
 
     def redshift(&b)
-      get_envvars = is_true_value(ENV.fetch('ETL_REDSHIFT_ENVVARS', false))
+      get_envvars = is_true_value(env.fetch('etl_redshift_envvars', false))
       @redshift ||= if get_envvars
+                      use_odbc_dsn_connection = is_true_value(env.fetch('etl_redshift_odbc_connection', false))
                       @redshift = {}
-                      @redshift[:dbname] = ENV.fetch('ETL_REDSHIFT_DB_NAME', 'dev')
                       @redshift[:user] = ENV.fetch('ETL_REDSHIFT_USER', 'masteruser')
-                      @@redshift[:password] = ENV.fetch('ETL_REDSHIFT_PASSWORD', 'root')
-                      @redshift[:host] = ENV.fetch('ETL_RESHIFT_HOST')
-                      @redshift[:port] = ENV.fetch('ETL_REDSHIFT_PORT', 5439)
-                      @redshift[:dsn] = ENV.fetch('ETL_REDSHIFT_DSN', 'MyRealRedshift')
+                      @redshift[:password] = ENV.fetch('ETL_REDSHIFT_PASSWORD', 'root')
+                      if !use_odbc_dsn_connection
+                        @redshift[:dbname] = ENV.fetch('ETL_REDSHIFT_DB_NAME', 'dev')
+                        @redshift[:host] = ENV.fetch('ETL_RESHIFT_HOST')
+                        @redshift[:port] = ENV.fetch('ETL_REDSHIFT_PORT', 5439)
+                      else
+                        @redshift[:port] = ENV.fetch('ETL_REDSHIFT_DSN', 'MyRealRedshift')
+                      end
+                    elsif
                     else
                       self.class.load_file(redshift_file)
                     end
@@ -92,7 +97,7 @@ module ETL
                     @influx = {}
                     @influx[:password] = ENV.fetch('ETL_INFLUXDB_PASSWORD')
                     @influx[:port] = ENV.fetch('ETL_INFLUXDB_PORT', 8086)
-                    @influx[:host] = ENV.fetch('ETL_INFLUXDB_PORT', 'influxdb.service.consul')
+                    @influx[:host] = ENV.fetch('ETL_INFLUXDB_HOST', 'influxdb.service.consul')
                     @influx[:database] = ENV.fetch('ETL_INFLUXDB_DB', 'metrics')
                   else
                     self.class.load_file(influx_file)
@@ -114,7 +119,7 @@ module ETL
 
                 c[:job] = {}
                 c[:job][:class_dir] = ENV.fetch('ETL_CLASS_DIR', DIR.pwd)
-                c[:job][:data_dir] = ENV.fetch('ETL_CLASS_DIR')
+                c[:job][:data_dir] = ENV.fetch('ETL_DATA_DIR')
                 c[:job][:retry_max] = 5 # max times retrying jobs
                 c[:job][:retry_wait] = 4 # seconds
                 c[:job][:retry_mult] = 2.0 # exponential backoff multiplier
