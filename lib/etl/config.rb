@@ -29,17 +29,17 @@ module ETL
       @db
     end
 
-    def database_env_vars
+    def database_env_vars(prefix="ETL_DATABASE")
       conn_params = {}
       conn_params[:encoding] = "utf8"
       conn_params[:reconnect] = false
       conn_params[:pool] = 5
-      conn_params[:adapter] = ENV.fetch('ETL_DATABASE_ADAPTER', 'postgres')
-      conn_params[:dbname] = ENV.fetch('ETL_DATABASE_DB_NAME', 'postgres')
-      conn_params[:username] = ENV.fetch('ETL_DATABASE_USER', 'root')
-      conn_params[:password] = ENV.fetch('ETL_DATABASE_PASSWORD', 'root')
-      conn_params[:host] = ENV.fetch('ETL_DATABASE_HOST', 'localhost')
-      conn_params[:port] = ENV.fetch('ETL_DATABASE_PORT', 5432)
+      conn_params[:adapter] = ENV.fetch("#{prefix}_ADAPTER", 'postgres')
+      conn_params[:dbname] = ENV.fetch("#{prefix}_DB_NAME", 'postgres')
+      conn_params[:username] = ENV.fetch("#{prefix}_USER", 'root')
+      conn_params[:password] = ENV.fetch("#{prefix}_PASSWORD", 'root')
+      conn_params[:host] = ENV.fetch("#{prefix}_HOST", 'localhost')
+      conn_params[:port] = ENV.fetch("#{prefix}_PORT", 5432)
       conn_params
     end
 
@@ -62,6 +62,22 @@ module ETL
       @aws
     end
 
+    def redshift_env_vars(prefix: "ETL_REDSHIFT", use_odbc_dsn_connection: false)
+      redshift_hash = {}
+      redshift_hash[:user] = ENV.fetch("#{prefix}_USER", 'masteruser')
+      redshift_hash[:password] = ENV.fetch("#{prefix}_PASSWORD")
+      redshift_hash[:port] = ENV.fetch("#{prefix}_PORT", 5439)
+      if use_odbc_dsn_connection
+        redshift_hash[:driver] = ENV.fetch("#{prefix}_DRIVER", 'Amazon Redshift (x64)')
+        redshift_hash[:server] = ENV.fetch("#{prefix}_HOST")
+        redshift_hash[:database] = ENV.fetch("#{prefix}_DB_NAME", 'dev')
+      else
+        redshift_hash[:dbname] = ENV.fetch("#{prefix}_DB_NAME", 'dev')
+        redshift_hash[:host] = ENV.fetch("#{prefix}_HOST")
+      end
+      redshift_hash
+    end
+
     def redshift_file
       @config_dir + "/redshift.yml"
     end
@@ -70,20 +86,7 @@ module ETL
       get_envvars = is_true_value(ENV.fetch('etl_redshift_envvars', false))
       @redshift ||= if get_envvars
                       use_odbc_dsn_connection = is_true_value(ENV.fetch('etl_redshift_odbc_connection', false))
-                      redshift_hash = {}
-                      redshift_hash[:user] = ENV.fetch('ETL_REDSHIFT_USER', 'masteruser')
-                      redshift_hash[:password] = ENV.fetch('ETL_REDSHIFT_PASSWORD')
-                      if !use_odbc_dsn_connection
-                        redshift_hash[:dbname] = ENV.fetch('ETL_REDSHIFT_DB_NAME', 'dev')
-                        redshift_hash[:host] = ENV.fetch('ETL_RESHIFT_HOST')
-                        redshift_hash[:port] = ENV.fetch('ETL_REDSHIFT_PORT', 5439)
-                      else
-                        redshift_hash[:driver] = ENV.fetch('ETL_REDSHIFT_DRIVER', 'Amazon Redshift (x64)')
-                        redshift_hash[:server] = ENV.fetch('ETL_RESHIFT_HOST')
-                        redshift_hash[:port] = ENV.fetch('ETL_REDSHIFT_PORT', 5439)
-                        redshift_hash[:database] = ENV.fetch('ETL_REDSHIFT_DB_NAME', 'dev')
-                      end
-                      redshift_hash
+                      redshift_env_vars(use_odbc_dsn_connection: use_odbc_dsn_connection)
                     else
                       self.class.load_file(redshift_file)
                     end

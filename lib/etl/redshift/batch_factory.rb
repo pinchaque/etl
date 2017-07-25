@@ -13,6 +13,7 @@ module ETL::Redshift
         @conn_params = conn_params
       end
     end
+
     def generate
       client = Client.new(@conn_params)
       result = client.execute(@get_start_time_query).values
@@ -26,7 +27,7 @@ module ETL::Redshift
       end_time = Time.now.getutc    
       b = ::ETL::Batch.new( { :end_time => end_time } )
       if value.kind_of?(String) then
-          value = Time.parse(value).getutc
+        value = Time.parse(value).getutc
       end
       if value.nil? then
         value = end_time - 60*60*24*@backfill_days
