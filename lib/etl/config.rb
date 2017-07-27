@@ -51,7 +51,7 @@ module ETL
       get_envvars = ENV.fetch('ETL_AWS_ENVVARS', false)
       @aws ||= if is_true_value(get_envvars)
                 aws_hash = {}
-                aws_hash[:aws_region] = ENV.fetch('ETL_AWS_REGION', 'us-west-2')
+                aws_hash[:region] = ENV.fetch('ETL_AWS_REGION', 'us-west-2')
                 aws_hash[:s3_bucket] = ENV.fetch('ETL_AWS_S3_BUCKET')
                 aws_hash[:role_arn] = ENV.fetch('ETL_AWS_ROLE_ARN')
                 aws_hash
