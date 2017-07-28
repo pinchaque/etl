@@ -119,7 +119,7 @@ RSpec.describe "redshift create table" do
   end
 end
 
-RSpec.describe "redshift output", skip: true do
+RSpec.describe "redshift output" do
 
   def get_conn
     ::ETL::Redshift::Client.new(rspec_redshift_params)

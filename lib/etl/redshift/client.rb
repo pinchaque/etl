@@ -51,7 +51,7 @@ module ETL::Redshift
 
     def columns(table_name)
       sql = <<SQL
-      SELECT "column", type FROM pg_table_def WHERE tablename = '#{table_name}'
+      SELECT "column", type FROM pg_catalog.pg_table_def WHERE tablename = '#{table_name}'
 SQL
       execute(sql)
     end
