@@ -16,7 +16,7 @@ module ETL::Job
     end
 
     def set_schema_version(version)
-      ENV["#{env_name}"] = target_version.to_s 
+      ENV["#{env_name}"] = version.to_s 
     end
 
     def get_schema_version

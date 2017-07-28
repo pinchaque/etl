@@ -112,6 +112,10 @@ module ETL::Schema
       add_column(name, :float, nil, nil, &block)
     end
 
+    def text(name, &block)
+      add_column(name, :text, nil, nil, &block)
+    end
+
     def numeric(name, width, precision, &block)
       add_column(name, :numeric, width, precision, &block)
     end
