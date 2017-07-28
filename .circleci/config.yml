@@ -4,7 +4,7 @@ jobs:
     docker:
       # if you update this, make sure to rebuild the docker image using ./bin/docker-build-circle-image
       # the repo and tag should match the "repo" and "version" labels in the Dockerfile
-      - image: getoutreach/etl-circle:1.0
+      - image: getoutreach/etl-circle:1.1
         environment:
           ETL_CONFIG_DIR="$HOME/config"
           REDSHIFT_PASSWORD="$REDSHIFT_PASSWORD"
@@ -28,7 +28,6 @@ jobs:
             set -x
             ./bin/generate_config_files -i etc/erb_templates/ -o "$HOME/config/" --job-dir "$HOME/empty" --class-dir "$HOME/empty"
             ./linux_redshift_odbc_driver_setup.sh
-            ls odbc
             bundle install
       - run:
           name: Setup Database
