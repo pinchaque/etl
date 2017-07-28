@@ -1,0 +1,50 @@
+machine:
+  timezone:
+    America/Los_Angeles
+  ruby:
+    version: 2.3.3
+  hosts:
+    circlehost: 127.0.0.1
+  environment:
+    ETL_CONFIG_DIR: "$HOME/config"
+    REDSHIFT_PASSWORD: "$REDSHIFT_PASSWORD"
+    INFLUXDB_PASSWORD: "$INFLUXDB_PASSWORD"
+    DATABASE_PASSWORD: "$DATABASE_PASSWORD"
+    ETL_AWS_ENVVARS: true
+    ETL_AWS_REGION: "us-west-1"
+    ETL_AWS_S3_BUCKET: "ss-uw1-stg.redshift-testing"
+    ETL_AWS_ROLE_ARN: "arn:aws:iam::182192988802:role/ss-uw1-stg-default-redshift-testing"
+    etl_redshift_envvars: true
+    ETL_REDSHIFT_PASSWORD: "$REDSHIFT_PASSWORD"
+    ETL_REDSHIFT_HOST: "$ETL_REDSHIFT_HOST"
+    ODBCINI: "$HOME/odbc/odbc.ini"
+    AMAZONREDSHIFTODBCINI: "$HOME/odbc/amazon.redshiftodbc.ini"
+    ODBCSYSINI: "$HOME/odbc"
+    LD_LIBRARY_PATH: "/opt/amazon/redshift/lib/64"
+    
+  services:
+    - docker
+
+dependencies:
+  pre:
+    - gem update --system
+    - gem install bundler
+    - pip install pre-commit 
+    - mkdir "$HOME/empty"        # Use an empty directory for jobs
+    - mkdir "$HOME/config"
+    - "$HOME/etl/bin/generate_config_files -i $HOME/etl/etc/erb_templates/ -o $HOME/config/ --job-dir $HOME/empty --class-dir $HOME/empty"
+    - docker
+    - "docker run --name outreach-dw -p 127.0.0.1:5433:5432 -e POSTGRES_PASSWORD=${DATABASE_PASSWORD} -e POSTGRES_USER=postgres -e POSTGRES_DB=test -d postgres"
+    - docker ps -a
+    - "bash $HOME/etl/linux_redshift_odbc_driver_setup.sh"
+    - ls $HOME/odbc
+    - bundle install
+
+
+  database:
+  override:
+    - bundle exec etl schema create
+
+test:
+  override:
+    - bundle exec rspec --color --require spec_helper spec --format progress --tag '~skip'

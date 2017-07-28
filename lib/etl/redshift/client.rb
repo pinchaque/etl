@@ -24,6 +24,7 @@ module ETL::Redshift
 
     def db
       @db ||= begin
+                puts @conn_params.inspect
                 PG.connect(@conn_params)
 # removing due to ubuntu 14.04 deployment issues
 #                if @use_redshift_odbc_driver then
@@ -51,7 +52,7 @@ module ETL::Redshift
 
     def columns(table_name)
       sql = <<SQL
-      SELECT "column", type FROM pg_catalog.pg_table_def WHERE tablename = '#{table_name}'
+      SELECT "column", type FROM pg_table_def WHERE tablename = '#{table_name}'
 SQL
       execute(sql)
     end
