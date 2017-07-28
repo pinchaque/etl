@@ -6,19 +6,19 @@ jobs:
       # the repo and tag should match the "repo" and "version" labels in the Dockerfile
       - image: getoutreach/etl-circle:1.1
         environment:
-          ETL_CONFIG_DIR="$HOME/config"
-          REDSHIFT_PASSWORD="$REDSHIFT_PASSWORD"
-          INFLUXDB_PASSWORD="$INFLUXDB_PASSWORD"
-          DATABASE_PASSWORD="$DATABASE_PASSWORD"
-          ODBCINI="$HOME/odbc/odbc.ini"
-          AMAZONREDSHIFTODBCINI="$HOME/odbc/amazon.redshiftodbc.ini"
-          ODBCSYSINI="$HOME/odbc"
-          LD_LIBRARY_PATH="/opt/amazon/redshift/lib/64"
+          ETL_CONFIG_DIR: "$HOME/config"
+          REDSHIFT_PASSWORD: "$REDSHIFT_PASSWORD"
+          INFLUXDB_PASSWORD: "$INFLUXDB_PASSWORD"
+          DATABASE_PASSWORD: "$DATABASE_PASSWORD"
+          ODBCINI: "$HOME/odbc/odbc.ini"
+          AMAZONREDSHIFTODBCINI: "$HOME/odbc/amazon.redshiftodbc.ini"
+          ODBCSYSINI: "$HOME/odbc"
+          LD_LIBRARY_PATH: "/opt/amazon/redshift/lib/64"
       - image: postgres
         environment:
-          POSTGRES_PASSWORD=${DATABASE_PASSWORD}
-          POSTGRES_USER=postgres
-          POSTGRES_DB=test
+          POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
+          POSTGRES_USER: postgres
+          POSTGRES_DB: test
     working_directory: ~/etl
     steps:
       - checkout
