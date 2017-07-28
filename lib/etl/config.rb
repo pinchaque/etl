@@ -84,7 +84,7 @@ module ETL
     end
 
     def redshift(&b)
-      get_envvars = is_true_value(ENV.fetch('etl_redshift_envvars', false))
+      get_envvars = is_true_value(ENV.fetch('ETL_REDSHIFT_ENVVARS', false))
       @redshift ||= if get_envvars
                       use_odbc_dsn_connection = is_true_value(ENV.fetch('etl_redshift_odbc_connection', false))
                       value = redshift_env_vars(use_odbc_dsn_connection: use_odbc_dsn_connection)

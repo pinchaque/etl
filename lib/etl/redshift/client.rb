@@ -24,7 +24,6 @@ module ETL::Redshift
 
     def db
       @db ||= begin
-                puts @conn_params.inspect
                 PG.connect(@conn_params)
 # removing due to ubuntu 14.04 deployment issues
 #                if @use_redshift_odbc_driver then

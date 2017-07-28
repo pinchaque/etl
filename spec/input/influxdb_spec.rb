@@ -18,9 +18,10 @@ RSpec.describe "influxdb inputs", skip: true do
   let(:container) { 'influx_input_test' }
 
   before(:all) do
-    system("docker run -d -t -p 8086:8086 --name influx_input_test influxdb:1.2")
-
-    sleep(0.5) # Give things a second to spin up.
+    if !ENV['CIRCLECI'] == 'true'
+      system("docker run -d -t -p 8086:8086 --name influx_input_test influxdb:1.2")
+      sleep(0.5) # Give things a second to spin up.
+    end
 
     system("curl -X POST http://localhost:8086/query --data-urlencode \"q=CREATE DATABASE test\"")
   end

@@ -9,7 +9,7 @@ RSpec.describe 'Redshift Table' do
         t = ETL::Redshift::Table.new(:test_table, dist_style: 'ALL')
         t.int(:id)
         t.add_primarykey(:id)
-        expect(t.create_table_sql).to eq('CREATE TABLE IF NOT EXISTS test_table( "id" int NOT NULL, PRIMARY KEY(id) ) DISTSTYLE ALL')
+        expect(t.create_table_sql).to eq("CREATE TABLE IF NOT EXISTS test_table( \"id\" int NOT NULL, PRIMARY KEY(id) ) DISTSTYLE ALL")
       end
 
       it 'Create a table sql with dist and sort key' do
