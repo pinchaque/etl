@@ -85,35 +85,35 @@ RSpec.describe "redshift create table" do
     context 'when none of primary_key, dist_key and sort_key are included' do
       let(:redshift_table) { TestRedshiftCreatetable1.new(load_strategy, table_name) }
       it 'returns valid sql' do
-        expect(redshift_table.schema.create_table_sql.lstrip.rstrip).to eq("CREATE TABLE IF NOT EXISTS #{table_name}( \"day\" timestamp, \"id\" int, \"value\" int, \"dw_created\" timestamp, \"dw_updated\" timestamp )")
+        expect(redshift_table.schema.create_table_sql.lstrip.rstrip).to eq("CREATE TABLE IF NOT EXISTS #{table_name}( \"day\" date, \"id\" int, \"value\" int, \"dw_created\" date, \"dw_updated\" date )")
       end
     end
 
     context 'when primary_keys are included' do
       let(:redshift_table) { TestRedshiftCreatetable1.new(load_strategy, table_name, pks: pks) }
       it 'returns valid sql' do
-        expect(redshift_table.schema.create_table_sql.lstrip.rstrip).to eq("CREATE TABLE IF NOT EXISTS #{table_name}( \"day\" timestamp NOT NULL, \"id\" int NOT NULL, \"value\" int, \"dw_created\" timestamp, \"dw_updated\" timestamp, PRIMARY KEY(#{pks.join(',')}) )")
+        expect(redshift_table.schema.create_table_sql.lstrip.rstrip).to eq("CREATE TABLE IF NOT EXISTS #{table_name}( \"day\" date NOT NULL, \"id\" int NOT NULL, \"value\" int, \"dw_created\" date, \"dw_updated\" date, PRIMARY KEY(#{pks.join(',')}) )")
       end
     end
 
     context 'when dist_keys are included' do
       let(:redshift_table) { TestRedshiftCreatetable1.new(load_strategy, table_name, dk: dk) }
       it 'returns valid sql' do
-        expect(redshift_table.schema.create_table_sql.lstrip.rstrip).to eq("CREATE TABLE IF NOT EXISTS #{table_name}( \"day\" timestamp, \"id\" int, \"value\" int, \"dw_created\" timestamp, \"dw_updated\" timestamp ) DISTKEY(id)")
+        expect(redshift_table.schema.create_table_sql.lstrip.rstrip).to eq("CREATE TABLE IF NOT EXISTS #{table_name}( \"day\" date, \"id\" int, \"value\" int, \"dw_created\" date, \"dw_updated\" date ) DISTKEY(id)")
       end
     end
 
     context 'when dist_key and sort_keys are included' do
       let(:redshift_table) { TestRedshiftCreatetable1.new(load_strategy, table_name, dk: dk, sks: sks) }
       it 'returns valid sql' do
-        expect(redshift_table.schema.create_table_sql.lstrip.rstrip).to eq("CREATE TABLE IF NOT EXISTS #{table_name}( \"day\" timestamp, \"id\" int, \"value\" int, \"dw_created\" timestamp, \"dw_updated\" timestamp ) DISTKEY(id) SORTKEY(#{sks.join(',')})")
+        expect(redshift_table.schema.create_table_sql.lstrip.rstrip).to eq("CREATE TABLE IF NOT EXISTS #{table_name}( \"day\" date, \"id\" int, \"value\" int, \"dw_created\" date, \"dw_updated\" date ) DISTKEY(id) SORTKEY(#{sks.join(',')})")
       end
     end
 
     context 'when primary_key, dist_key and sort_key are included' do
       let(:redshift_table) { TestRedshiftCreatetable1.new(load_strategy, table_name, pks: pks, dk: dk, sks: sks) }
       it 'returns valid sql' do
-        expect(redshift_table.schema.create_table_sql.lstrip.rstrip).to eq("CREATE TABLE IF NOT EXISTS #{table_name}( \"day\" timestamp NOT NULL, \"id\" int NOT NULL, \"value\" int, \"dw_created\" timestamp, \"dw_updated\" timestamp, PRIMARY KEY(#{pks.join(',')}) ) DISTKEY(#{dk}) SORTKEY(#{sks.join(',')})")
+        expect(redshift_table.schema.create_table_sql.lstrip.rstrip).to eq("CREATE TABLE IF NOT EXISTS #{table_name}( \"day\" date NOT NULL, \"id\" int NOT NULL, \"value\" int, \"dw_created\" date, \"dw_updated\" date, PRIMARY KEY(#{pks.join(',')}) ) DISTKEY(#{dk}) SORTKEY(#{sks.join(',')})")
       end
     end
   end
@@ -189,7 +189,7 @@ RSpec.describe "redshift output", skip: true do
     sql = <<SQL
 drop table if exists #{table_name};
 create table #{table_name} (
-  day timestamp,
+  day date,
   id int,
   value int,
   dw_created timestamp,
