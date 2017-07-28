@@ -55,6 +55,7 @@ module ETL
                 aws_hash[:s3_bucket] = ENV.fetch('ETL_AWS_S3_BUCKET')
                 aws_hash[:role_arn] = ENV.fetch('ETL_AWS_ROLE_ARN')
                 aws_hash
+                { test: aws_hash, etl: aws_hash }
               else
                 self.class.load_file(aws_file)
               end
@@ -83,10 +84,11 @@ module ETL
     end
 
     def redshift(&b)
-      get_envvars = is_true_value(ENV.fetch('etl_redshift_envvars', false))
+      get_envvars = is_true_value(ENV.fetch('ETL_REDSHIFT_ENVVARS', false))
       @redshift ||= if get_envvars
                       use_odbc_dsn_connection = is_true_value(ENV.fetch('etl_redshift_odbc_connection', false))
-                      redshift_env_vars(use_odbc_dsn_connection: use_odbc_dsn_connection)
+                      value = redshift_env_vars(use_odbc_dsn_connection: use_odbc_dsn_connection)
+                      { etl: value, test: value}
                     else
                       self.class.load_file(redshift_file)
                     end
@@ -137,7 +139,7 @@ module ETL
                 core_hash[:level] = ENV.fetch('ETL_LOG_LEVEL', 'debug')
 
                 core_hash[:database] = database_env_vars
-
+                
                 core_hash[:queue] = {}
                 core_hash[:queue][:class] = ENV.fetch('ETL_QUEUE_CLASS', 'ETL::Queue::File')
                 core_hash[:queue][:path] = ENV.fetch('ETL_QUEUE_PATH', "/var/tmp/etl_queue")

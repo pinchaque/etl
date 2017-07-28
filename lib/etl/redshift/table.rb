@@ -44,7 +44,7 @@ module ETL
         type_ary = []
         columns.each do |name, column|
           column_type = col_type_str(column)
-          column_statement = "\\\"#{name}\\\" #{column_type}"
+          column_statement = "\"#{name}\" #{column_type}"
           column_statement += " IDENTITY(#{@identity_key[:seed]}, #{@identity_key[:step]})" unless @identity_key.empty?
           column_statement += " NOT NULL" if @primary_key.include?(name.to_sym) || ( !@identity_key.empty? && @identity_key[:column] == name.to_sym )
 
@@ -60,14 +60,14 @@ module ETL
           sql << "( #{type_ary.join(', ')} )"
         end
 
-        # backup is by default on if not specified
-        if !@backup
-                 sql << " BACKUP NO"
-        end
-
         # If the sql provider doesn't support redshift specific
         # create table pieces don't add them in.
         if using_redshift_odbc_driver then
+          # backup is by default on if not specified
+          if !@backup
+            sql << " BACKUP NO"
+          end
+
           if !@dist_key.empty?
             sql << " DISTKEY(#{@dist_key})"
           end

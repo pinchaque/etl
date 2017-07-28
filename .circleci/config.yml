@@ -19,6 +19,7 @@ jobs:
           POSTGRES_PASSWORD: "$DATABASE_PASSWORD"
           POSTGRES_USER: postgres
           POSTGRES_DB: test
+      - image: influxdb:1.2 
     steps:
       - checkout
       - run:
@@ -29,7 +30,6 @@ jobs:
             ./bin/generate_config_files -i etc/erb_templates/ -o "$HOME/config/" --job-dir "$HOME/empty" --class-dir "$HOME/empty"
             ./linux_redshift_odbc_driver_setup.sh
             env
-            tree ~
             bundle install
       - run:
           name: Setup Database
