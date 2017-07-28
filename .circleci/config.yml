@@ -29,6 +29,7 @@ jobs:
             apt-get install tree
             ./bin/generate_config_files -i etc/erb_templates/ -o "$HOME/config/" --job-dir "$HOME/empty" --class-dir "$HOME/empty"
             ./linux_redshift_odbc_driver_setup.sh
+            env
             tree ~
             bundle install
       - run:
