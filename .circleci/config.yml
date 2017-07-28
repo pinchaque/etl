@@ -10,6 +10,9 @@ jobs:
           REDSHIFT_PASSWORD: "$REDSHIFT_PASSWORD"
           INFLUXDB_PASSWORD: "$INFLUXDB_PASSWORD"
           DATABASE_PASSWORD: "$DATABASE_PASSWORD"
+          etl_redshift_envvars: true
+          ETL_REDSHIFT_PASSWORD: "$REDSHIFT_PASSWORD"
+          ETL_REDSHIFT_HOST: "$ETL_REDSHIFT_HOST"
           ODBCINI: "/root/odbc/odbc.ini"
           AMAZONREDSHIFTODBCINI: "/root/odbc/amazon.redshiftodbc.ini"
           ODBCSYSINI: "/root/odbc"
