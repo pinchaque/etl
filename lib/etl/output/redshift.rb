@@ -68,6 +68,8 @@ module ETL::Output
         when :string
           "varchar(255)"
         when :date
+          "date"
+        when :timestamp
           "timestamp"
         when :numeric
           s = "numeric"
@@ -98,6 +100,8 @@ module ETL::Output
         FROM 's3://#{@bucket}/#{tmp_table}'
         IAM_ROLE '#{@aws_params[:role_arn]}'
         TIMEFORMAT AS 'auto'
+        DATEFORMAT AS 'auto'
+        ESCAPE
         DELIMITER '#{@delimiter}'
         REGION '#{@aws_params[:region]}'
 SQL
@@ -217,6 +221,8 @@ SQL
         FROM 's3://#{@bucket}/#{tmp_table}'
         IAM_ROLE '#{@aws_params[:role_arn]}'
         TIMEFORMAT AS 'auto'
+        DATEFORMAT AS 'auto'
+        ESCAPE
         DELIMITER '#{@delimiter}'
         REGION '#{@aws_params[:region]}'
 SQL

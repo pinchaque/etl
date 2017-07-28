@@ -27,6 +27,10 @@ module ETL
         @identity_key = { column: column, seed: seed, step: step }
       end
 
+      def smallint(name, &block)
+        add_column(name, :smallint, nil, nil, &block)
+      end
+
       def create_table_sql(using_redshift_odbc_driver = true)
         temp =""
         temp = if @temp
@@ -97,6 +101,8 @@ SQL
           when :string
             "varchar(255)"
           when :date
+            "date"
+          when :timestamp
             "timestamp"
           when :numeric
             s = "numeric"
