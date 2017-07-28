@@ -2,7 +2,7 @@ require 'influxdb'
 
 require 'etl/core'
 
-RSpec.describe "influxdb inputs" do
+RSpec.describe "influxdb inputs", skip: true do
   
   let (:dbconfig) {
     { 

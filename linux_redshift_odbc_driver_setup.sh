@@ -2,19 +2,6 @@ set -e
 
 export odbc_dir=$HOME/odbc
 
-if [ -d "$HOME/odbc" ]; then
-  rm -rdf $HOME/odbc
-fi
-
-sudo apt-get update; sudo apt-get install unixodbc-dev
-
-mkdir -p $odbc_dir
-
-wget https://s3-us-west-2.amazonaws.com/outreach-builds/redshift/amazonredshiftodbc-64-bit_1.3.1-2_amd64.deb -O $odbc_dir/amazonredshiftodbc-64-bit_1.3.1-2_amd64.deb
-
-sudo dpkg -i $odbc_dir/amazonredshiftodbc-64-bit_1.3.1-2_amd64.deb
-
-
 echo "write odbc.ini"
 cat << EOF > $odbc_dir/odbc.ini
 [ODBC Data Sources]
