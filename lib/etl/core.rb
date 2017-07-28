@@ -12,6 +12,7 @@ require 'etl/exception'
 
 # Utilities
 require 'etl/util/logger'
+require 'etl/util/metrics'
 require 'etl/util/hash_util'
 require 'etl/util/string_util'
 require 'etl/batch'
@@ -60,7 +61,11 @@ module ETL
     log.context = context.dup
     log
   end
-  
+
+  def ETL.create_metrics
+    ETL.create_class(:metrics)
+  end
+
   def ETL.queue
     @@queue ||= ETL.create_queue
   end
@@ -82,8 +87,38 @@ module ETL
   
   # load all user job classes
   def ETL.load_user_classes
+    class_dirs_map = {}
+    if c = ETL.config.core.fetch(:default, {})[:class_dir]
+      find_dirs(c, class_dirs_map)
+    end
     if c = ETL.config.core[:job][:class_dir]
-      ETL::Job::Manager.load_job_classes(c)
+      find_dirs(c, class_dirs_map)
+    end
+    class_dirs_map.keys.each do |c|
+      load_class_dir(c)
     end
   end
-end  
+
+  private
+
+  # loading the sub directories of the supplied base directory. Adding dirs to hash in case there are duplicates to remove them
+  def ETL.find_dirs(dir, dirs_map)
+      Dir.entries(dir).select {|entry| File.directory? File.join(dir ,entry) and !(entry =='.' || entry == '..') }.each  do | f|
+        dirs_map["#{dir}/#{f}"] = true
+      end
+      dirs_map[dir] = true
+  end
+
+  # Function to load external classes in the specified directory
+  def ETL.load_class_dir(class_dir)
+    unless class_dir.start_with?("/")
+      class_dir = ETL.root + "/" + class_dir
+    end
+    ::Dir.new(class_dir).each do |file|
+      next unless file =~ /\.rb$/
+      path = class_dir + "/" + file
+      ETL.logger.debug("Loading user file #{path}")
+      require path
+    end
+  end
+end

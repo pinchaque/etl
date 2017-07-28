@@ -1,0 +1,25 @@
+FROM ruby:2.3
+ENV LD_LIBRARY_PATH=/usr/lib:/opt/amazon/redshift/lib
+ENV ODBCINI=/usr/app/odbc_config/odbc.ini
+ENV AMAZONREDSHIFTODBCINI=/usr/app/odbc_config/amazon.redshiftodbc.ini
+ENV ODBCSYSINI=/usr/app/odbc_config
+
+RUN mkdir /usr/app
+
+COPY . /usr/app
+WORKDIR /usr/app
+
+RUN gem install bundler && \
+    apt-get update && \
+    apt-get install -y \
+        unixodbc-dev \
+        postgresql \
+        postgresql-common \
+        postgresql-contrib \
+        vim && \
+    bundle install && \
+    wget https://s3-us-west-2.amazonaws.com/outreach-builds/redshift/amazonredshiftodbc-64-bit_1.3.1-2_amd64.deb -O /usr/app/amazonredshiftodbc-64-bit_1.3.1-2_amd64.deb && \
+    dpkg -i /usr/app/amazonredshiftodbc-64-bit_1.3.1-2_amd64.deb && \
+    /usr/app/postgres_init.sh
+
+

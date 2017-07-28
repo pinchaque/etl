@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+
+require 'erb'
+require 'pathname'
+require 'optionparser'
+require 'fileutils'
+
+options = {}
+op = OptionParser.new do |opts|
+  opts.on('-o', '--output OUTPUT', "Output to directory") do |v|
+    options[:output] = v
+  end
+
+  opts.on('-i', '--input INPUT', "Input from directory") do |v|
+    options[:input] = v
+  end
+
+  opts.on('--class-dir DIR') do |v|
+    options[:class_dir] = v
+  end
+
+  opts.on('--job-dir JOB_DIR', "Where the job things are") do |v|
+    options[:job_dir] = v
+  end
+end
+op.parse!
+
+input_dir, output_dir, @job_dir, @class_dir = [
+  :input, :output, :job_dir, :class_dir
+].map do |key|
+  Pathname.new(options.fetch(key)).expand_path
+end
+
+@redshift_password = ENV.fetch('REDSHIFT_PASSWORD')
+@database_password = ENV.fetch('DATABASE_PASSWORD')
+@influxdb_password = ENV.fetch('INFLUXDB_PASSWORD')
+
+FileUtils.mkdir_p(output_dir)
+
+FILENAMES = ['core', 'database', 'aws', 'redshift']
+FILENAMES.each do |name|
+  template = File.open(input_dir / "#{name}.yml.erb", &:read)
+
+  File.open(output_dir / "#{name}.yml", 'w') do |f|
+    erb = ERB.new(template)
+    f.write(erb.result(binding))
+  end
+end

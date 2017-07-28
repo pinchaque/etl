@@ -2,53 +2,64 @@ require 'influxdb'
 
 require 'etl/core'
 
-RSpec.describe "influxdb inputs" do
+RSpec.describe "influxdb inputs", skip: true do
   
-  let(:dbconfig) { ETL.config.db[:influxdb] }
+  let (:dbconfig) {
+    { 
+      :port     => 8086,
+      :host     => "localhost",
+      :database => "test"
+    } 
+  }
   let(:iql) { '' }
   let(:idb) { ETL::Input::Influxdb.new(dbconfig, iql) }
   let(:ts) { Time.parse('2015-01-10T23:00:50Z').utc } # changing this will break tests
-  
   let(:series) { 'input_test' }
+  let(:container) { 'influx_input_test' }
+
+  before(:all) do
+    if !ENV['CIRCLECI'] == 'true'
+      system("docker run -d -t -p 8086:8086 --name influx_input_test influxdb:1.2")
+      sleep(0.5) # Give things a second to spin up.
+    end
+
+    system("curl -X POST http://localhost:8086/query --data-urlencode \"q=CREATE DATABASE test\"")
+  end
   
   before do
-    c = idb.conn
-    
-    data = [
-      {
-        series: series,
-        timestamp: ts.to_i,
-        values: { value: 1, n: 2 },
-        tags: { foo: 'bar', color: 'red' }
-      },
-      {
-        series: series,
-        timestamp: ts.to_i + 25,
-        values: { value: 2, n: 4 },
-        tags: { foo: 'bar', color: 'red' }
-      },
-      {
-        series: series,
-        timestamp: ts.to_i + 45,
-        values: { value: 3, n: 6 },
-        tags: { foo: 'bar', color: 'blue' }
-      },
-    ]
 
+    c = idb.conn
+
+    data = []
+
+    for i in 1..1000 do
+      h = Hash.new
+      h[:series] = series
+      h[:timestamp] = ts.to_i + 20*(i-1) 
+      h[:values] = { value: i, n: i*2 }
+      color = if i%2 == 1
+                'red'
+              else
+                'blue'
+              end
+      h[:tags] = { foo: 'bar', color: color }
+      data.push(h)
+    end
+
+    c.create_database(dbconfig[:database])
     c.write_points(data)
     # > select * from input_test
     # name: input_test
     # ----------------
     # time			            color	foo	n	value
     # 2015-01-10T23:00:50Z	red  	bar	2	1
-    # 2015-01-10T23:01:15Z	red	  bar	4	2
-    # 2015-01-10T23:01:35Z	blue	bar	6	3
+    # 2015-01-10T23:01:10Z	red	  bar	4	2
+    # 2015-01-10T23:01:30Z	blue	bar	6	3
   end
   
-  after do
-    # ideally we'd clean up the data points but we can't do that w/o admin
-    # access. the reality is that the test will just keep overwriting the same
-    # data so it's not a big problem
+  after(:all) do
+    system("docker stop influx_input_test")
+    system("docker rm influx_input_test")
   end
 
   describe 'dummy parameters' do
@@ -66,39 +77,32 @@ RSpec.describe "influxdb inputs" do
     end
   end
   
-  describe 'test database - all data' do
+  describe 'test database - first two rows' do
     let(:iql) { "select * from #{series}" }
     
     it 'returns correct rows' do
       rows = []
       idb.each_row { |row| rows << row }
-      expect(idb.rows_processed).to eq(3)
+      expect(idb.rows_processed).to eq(1000)
+
+      expected = []
+
+      for i in 1..2 do
+        h = Hash.new
+        h["time"] = (ts + (i-1)*20).strftime('%FT%TZ') 
+        color = if i%2 == 1
+                  'red'
+                else
+                  'blue'
+                end
+        h["color"] = color
+        h["foo"] = "bar" 
+        h["n"] = i*2 
+        h["value"] = i
+        expected.push(h)
+      end
       
-      expected = [
-        {
-          "time" => ts.strftime('%FT%TZ'),
-          "color" => "red",
-          "foo" => "bar",
-          "n" => 2,
-          "value" => 1,
-        },
-        {
-          "time" => (ts + 25).strftime('%FT%TZ'),
-          "color" => "red",
-          "foo" => "bar",
-          "n" => 4,
-          "value" => 2,
-        },
-        {
-          "time" => (ts + 45).strftime('%FT%TZ'),
-          "color" => "blue",
-          "foo" => "bar",
-          "n" => 6,
-          "value" => 3,
-        },
-      ]
-      
-      expect(rows).to eq(expected)
+      expect(rows[0..1]).to eq(expected)
     end
   end
   
@@ -115,18 +119,18 @@ RSpec.describe "influxdb inputs" do
       expected = [
         {
           "time" => "2015-01-10T23:00:00Z",
-          "n" => 1,
           "v" => 1,
+          "n" => 1,
         },
         {
           "time" => "2015-01-10T23:01:00Z",
-          "n" => 2,
-          "v" => 5,
+          "v" => 9,
+          "n" => 3,
         },
         {
           "time" => "2015-01-10T23:02:00Z",
-          "n" => 0,
-          "v" => nil,
+          "v" => 18,
+          "n" => 3,
         },
       ]
       
@@ -136,7 +140,7 @@ RSpec.describe "influxdb inputs" do
   
   describe 'test database - aggregated by color' do
     let(:iql) { 
-      "select sum(value) as v, sum(n) as n from #{series} where time >= '2015-01-10T23:01:00Z' and time < '2015-01-10T23:03:00Z' group by color"
+      "select sum(value) as v, sum(n) as n from #{series} where time >= '2015-01-10T23:00:50Z' and time < '2015-01-25T23:00:00Z' group by color"
     }
     # influx gets a bit weird here - we don't ask for a time but it gives us one
     # anyway. we don't have a good way of deciding whether or not the user
@@ -147,28 +151,29 @@ RSpec.describe "influxdb inputs" do
     it 'returns correct rows' do
       rows = []
       idb.each_row { |row| rows << row }
+
       expect(idb.rows_processed).to eq(2)
       
       expected = [
         {
-          "time" => "2015-01-10T23:01:00Z",
           "color" => "blue",
-          "n" => 6,
-          "v" => 3,
+          "n" => 501000,
+          "time" => "2015-01-10T23:00:50Z",
+          "v" => 250500,
         },
         {
-          "time" => "2015-01-10T23:01:00Z",
           "color" => "red",
-          "n" => 4,
-          "v" => 2,
+          "n" => 500000,
+          "time" => "2015-01-10T23:00:50Z",
+          "v" => 250000,
         },
       ]
       
       # not sure if influx enforces consistent ordering on these. just sort
       # by color to be safe
       rows.sort! { |a, b| a["color"] <=> b["color"] }
-      
-      expect(rows).to eq(expected)
+      sort_rows = rows.map { |row| row.sort.to_h }
+      expect(sort_rows).to eq(expected)
     end
   end
 end

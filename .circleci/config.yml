@@ -1,0 +1,41 @@
+version: 2
+jobs:
+  build:
+    docker:
+      # if you update this, make sure to rebuild the docker image using ./bin/docker-build-circle-image
+      # the repo and tag should match the "repo" and "version" labels in the Dockerfile
+      - image: getoutreach/etl-circle:1.1
+        environment:
+          ETL_CONFIG_DIR: "/root/config"
+          REDSHIFT_PASSWORD: "$REDSHIFT_PASSWORD"
+          INFLUXDB_PASSWORD: "$INFLUXDB_PASSWORD"
+          DATABASE_PASSWORD: "$DATABASE_PASSWORD"
+          ODBCINI: "/root/odbc/odbc.ini"
+          AMAZONREDSHIFTODBCINI: "/root/odbc/amazon.redshiftodbc.ini"
+          ODBCSYSINI: "/root/odbc"
+          LD_LIBRARY_PATH: "/opt/amazon/redshift/lib/64"
+      - image: postgres
+        environment:
+          POSTGRES_PASSWORD: "$DATABASE_PASSWORD"
+          POSTGRES_USER: postgres
+          POSTGRES_DB: test
+      - image: influxdb:1.2 
+    steps:
+      - checkout
+      - run:
+          name: Install project dependencies
+          command: |
+            set -x
+            apt-get install tree
+            ./bin/generate_config_files -i etc/erb_templates/ -o "$HOME/config/" --job-dir "$HOME/empty" --class-dir "$HOME/empty"
+            ./linux_redshift_odbc_driver_setup.sh
+            env
+            bundle install
+      - run:
+          name: Setup Database
+          command: |
+            bundle exec etl schema create
+      - run:
+          name: Run Tests
+          command: |
+            bundle exec rspec --color --require spec_helper spec --format progress --tag '~skip'

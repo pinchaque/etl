@@ -6,6 +6,7 @@
 
 # Ignore bundler config.
 /.bundle
+/vendor
 
 # Ignore the default SQLite database.
 /db/*.sqlite3
@@ -15,6 +16,12 @@
 /log/*
 !/log/.keep
 /tmp
+
+# Ignore all config files/templates except circle files
+*.yml
+/etc/*.yml
+/spec/etc/*.yml
+!.circleci/*
 
 # Editor stuff
 .*.sw[op]

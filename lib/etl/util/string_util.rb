@@ -15,4 +15,15 @@ module ETL::StringUtil
     word.downcase!
     word
   end
+
+  # Transforms string from snake_case to CamelCase
+  def self.snake_to_camel(str)
+    return nil if str.nil?
+    str.capitalize.gsub(/_(\w)/){$1.upcase}
+  end
+
+  # Transforms integer to n-digit string 
+  def self.digit_str(i, n=4)
+    i.to_s.rjust(n, "0")
+  end
 end

@@ -44,12 +44,17 @@ module ETL::Output
       ETL::Schema::Table.from_sequel_schema(sequel_schema)
     end
 
+    # Timezone to use in transformations (Olson format)
+    def timezone
+      'UTC'
+    end
+
     # Returns string that can be used as the database type given the 
     # ETL::Schema::Column object
     def col_type_str(col)
       case col.type
         when :string
-          "varchar(255)"
+          "text"
         when :date
           "timestamp"
         when :numeric

@@ -6,6 +6,10 @@ def rspec_conn_params
   dbconfig[:user] = dbconfig[:username]
   dbconfig
 end
+
+def get_today
+  Time.now.utc.strftime("%F %T")
+end
   
 class RelDb1 < ETL::Output::Sequel
   def initialize
@@ -253,7 +257,7 @@ order by day, id, value;
 SQL
     )
 
-    today = DateTime.now.strftime("%F %T")
+    today = get_today
 
     exp_values = [
       ["2015-04-01 00:00:00", 10, 1, d1, d2],
@@ -311,7 +315,7 @@ order by day, id, value;
 SQL
     )
 
-    today = DateTime.now.strftime("%F %T")
+    today = get_today
     exp_values = [
       ["2015-04-02 00:00:00", 11, 4, today, today],
       ["2015-04-02 00:00:00", 13, 5, today, today],
@@ -365,7 +369,7 @@ order by day, id, value;
 SQL
     )
 
-    today = DateTime.now.strftime("%F %T")
+    today = get_today
     exp_values = [
       ["2015-04-01 00:00:00", 10, 1, d1, d2],
       ["2015-04-02 00:00:00", 11, 4, today, today],
@@ -422,7 +426,7 @@ order by day, id, value;
 SQL
     )
 
-    today = DateTime.now.strftime("%F %T")
+    today = get_today
     exp_values = [
       ["2015-04-01 00:00:00", 10, 1, d1, d2],
       ["2015-04-02 00:00:00", 11, 4, d1, today],
@@ -476,7 +480,7 @@ order by id, day, value
 SQL
     )
 
-    today = DateTime.now.strftime("%F %T")
+    today = get_today
     exp_values = [
       ["2015-04-01 00:00:00", 10, 1, d1, d2],
       ["2015-04-02 00:00:00", 11, 4, d1, today],

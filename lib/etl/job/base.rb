@@ -1,4 +1,5 @@
 require 'mixins/cached_logger'
+require 'slack/notifier'
 
 module ETL::Job
 
@@ -6,10 +7,18 @@ module ETL::Job
   class Base
     include ETL::CachedLogger
     
-    attr_reader :batch
+    attr_reader :batch, :notifier
     
     def initialize(b)
       @batch = b
+      @notifier ||= begin 
+        if ETL.config.core[:slack]
+          slack_config = ETL.config.core[:slack]
+          if slack_config[:url] && slack_config[:channel] && id 
+            ETL::Slack::Notifier.new(slack_config[:url], slack_config[:channel], id)
+          end
+        end
+      end
     end
     
     # Registers a job class with the manager. This is typically called by
@@ -26,11 +35,12 @@ module ETL::Job
       inp = input
       inp.log = log
       log.debug("Input: #{inp.name}")
+      inp.slack_tags.map { |atr, value| @notifier.add_text_to_attachments("# #{atr.to_s}: #{value}") } if @notifier
       
       # set up our output object
       out = output
       out.log = log
-      out.reader = input
+      out.reader = inp
       log.debug("Output: #{out.feed_name}")
       
       # run this batch
@@ -63,6 +73,10 @@ module ETL::Job
       ETL::Schedule::Never
     end
     
+    def self.batch_factory
+      batch_factory_class.new
+    end
+    
     def self.batch_factory_class
       ETL::BatchFactory::Base
     end
@@ -77,6 +91,10 @@ module ETL::Job
     # override this method to create the correct output object for the job.
     def output
       ETL::Output::Null.new
+    end
+
+    def metrics
+      @metrics ||= ETL.create_metrics
     end
 
     protected
