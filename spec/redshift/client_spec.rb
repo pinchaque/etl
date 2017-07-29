@@ -2,7 +2,7 @@ require 'etl/redshift/client'
 require 'etl/redshift/table'
 require 'etl/core'
 
-RSpec.describe "redshift", skip: true do
+RSpec.describe "redshift" do
   context "client testing" do
     let(:client) { ETL::Redshift::Client.new(ETL.config.redshift[:test]) }
     it "connect and create and delete a table" do

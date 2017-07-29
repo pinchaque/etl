@@ -21,7 +21,8 @@ module ETL
     def db(&b)
       get_envvars = is_true_value(ENV.fetch('ETL_DATABASE_ENVVARS', false))
       @db ||= if get_envvars
-                database_env_vars
+                value = database_env_vars
+                { etl: value, test: value}
               else
                 self.class.load_file(db_file)
               end
@@ -128,18 +129,18 @@ module ETL
                 core_hash[:default][:class_dir] = ENV.fetch('ETL_CLASS_DIR', ::Dir.pwd)
 
                 core_hash[:job] = {}
-                core_hash[:job][:class_dir] = ENV.fetch('ETL_CLASS_DIR', ::Dir.pwd)
+                core_hash[:job][:class_dir] = ENV.fetch('ETL_JOB_DIR', ::Dir.pwd)
                 core_hash[:job][:data_dir] = ENV.fetch('ETL_DATA_DIR')
                 core_hash[:job][:retry_max] = 5 # max times retrying jobs
                 core_hash[:job][:retry_wait] = 4 # seconds
                 core_hash[:job][:retry_mult] = 2.0 # exponential backoff multiplier
 
                 core_hash[:log] = {}
-                core_hash[:class] = "ETL::Logger"
-                core_hash[:level] = ENV.fetch('ETL_LOG_LEVEL', 'debug')
+                core_hash[:log][:class] = "ETL::Logger"
+                core_hash[:log][:level] = ENV.fetch('ETL_LOG_LEVEL', 'debug')
 
                 core_hash[:database] = database_env_vars
-                
+
                 core_hash[:queue] = {}
                 core_hash[:queue][:class] = ENV.fetch('ETL_QUEUE_CLASS', 'ETL::Queue::File')
                 core_hash[:queue][:path] = ENV.fetch('ETL_QUEUE_PATH', "/var/tmp/etl_queue")
@@ -149,10 +150,13 @@ module ETL
                 core_hash[:metrics][:file] = ENV.fetch('ETL_METRICS_FILE_PATH', '/tmp/etl-metrics.log')
                 core_hash[:metrics][:series] = 'etlv2_job_run'
 
-                core_hash[:slack] = {}
-                core_hash[:slack][:url] = ENV.fetch('ETL_SLACK_URL')
-                core_hash[:slack][:channel] = ENV.fetch('ETL_SLACK_CHANNEL')
-                core_hash[:slack][:username] = ENV.fetch('ETL_SLACK_USERNAME')
+                slack = {}
+                slack[:url] = ENV.fetch('ETL_SLACK_URL', nil)
+                slack[:channel] = ENV.fetch('ETL_SLACK_CHANNEL', nil)
+                slack[:username] = ENV.fetch('ETL_SLACK_USERNAME', nil)
+                if !(slack[:url] && slack[:channel] && slack[:username])
+                  core_hash[:slack] = slack
+                end
                 core_hash
              else
                 self.class.load_file(core_file)
