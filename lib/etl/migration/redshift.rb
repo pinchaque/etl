@@ -1,4 +1,3 @@
-require 'sequel'
 require_relative '../redshift/client'
 
 module ETL::Migration
