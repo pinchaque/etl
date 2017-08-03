@@ -58,6 +58,10 @@ module ETL::Cli::Cmd
         end
       end
 
+      def target_columns
+        @target_columns ||= table_config.fetch(:target_columns, {})
+      end
+
       def provider_connect
         @provider_connect ||= ::Sequel.connect(provider_params)
       end
@@ -77,9 +81,12 @@ module ETL::Cli::Cmd
         @schema_map ||= begin
           schema_hash = source_schema.each_with_object({}) do |schema, h|
             column_name = columns[schema[0].to_sym]
-            h[column_name] = schema[1][:type] 
+            h[column_name] = schema[1][:db_type].to_sym 
           end
-          schema_hash.select { |k, v| columns.values.include? k } .sort_by { |k, _| columns.values.index(k) }.to_h
+          s_map = schema_hash.select { |k, v| columns.values.include? k } .sort_by { |k, _| columns.values.index(k) }.to_h
+          # Add target-specific columns if defined
+          target_columns.each { |k, v| s_map[k] = v }
+          s_map
         end
       end
 
@@ -104,44 +111,64 @@ module ETL::Cli::Cmd
         t = ETL::Redshift::Table.new(table)
 
         schema_map.each do |key, type|
-          case type
-          when :int
-            t.int(key.to_sym)
-          when :float
-            t.float(key.to_sym)
-          when :double
-            t.double(key.to_sym)
-          when :string
-            t.string(key.to_sym)
-          when :character
-            t.character(key.to_sym)
-          when :boolean
-            t.boolean(key.to_sym)
-          when :text
-            t.text(key.to_sym)
-          when :datetime
-            t.date(key.to_sym)
-          else
-            if type.to_s.start_with? "varchar"
-              range = type.to_s.split("(")[1].split(")")[0]
-              t.varchar(key.to_sym, range.to_i)
+          if type.is_a? Hash 
+            define_type(t, key, type[:type])
+            if type.include? :key
+              case type[:key].to_sym
+              when :identity
+                t.set_identity(key)
+              when :primary
+                t.add_primarykey(key)
+              end
             end
-
-            t.int(key.to_sym) if type.to_s.start_with? "int"
-            t.smallint(key.to_sym) if type.to_s.start_with? "tinyint"
+          else
+            define_type(t, key, type)
           end
         end
 
         primary_keys.each { |pk| t.add_primarykey(pk) }
         up = <<END
-        @client.execute("#{t.create_table_sql}")
+        @client.execute('#{t.create_table_sql}')
 END
       end
 
       def down_sql
         down = <<END
-        @client.execute("drop table #{@table}")
+        @client.execute('drop table #{@table}')
 END
+      end
+
+      def define_type(table, key, type)
+        case type
+        when :int
+          table.int(key.to_sym)
+        when :float
+          table.float(key.to_sym)
+        when :double
+          table.double(key.to_sym)
+        when :string
+          table.string(key.to_sym)
+        when :character
+          table.character(key.to_sym)
+        when :boolean
+          table.boolean(key.to_sym)
+        when :text
+          table.varchar(key.to_sym, "max")
+        when :datetime
+          table.date(key.to_sym)
+        else
+          if type.to_s.start_with? "varchar"
+            if type.to_s.include? "(" and type.to_s.include? ")"
+              range = type.to_s.split("(")[1].split(")")[0]
+              table.varchar(key.to_sym, range)
+            else
+              table.varchar(key.to_sym, "max")
+            end
+          end
+
+          table.int(key.to_sym) if type.to_s.start_with? "int"
+          table.boolean(key.to_sym) if type.to_s.start_with? "tinyint"
+        end
       end
 
       def execute
