@@ -1,5 +1,7 @@
+require 'etl/models/job_run_repository'
 require 'etl/job/exec'
 require 'etl/job/migratable_base'
+require_relative '../job_repository_helper'
 
 class Job < ETL::Job::MigratableBase 
   register_job
@@ -62,14 +64,20 @@ END
     f2.close()
   end
 
-  after(:all) do
-    system( "rm -rf #{Dir.pwd}/db")
+  before :all do
+    JobRunRepositoryHelper.instance.setup
+    ::ETL::Model::JobRunRepository.instance = ETL::Model::JobRunRepository.new
+  end
+  before(:each) do
+    JobRunRepositoryHelper.instance.delete_all
   end
 
-  before(:each) do
-    ETL::Model::JobRun.dataset.delete
+  after:all do
+    JobRunRepositoryHelper.instance.teardown
+    system( "rm -rf #{Dir.pwd}/db")
   end
   
+  let(:jrr) { ETL::Model::JobRunRepository.new}
   let(:batch) { ETL::Batch.new() }
   let(:job_id) { 'job' }
   let(:payload) { ETL::Queue::Payload.new(job_id, batch) }
@@ -92,7 +100,7 @@ END
     end 
   
     it "creates run models" do
-      jr = ETL::Model::JobRun.create_for_job(job, batch)
+      jr = jrr.create_for_job(job, batch)
       expect(jr.job_id).to eq('job')
       expect(jr.status).to eq("new")
       expect(jr.started_at).to be_nil
