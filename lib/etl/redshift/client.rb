@@ -12,7 +12,7 @@ module ETL::Redshift
   # Class that contains shared logic for accessing Redshift.
   class Client
     include ETL::CachedLogger
-    attr_accessor :db
+    attr_accessor :db, :region, :iam_role
 
     # when odbc driver is fully working the use redshift driver can
     # default to true
@@ -56,5 +56,60 @@ SQL
       execute(sql)
     end
 
+    def count_row_by_s3(destination)
+      sql = <<SQL
+        SELECT c.lines_scanned FROM stl_load_commits c, stl_query q WHERE filename LIKE 's3://#{destination}%' 
+        AND c.query = q.query AND trim(q.querytxt) NOT LIKE 'COPY ANALYZE%'
+SQL
+      results = execute(sql)
+      loaded_rows = 0
+      results.each { |result| loaded_rows += result.fetch("lines_scanned", "0").to_i }
+      loaded_rows
+    end
+
+    def unload_to_s3(query, destination, delimiter = '|')
+      sql = <<SQL 
+        UNLOAD ('#{query}') TO 's3://#{destination}'
+        IAM_ROLE '#{@iam_role}'
+        DELIMITER '#{delimiter}'
+SQL
+      execute(sql)
+    end
+
+    def copy_from_s3(table_name, destination, delimiter = '|')
+      sql = <<SQL
+        COPY #{table_name}
+        FROM 's3://#{destination}' 
+        IAM_ROLE '#{@iam_role}'
+        TIMEFORMAT AS 'auto'
+        DATEFORMAT AS 'auto'
+        ESCAPE
+        DELIMITER '#{delimiter}'
+        REGION '#{@region}'
+SQL
+      execute(sql)
+    end
+
+    def creds(session_name)
+      sts = Aws::STS::Client.new(region: @region)
+      session = sts.assume_role(
+        role_arn: @iam_role,
+        role_session_name: session_name 
+      )
+
+      Aws::Credentials.new(
+        session.credentials.access_key_id,
+        session.credentials.secret_access_key,
+        session.credentials.session_token
+      )
+    end
+
+    def delete_object_from_s3(bucket, prefix, session_name)
+      s3 = Aws::S3::Client.new(region: @region, credentials: creds(session_name))
+      resp = s3.list_objects(bucket: bucket)
+      keys = resp[:contents].select { |content| content.key.start_with? prefix }.map { |content| content.key }
+
+      keys.each { |key| s3.delete_object(bucket: bucket, key: key) }
+    end
   end
 end

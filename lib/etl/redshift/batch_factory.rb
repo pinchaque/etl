@@ -35,6 +35,5 @@ module ETL::Redshift
       b.start_time = value
       b
     end
-  
   end
 end
