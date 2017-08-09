@@ -9,7 +9,6 @@ module ETL::Cli::Cmd
         jrr = ::ETL::Model::JobRunRepository.instance
         jrr.tables.each do |t|
           log.info("  * Dropping #{t}")
-          puts t.inspect
           jrr.conn.exec("DROP TABLE IF EXISTS #{t} CASCADE")
         end
       end

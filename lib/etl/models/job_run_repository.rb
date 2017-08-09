@@ -64,7 +64,7 @@ module ETL::Model
       jr.id = r.first[0].to_i
       jr
     end
-    
+
     def save(jr)
       update_sql = "UPDATE #{schema_name}.job_runs SET status='#{jr.status}', updated_at='#{jr.updated_at}'"
       if !jr.message.nil?
@@ -83,10 +83,9 @@ module ETL::Model
       if !jr.rows_processed.nil?
         update_sql = update_sql + ", rows_processed=#{jr.rows_processed}"
       end
-     
+
       update_sql = update_sql + " WHERE id = #{jr.id}"
       log.debug("SQL: '#{update_sql}'")
-      puts update_sql
       conn.exec(update_sql)
       jr
     end
@@ -104,11 +103,10 @@ module ETL::Model
 
     def table_schema(table_name)
       sql = "SELECT * FROM information_schema.columns WHERE table_schema = '#{schema_name}' AND table_name = '#{table_name}'"
-      puts sql
       r = conn.exec(sql)
       columns = {}
       r.each do |c|
-        columns[c["column_name"].to_s] = c["data_type"]
+        columns[c["column_name"].to_st ] = c["data_type"]
       end
       columns
     end
@@ -163,7 +161,6 @@ module ETL::Model
 
     def job_run_query(sql)
       log.debug("SQL: '#{sql}'")
-      puts sql
       r = conn.exec(sql)
       job_runs = []
       r.each do |single_result|
