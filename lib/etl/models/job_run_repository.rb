@@ -35,7 +35,7 @@ module ETL::Model
       @conn ||= PG.connect(@conn_params)
     end
 
-    def self.create_table_sql(schema_name)
+    def self.create_table_sql(schema_name = 'public')
       dir = Dir.pwd
       template_file = "#{dir}/etc/erb_templates/create_job_run_table.sql.erb"
       renderer = ERB.new(File.open(template_file, "rb").read)
@@ -45,7 +45,7 @@ module ETL::Model
     end
 
     def create_table
-      @conn.exec(self.create_table_sql)
+      @conn.exec(::ETL::Model::JobRunRepository.create_table_sql)
     end
 
     # Creates JobRun object from Job and batch date
@@ -91,6 +91,27 @@ module ETL::Model
       jr
     end
 
+    def tables
+      sql = "SELECT tablename FROM pg_catalog.pg_tables where schemaname = '#{schema_name}'"
+      log.debug("SQL: '#{sql}'")
+      r = conn.exec(sql)
+      table_names = []
+      r.each do |row|
+        table_names << row["tablename"]
+      end
+      table_names
+    end
+
+    def table_schema(table_name)
+      sql = "SELECT * FROM information_schema.columns WHERE table_schema = '#{schema_name}' AND table_name = '#{table_name}'"
+      puts sql
+      r = conn.exec(sql)
+      columns = {}
+      r.each do |c|
+        columns[c["column_name"].to_s] = c["data_type"]
+      end
+      columns
+    end
     def delete_all
       sql = "DELETE from #{@schema_name}.job_runs;"
       job_run_query(sql)
