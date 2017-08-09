@@ -28,7 +28,6 @@ module ETL::Job
       # get a run for this job
 
       jrr = ::ETL::Model::JobRunRepository.instance
-      puts jrr.inspect
       jr = jrr.create_for_job(job, batch)
 
       # change status to running

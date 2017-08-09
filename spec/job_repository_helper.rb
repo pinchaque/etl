@@ -11,7 +11,6 @@ class JobRunRepositoryHelper
     @conn ||= PG.connect(@conn_params)
   end
   def delete_all
-    puts "delete all"
     @conn.exec("DELETE from public.job_runs")
   end
   def setup

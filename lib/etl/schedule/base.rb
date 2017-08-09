@@ -8,7 +8,6 @@ module ETL::Schedule
   class Base
 
     def initialize(job, batch)
-      puts "Job: #{job.id}"
       @job = job
       @batch = batch
     end
