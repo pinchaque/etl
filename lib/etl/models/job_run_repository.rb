@@ -36,12 +36,26 @@ module ETL::Model
     end
 
     def self.create_table_sql(schema_name = 'public')
-      dir = Dir.pwd
-      template_file = "#{dir}/etc/erb_templates/create_job_run_table.sql.erb"
-      renderer = ERB.new(File.open(template_file, "rb").read)
-      b = binding
-      b.local_variable_set(:schema, schema_name)
-      renderer.result(b)
+      <<~HEREDOC
+        CREATE TABLE IF NOT EXISTS  #{schema_name}.job_runs
+        (
+            id SERIAL PRIMARY KEY,
+            created_at timestamp without time zone NOT NULL,
+            updated_at timestamp without time zone NOT NULL,
+            job_id text COLLATE pg_catalog."default" NOT NULL,
+            batch text COLLATE pg_catalog."default" NOT NULL,
+            status text COLLATE pg_catalog."default" NOT NULL,
+            queued_at timestamp without time zone,
+            started_at timestamp without time zone,
+            ended_at timestamp without time zone,
+            rows_processed integer,
+            message text COLLATE pg_catalog."default"
+        )
+        WITH (
+            OIDS = FALSE
+        )
+        TABLESPACE pg_default;
+      HEREDOC
     end
 
     def create_table
@@ -184,7 +198,6 @@ module ETL::Model
       jr.message = r["message"]
       jr
     end
-
   end
 end
 
