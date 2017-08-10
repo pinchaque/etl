@@ -26,7 +26,9 @@ module ETL::Job
       # get batch and job model out of the payload
       batch, job = extract_payload
       # get a run for this job
-      jr = ETL::Model::JobRun.create_for_job(job, batch)
+
+      jrr = ::ETL::Model::JobRunRepository.instance
+      jr = jrr.create_for_job(job, batch)
 
       # change status to running
       jr.running()

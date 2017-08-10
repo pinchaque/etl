@@ -18,11 +18,10 @@ require 'etl/util/string_util'
 require 'etl/batch'
 
 # Models
-# Set up the database connection that's needed for Sequel models
-# Also we can use the DB constant in the rest of the code
-DB = Sequel::Model.db = Sequel.connect(ETL.config.core[:database])
-Sequel::Model.plugin :timestamps
 require 'etl/models/job_run'
+require 'etl/models/job_run_repository'
+
+::ETL::Model::JobRunRepository.instance = ::ETL::Model::JobRunRepository.new
 
 require 'etl/schema/table'
 require 'etl/schema/column'
