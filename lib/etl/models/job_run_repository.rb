@@ -45,7 +45,7 @@ module ETL::Model
     end
 
     def create_table
-      @conn.exec(::ETL::Model::JobRunRepository.create_table_sql)
+      @conn.exec(self.class.create_table_sql)
     end
 
     # Creates JobRun object from Job and batch date
@@ -91,7 +91,7 @@ module ETL::Model
     end
 
     def tables
-      sql = "SELECT tablename FROM pg_catalog.pg_tables where schemaname = '#{schema_name}'"
+      sql = "SELECT tablename FROM pg_catalog.pg_tables where schemaname = '#{@schema_name}'"
       log.debug("SQL: '#{sql}'")
       r = conn.exec(sql)
       table_names = []
@@ -102,7 +102,7 @@ module ETL::Model
     end
 
     def table_schema(table_name)
-      sql = "SELECT * FROM information_schema.columns WHERE table_schema = '#{schema_name}' AND table_name = '#{table_name}'"
+      sql = "SELECT * FROM information_schema.columns WHERE table_schema = '#{@schema_name}' AND table_name = '#{table_name}'"
       r = conn.exec(sql)
       columns = {}
       r.each do |c|
@@ -110,6 +110,7 @@ module ETL::Model
       end
       columns
     end
+
     def delete_all
       sql = "DELETE from #{@schema_name}.job_runs;"
       job_run_query(sql)
@@ -155,7 +156,6 @@ module ETL::Model
     def last_ended(job, batch)
       sql = "Select * from #{schema_name}.job_runs where job_id = '#{job.id}' and batch = '#{batch.to_json}' and (status = 'success' or status = 'error') ORDER BY ended_at DESC;"
       runs = job_run_query(sql)
-      first = runs.first
       runs.first
     end
 
