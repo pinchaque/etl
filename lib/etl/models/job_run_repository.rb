@@ -15,18 +15,19 @@ module ETL::Model
     def initialize(conn_params = nil, schema_name= 'public')
       @conn_params = conn_params
       @schema_name = schema_name
-      if @conn_params.nil?
-        @conn_params = ETL.config.core[:database]
-      end
+      @conn_params = ETL.config.core[:database] if @conn_params.nil?
       @conn_params = prep_conn(@conn_params)
     end
 
     def prep_conn(conn_params)
       # Adding this to allow the current configuration files to work with pg lib
       # separate function so useful for tests.
-      conn_params.delete(:adapter)
-      conn_params.delete(:encoding)
-      conn_params.delete(:reconnect)
+      if conn_params[:adapter] == "postgres"
+        conn_params.delete(:adapter)
+        conn_params.delete(:encoding)
+        conn_params.delete(:reconnect)
+        conn_params.delete(:pool)
+      end
       conn_params
     end
 

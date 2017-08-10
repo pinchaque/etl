@@ -37,6 +37,7 @@ module ETL
       conn_params[:password] = ENV.fetch("#{prefix}_PASSWORD")
       conn_params[:host] = ENV.fetch("#{prefix}_HOST", 'localhost')
       conn_params[:port] = ENV.fetch("#{prefix}_PORT", 5432)
+      conn_params[:adapter] = ENV.fetch("#{prefix}_ADAPTER", 'postgres')
       conn_params
     end
 
