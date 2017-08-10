@@ -55,7 +55,7 @@ module ETL::Model
       jr.job_id = job.id
       jr.status = "new"
       jr.batch = batch.to_json
-      insert_sql = "INSERT INTO #{@schema_name}.job_runs(created_at, updated_at, job_id, batch, status) VALUES ('#{Time.now.utc}','#{Time.at(0).utc}', '#{job.id}', '#{batch.to_json}', 'new') RETURNING id";
+      insert_sql = "INSERT INTO #{@schema_name}.job_runs(created_at, updated_at, job_id, batch, status) VALUES ('#{Time.now}','#{Time.at(0)}', '#{job.id}', '#{batch.to_json}', 'new') RETURNING id";
       log.debug("SQL: '#{insert_sql}'")
       r = conn.exec(insert_sql).values
       if r.length == 0
