@@ -26,6 +26,7 @@ module ETL::Model
         conn_params.delete(:adapter)
         conn_params.delete(:encoding)
         conn_params.delete(:reconnect)
+        conn_params.delete(:database)
         conn_params.delete(:pool)
       end
       conn_params
