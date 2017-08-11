@@ -3,7 +3,7 @@ require 'etl/job/exec'
 require 'etl/job/migratable_base'
 require_relative '../job_repository_helper'
 
-class Job < ETL::Job::MigratableBase 
+class Job < ETL::Job::MigratableBase
   register_job
 
   def target_version
@@ -25,7 +25,7 @@ class Job < ETL::Job::MigratableBase
 end
 
 RSpec.describe "migratablejob" do
-  
+
   # Make migration_dir and put files to be executed in migrate
   before(:all) do
     Dir.mkdir 'db'
@@ -37,7 +37,7 @@ RSpec.describe "migratablejob" do
         puts "test output up at version 1"
       end
 
-      def down 
+      def down
         puts "test output down at version 1"
       end
     end
@@ -54,7 +54,7 @@ END
         puts "test output up at version 2"
       end
 
-      def down 
+      def down
         puts "test output down at version 2"
       end
     end
@@ -76,14 +76,14 @@ END
     JobRunRepositoryHelper.instance.teardown
     system( "rm -rf #{Dir.pwd}/db")
   end
-  
+
   let(:jrr) { ETL::Model::JobRunRepository.new}
   let(:batch) { ETL::Batch.new() }
   let(:job_id) { 'job' }
   let(:payload) { ETL::Queue::Payload.new(job_id, batch) }
   let(:job) { Job.new(ETL::Batch.new(payload.batch_hash)) }
   let(:job_exec) { ETL::Job::Exec.new(payload) }
-  
+
   context "migration" do
     it { expect(job.id).to eq("job") }
     it { expect( job.migration_files.length ).to eq(2) }
@@ -91,18 +91,18 @@ END
       allow(job).to receive(:deploy_version).and_return(0)
       allow(job).to receive(:target_version).and_return(2)
       expect { job.migrate }.to output("test output up at version 1\ntest output up at version 2\n").to_stdout
-    end 
+    end
 
     it "#migrate down to 1" do
       allow(job).to receive(:deploy_version).and_return(2)
       allow(job).to receive(:target_version).and_return(0)
       expect { job.migrate }.to output("test output down at version 2\ntest output down at version 1\n").to_stdout
-    end 
-  
+    end
+
     it "creates run models" do
       jr = jrr.create_for_job(job, batch)
       expect(jr.job_id).to eq('job')
-      expect(jr.status).to eq("new")
+      expect(jr.status).to eq(:new)
       expect(jr.started_at).to be_nil
       expect(jr.batch).to eq(batch.to_json)
     end
@@ -113,7 +113,7 @@ END
 
       # check this object
       expect(jr.job_id).to eq(job.id)
-      expect(jr.status).to eq("success")
+      expect(jr.status).to eq(:success)
       expect(jr.queued_at).to be_nil
       expect(jr.started_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))

@@ -81,7 +81,7 @@ RSpec.describe "job" do
   it "creates run models" do
     jr = jrr.create_for_job(job, batch)
     expect(jr.job_id).to eq('spec_job')
-    expect(jr.status).to eq("new")
+    expect(jr.status).to eq(:new)
     expect(jr.started_at).to be_nil
     expect(jr.batch).to eq(batch.to_json)
   end
@@ -91,7 +91,7 @@ RSpec.describe "job" do
 
     # check this object
     expect(jr.job_id).to eq(job.id)
-    expect(jr.status).to eq("success")
+    expect(jr.status).to eq(:success)
     expect(jr.queued_at).to be_nil
     expect(jr.started_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
     expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
@@ -106,7 +106,7 @@ RSpec.describe "job" do
     expect(runs.count).to eq(1)
     jr = ETL::Model::JobRunRepository.build_job_run(jrr, runs[0])
     expect(jr.job_id).to eq(job.id)
-    expect(jr.status).to eq("success")
+    expect(jr.status).to eq(:success)
     expect(jr.queued_at).to be_nil
     expect(jr.started_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
     expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
@@ -123,7 +123,7 @@ RSpec.describe "job" do
     it 'sets correct result state' do
       jr = job_exec.run
       expect(jr.job_id).to eq(job.id)
-      expect(jr.status).to eq("success")
+      expect(jr.status).to eq(:success)
       expect(jr.queued_at).to be_nil
       expect(jr.started_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
@@ -136,7 +136,7 @@ RSpec.describe "job" do
       expect(runs.count).to eq(1)
       jr = ETL::Model::JobRunRepository.build_job_run(jrr, runs[0])
       expect(jr.job_id).to eq(job.id)
-      expect(jr.status).to eq("success")
+      expect(jr.status).to eq(:success)
       expect(jr.queued_at).to be_nil
       expect(jr.started_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
@@ -155,7 +155,7 @@ RSpec.describe "job" do
       jr = job_exec.run
 
       expect(jr.job_id).to eq(job.id)
-      expect(jr.status).to eq("error")
+      expect(jr.status).to eq(:error)
       expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.started_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.batch).to eq(batch.to_json)
@@ -167,7 +167,7 @@ RSpec.describe "job" do
       expect(runs.count).to eq(1)
       jr = ETL::Model::JobRunRepository.build_job_run(jrr, runs[0])
       expect(jr.job_id).to eq(job.id)
-      expect(jr.status).to eq("error")
+      expect(jr.status).to eq(:error)
       expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.started_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.batch).to eq(batch.to_json)
