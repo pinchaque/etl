@@ -66,7 +66,7 @@ module ETL::Model
     end
 
     def save(jr)
-      update_sql = "UPDATE #{schema_name}.job_runs SET status='#{jr.status}', updated_at='#{jr.updated_at}'"
+      update_sql = "UPDATE #{schema_name}.job_runs SET status='#{jr.status.to_s}', updated_at='#{jr.updated_at}'"
       if !jr.message.nil?
         escaped_message = "E'" + @conn.escape_string(jr.message).gsub("\n", "\\n")+"'"
         update_sql = update_sql + ", message=#{escaped_message}"

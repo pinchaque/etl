@@ -9,15 +9,19 @@ module ETL::Model
     def initialize(repository)
       @repository = repository
     end
+    
+    def success?
+      self.status == :success
+    end
 
     # Sets the final status as success along with rows affected
     def success(result)
-      final_state(:success.to_s, result)
+      final_state(:success, result)
     end
 
     # Sets the final status as error along with rows affected
     def error(result)
-      final_state(:error.to_s, result)
+      final_state(:error, result)
     end
 
     # Mark this as an error and save the exception message
@@ -27,7 +31,7 @@ module ETL::Model
 
     # Sets the current status as running and initializes started_at
     def running
-      self.status = :running.to_s
+      self.status = :running
       self.started_at = Time.now
       self.updated_at = Time.now
       @repository.save(self)
@@ -35,7 +39,7 @@ module ETL::Model
 
     # Sets the current status as queued and sets queued_at
     def queued()
-      self.status = :queued.to_s
+      self.status = :queued
       self.queued_at = Time.now
       self.updated_at = Time.now
       @repository.save(self)
