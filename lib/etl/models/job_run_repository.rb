@@ -69,7 +69,7 @@ module ETL::Model
       jr = JobRun.new(self)
       jr.created_at = Time.now
       jr.job_id = job.id
-      jr.status = "new"
+      jr.status = :new
       jr.batch = batch.to_json
       insert_sql = "INSERT INTO #{@schema_name}.job_runs(created_at, updated_at, job_id, batch, status) VALUES ('#{Time.now}','#{Time.at(0)}', '#{job.id}', '#{batch.to_json}', 'new') RETURNING id";
       log.debug("SQL: '#{insert_sql}'")
@@ -82,7 +82,7 @@ module ETL::Model
     end
 
     def save(jr)
-      update_sql = "UPDATE #{schema_name}.job_runs SET status='#{jr.status}', updated_at='#{jr.updated_at}'"
+      update_sql = "UPDATE #{schema_name}.job_runs SET status='#{jr.status.to_s}', updated_at='#{jr.updated_at}'"
       if !jr.message.nil?
         escaped_message = "E'" + @conn.escape_string(jr.message).gsub("\n", "\\n")+"'"
         update_sql = update_sql + ", message=#{escaped_message}"
@@ -192,7 +192,8 @@ module ETL::Model
       jr.updated_at = Time.parse(r["updated_at"])
       jr.job_id = r["job_id"]
       jr.batch = r["batch"]
-      jr.status = r["status"]
+      jr.status = r["status"].to_sym
+      puts "Status: #{jr.status}"
       jr.queued_at = Time.parse(r["queued_at"]) unless r["queued_at"].nil?
       jr.started_at = Time.parse(r["started_at"]) unless r["started_at"].nil?
       jr.ended_at = Time.parse(r["ended_at"]) unless r["ended_at"].nil?

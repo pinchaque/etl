@@ -74,12 +74,12 @@ RSpec.describe "models/job_run_repository" do
     expect(jrr.has_pending?(job, batch)).to be_truthy
     jms = jrr.find_pending(job, batch)
     expect(jms.count).to eq(1)
-    expect(jms[0].status).to eq("queued")
+    expect(jms[0].status).to eq(:queued)
     expect(jms[0].queued_at.utc.strftime(tfmt)).to eq((base_time + 20).strftime(tfmt))
 
     # latest finished should be that successful job
     jm = jrr.last_ended(job, batch)
-    expect(jm.status).to eq("success")
+    expect(jm.status).to eq(:success)
     expect(jm.ended_at.utc.strftime(tfmt)).to eq((base_time + 10).strftime(tfmt))
   end
 end
