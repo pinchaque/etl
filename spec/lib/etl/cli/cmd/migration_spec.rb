@@ -182,3 +182,119 @@ END
     end
   end
 end
+
+RSpec.describe ETL::Cli::Cmd::Migration::Create do
+  let(:table) { "test_table" }
+  let(:dir) { "#{Dir.pwd}/db" }
+  let(:args) { ["--table", table, "--outputdir", dir, "--inputdir", dir] }
+  let(:passwd) { "mysecretpassword" }
+
+  let(:described_instance) do
+    instance = described_class.new('etl migration create', {})
+    instance.parse(args)
+    instance
+  end
+
+  before(:all) do
+    Dir.mkdir 'db'
+    f = File.open("#{Dir.pwd}/db/migration_config.yml", "w")
+    s = <<-END
+test_table:
+  scd: true
+  columns:
+    day: day
+    attribute: attr
+  scd_columns:
+    day: day
+END
+
+    f << s
+    f.close()
+    system( "cp #{Dir.pwd}/etc/erb_templates/redshift_migration.erb #{Dir.pwd}/db/")
+  end
+
+  after(:all) do
+    system( "rm -rf #{Dir.pwd}/db")
+  end
+
+  context 'schema_map without scd' do
+    before do
+      allow(described_instance).to receive(:source_schema).and_return([[:attribute, {:primary_key=>false, :allow_null=>true, :default=>nil, :db_type=>"varchar(100)", :type=>:string, :ruby_default=>nil, :max_length=>100}],
+                                                                              [:day, {:primary_key=>false, :allow_null=>true, :default=>nil, :db_type=>"datetime", :type=>:datetime, :ruby_default=>nil}]] )
+      allow(described_instance).to receive(:scd?).and_return(false)
+    end
+
+    # Create two tables: test_table, test_table_history
+    it '#up_sql' do
+      expect( described_instance.up_sql(true).lstrip.rstrip.delete("\n") ).to eq( "@client.execute('CREATE TABLE IF NOT EXISTS test_table( \"day\" date, \"attr\" varchar (100) )')        @client.execute('CREATE TABLE IF NOT EXISTS test_table_history( \"day\" date )')" )
+    end
+  end
+
+  context 'schema_map with scd' do
+    before { allow(described_instance).to receive(:source_schema).and_return([[:attribute, {:primary_key=>false, :allow_null=>true, :default=>nil, :db_type=>"varchar(100)", :type=>:string, :ruby_default=>nil, :max_length=>100}],
+                                                                              [:day, {:primary_key=>false, :allow_null=>true, :default=>nil, :db_type=>"datetime", :type=>:datetime, :ruby_default=>nil}]] ) }
+
+    it "#scd" do
+      expect( described_instance.scd? ).to eq(true)
+    end
+
+    it '#schema_map' do
+      expect( described_instance.schema_map ).to eq({ "day" => "datetime", "attr" => "varchar(100)" })
+    end
+
+    it '#scd schema_map' do
+      expect( described_instance.schema_map(true) ).to eq({ "day" => "datetime" })
+    end
+
+    it '#primary_keys' do
+      expect( described_instance.primary_keys ).to eq( [] )
+    end
+
+    # Create two tables: test_table, test_table_history
+    it '#up_sql' do
+      expect( described_instance.up_sql(true).lstrip.rstrip.delete("\n") ).to eq( "@client.execute('CREATE TABLE IF NOT EXISTS test_table( \"test_table_id\" int IDENTITY(1, 1) NOT NULL, \"day\" date, \"attr\" varchar (100) )')        @client.execute('CREATE TABLE IF NOT EXISTS test_table_history( \"test_table_history_id\" int IDENTITY(1, 1) NOT NULL, \"day\" date )')" )
+    end
+
+    # Drop two tables: test_table, test_table_history
+    it '#down_sql' do
+      expect( described_instance.down_sql.lstrip.rstrip ).to eq( "@client.execute('drop table test_table')" )
+    end
+  end
+
+  context 'schema_map with scd and primary_key' do
+    before { allow(described_instance).to receive(:source_schema).and_return([[:attribute, {:primary_key=>false, :allow_null=>true, :default=>nil, :db_type=>"varchar(100)", :type=>:string, :ruby_default=>nil, :max_length=>100}],
+                                                                              [:day, {:primary_key=>true, :allow_null=>true, :default=>nil, :db_type=>"datetime", :type=>:datetime, :ruby_default=>nil}]] ) }
+
+    it "#scd" do
+      expect( described_instance.scd? ).to eq(true)
+    end
+
+    it '#schema_map' do
+      expect( described_instance.schema_map ).to eq({ "day" => "datetime", "attr" => "varchar(100)" })
+    end
+
+    it '#scd schema_map' do
+      expect( described_instance.schema_map(true) ).to eq({ "day" => "datetime" })
+    end
+
+    it '#primary_keys' do
+      expect( described_instance.primary_keys ).to eq( [:day] )
+    end
+
+    # Create two tables: test_table, test_table_history
+    it '#up_sql' do
+      expect( described_instance.up_sql(true).lstrip.rstrip.delete("\n") ).to eq( "@client.execute('CREATE TABLE IF NOT EXISTS test_table( \"test_table_id\" int IDENTITY(1, 1) NOT NULL, \"day\" date NOT NULL, \"attr\" varchar (100), PRIMARY KEY(day) )')        @client.execute('CREATE TABLE IF NOT EXISTS test_table_history( \"test_table_history_id\" int IDENTITY(1, 1) NOT NULL, \"day\" date NOT NULL, PRIMARY KEY(day) )')" )
+    end
+
+    # Drop two tables: test_table, test_table_history
+    it '#down_sql' do
+      expect( described_instance.down_sql.lstrip.rstrip ).to eq( "@client.execute('drop table test_table')" )
+    end
+
+    it '#execute' do
+      described_instance.execute
+      expect(File).to exist("#{dir}/#{table}_0001.rb") 
+    end
+  end
+end
+
