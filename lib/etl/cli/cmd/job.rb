@@ -10,11 +10,17 @@ module ETL::Cli::Cmd
 
       def execute
         ETL.load_user_classes
-        log.info("List of registered job IDs (classes):")
+        dependencies_jobs = ETL::Job::Manager.instance.sorted_dependent_jobs
+        d_jobs = dependencies_jobs.select { |id| id =~ regex }
+
+        # Dependencies_jobs sorted by the order to be executed
+        puts(" *** #{d_jobs.join(' ')}") unless d_jobs.empty?
+
+        # Independent_jobs          
         ETL::Job::Manager.instance.job_classes.select do |id, klass|
           id =~ regex
         end.each do |id, klass|
-          puts(" * #{id} (#{klass.name.to_s})")
+          puts(" * #{id} (#{klass.name.to_s})") unless d_jobs.include? id
         end
       end
     end

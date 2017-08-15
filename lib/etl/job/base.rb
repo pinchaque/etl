@@ -28,6 +28,11 @@ module ETL::Job
       Manager.instance.register(id, self)
     end
     
+    # Registers a job class that depends on parent job with the manager
+    def self.register_job_with_parent(p_id)
+      Manager.instance.register_job_with_parent(id, p_id, self)
+    end
+
     # Run the job by instantiating input and output classes with parameters
     # and then running the output class for this batch
     def run

@@ -193,7 +193,6 @@ module ETL::Model
       jr.job_id = r["job_id"]
       jr.batch = r["batch"]
       jr.status = r["status"].to_sym
-      puts "Status: #{jr.status}"
       jr.queued_at = Time.parse(r["queued_at"]) unless r["queued_at"].nil?
       jr.started_at = Time.parse(r["started_at"]) unless r["started_at"].nil?
       jr.ended_at = Time.parse(r["ended_at"]) unless r["ended_at"].nil?

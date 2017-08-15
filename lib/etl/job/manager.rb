@@ -2,6 +2,23 @@ require 'singleton'
 
 module ETL::Job
   class Manager
+    class Node
+      attr_reader :id, :children
+      def initialize(id, child = nil)
+        @id = id
+        @children = []
+        add_child(child) unless child.nil?
+      end
+      
+      def add_child(child)
+        @children.push(child) unless @children.include? child
+      end
+
+      def ==(another_sock)
+        self.id == another_sock.id
+      end
+    end
+
     include Singleton
 
     # Map of id => Class
@@ -10,6 +27,8 @@ module ETL::Job
     def initialize
       @job_classes = {}
       @job_class_factories = {}
+      @job_dependencies = {}
+      @job_parents = []
     end
 
     # Registers a job class with the manager. This is typically called by
@@ -31,6 +50,47 @@ module ETL::Job
       end
 
       @job_classes[id_str] = klass
+    end
+
+    # Registers a job class that depends on parent job with the manager
+    def register_job_with_parent(id, p_id, klass, klass_factory=nil)
+      register(id, klass, klass_factory)
+      id_str = id.to_s
+      pid_str = p_id.to_s
+
+      ETL.logger.debug("Registering dependency with manager: #{id_str} depends on #{pid_str}")
+
+      node = @job_dependencies.fetch(id_str, Node.new(id_str))
+      if !@job_dependencies.include? pid_str
+        pnode = Node.new(pid_str)
+        pnode.add_child(node)
+        @job_parents.push(pnode)
+        @job_parents.delete(node)
+      else
+        pnode = @job_dependencies[pid_str]
+        pnode.add_child(node)
+      end
+
+      # Build a hash to keep dependencies
+      @job_dependencies[id_str] = node 
+      @job_dependencies[pid_str] = pnode 
+    end
+
+    def sorted_dependent_jobs 
+      output = [] 
+      queue = @job_parents 
+      visited = []
+
+      while !queue.empty?
+        node = queue.shift
+
+        unless visited.include? node
+          output.push(node.id)
+          visited.push(node)
+        end
+        node.children.each { |c| queue.push(c) }
+      end
+      output
     end
 
     # Returns the job class registered for the specified ID, or nil if none
