@@ -1,3 +1,4 @@
+require 'etl/core'
 require 'etl/queue/payload'
 
 module ETL::Queue
@@ -10,31 +11,11 @@ module ETL::Queue
       end
 
       idle_timeout = params.fetch(:idle_timeout, nil)
-      @queue_url = params.fetch(:url,'')
-      @region = params.fetch(:region,'')
+      @queue_url = params.fetch(:url, '')
+      @region = params.fetch(:region, '')
+      @iam_role = params.fetch(:iam_role, '')
 
-      if ENV["AWS_ACCESS_KEY_ID"].nil?
-        @iam_role = params.fetch(:iam_role)
-
-        sts = Aws::STS::Client.new(region: @region)
-        session = sts.assume_role(
-          role_arn: @iam_role,
-          role_session_name: session_name
-        )
-
-        creds = Aws::Credentials.new(
-          session.credentials.access_key_id,
-          session.credentials.secret_access_key,
-          session.credentials.session_token
-        )
-      else
-        # Note this branch of code is really for testing purposes
-        # when running from a machine that is not an ec2 instance
-        creds = Aws::Credentials.new(
-           ENV["AWS_ACCESS_KEY_ID"],
-           ENV["AWS_SECRET_ACCESS_KEY"]
-        )
-      end
+      creds = ::ETL.create_aws_credentials(@region, @iam_role, "etl_sqs_session")
 
       @client = Aws::SQS::Client.new(region: @region, credentials: creds)
       @poller = Aws::SQS::QueuePoller.new(@queue_url, { client: @client, idle_timeout: idle_timeout })

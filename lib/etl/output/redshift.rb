@@ -110,24 +110,8 @@ SQL
     end
 
     def creds
-      sts = Aws::STS::Client.new(region: @aws_params[:region])
-      if tmp_table.length > 50
-        session = sts.assume_role(
-          role_arn: @aws_params[:role_arn],
-          role_session_name: "circle-#{tmp_table[0..49]}-upload"
-        )
-      else
-        session = sts.assume_role(
-          role_arn: @aws_params[:role_arn],
-          role_session_name: "circle-#{tmp_table}-upload"
-        )
-      end
-
-      Aws::Credentials.new(
-        session.credentials.access_key_id,
-        session.credentials.secret_access_key,
-        session.credentials.session_token
-      )
+      session_name = "rdshift-#{tmp_table[0..49]}-upload"
+      ::ETL.create_aws_credentials(@aws_params[:region], @aws_params[:role_arn], session_name)
     end
 
     def upload_to_s3

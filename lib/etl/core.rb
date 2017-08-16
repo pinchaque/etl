@@ -42,6 +42,29 @@ base_file = 'base.rb'
 end
 
 module ETL
+  # creates aws credentials to log
+  def self.create_aws_credentials(region, iam_role, session_name)
+    if ENV["AWS_ACCESS_KEY_ID"].nil?
+      sts = Aws::STS::Client.new(region: region)
+      session = sts.assume_role(
+        role_arn: iam_role,
+        role_session_name: session_name
+      )
+
+      creds = Aws::Credentials.new(
+        session.credentials.access_key_id,
+        session.credentials.secret_access_key,
+        session.credentials.session_token
+      )
+    else
+      # Note this branch of code is really for testing purposes
+      # when running from a machine that is not an ec2 instance
+      creds = Aws::Credentials.new(
+         ENV["AWS_ACCESS_KEY_ID"],
+         ENV["AWS_SECRET_ACCESS_KEY"]
+      )
+    end
+  end
 
   # Generic App-wide logger
   def ETL.logger

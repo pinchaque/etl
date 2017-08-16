@@ -29,7 +29,7 @@ RSpec.describe "sqs-based queue", skip: true  do
   end
 
   it "processes messages" do
-    queue = ETL::Queue::SQS.new(queue_url: queue_url, region: region, idle_timeout: 120)
+    queue = ETL::Queue::SQS.new(url: queue_url, region: region, idle_timeout: 20)
     queue.purge
     sleep(60)
     expect(queue.message_count).to eq(0)
