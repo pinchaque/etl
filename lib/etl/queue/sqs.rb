@@ -9,6 +9,7 @@ module ETL::Queue
         params = ::ETL::Config.config.sqs
       end
 
+      idle_timeout = params.fetch(:idle_timeout, nil)
       @queue_url = params.fetch(:url,'')
       @region = params.fetch(:region,'')
 
@@ -27,7 +28,7 @@ module ETL::Queue
           session.credentials.session_token
         )
       else
-        # Not this branch is really for testing purposes
+        # Note this branch of code is really for testing purposes
         # when running from a machine that is not an ec2 instance
         creds = Aws::Credentials.new(
            ENV["AWS_ACCESS_KEY_ID"],
@@ -36,7 +37,7 @@ module ETL::Queue
       end
 
       @client = Aws::SQS::Client.new(region: @region, credentials: creds)
-      @poller = Aws::SQS::QueuePoller.new(@queue_url)
+      @poller = Aws::SQS::QueuePoller.new(@queue_url, { client: @client, idle_timeout: idle_timeout })
       @queue = Aws::SQS::Queue.new(url: @queue_url, client: @client)
 
       # Receive the message in the queue.
@@ -68,7 +69,7 @@ module ETL::Queue
     end
 
     def process_async
-      @poller.poll(skip_delete: true, idle_timeout: 120) do |message|
+      @poller.poll(skip_delete: true) do |message|
         payload = ETL::Queue::Payload.decode(message.body)
         yield message, payload
       end

@@ -1,6 +1,6 @@
 require 'etl/queue/sqs.rb'
 
-RSpec.describe "sqs-based queue", skip: true do
+RSpec.describe "sqs-based queue" do
 
   def create_payload(id)
     ETL::Queue::Payload.new(id, ETL::Batch.new)
@@ -29,7 +29,7 @@ RSpec.describe "sqs-based queue", skip: true do
   end
 
   it "processes messages" do
-    queue = ETL::Queue::SQS.new(queue_url: queue_url, region: region)
+    queue = ETL::Queue::SQS.new(queue_url: queue_url, region: region, idle_timeout: 120)
     queue.purge
     sleep(60)
     expect(queue.message_count).to eq(0)
