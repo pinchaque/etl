@@ -6,7 +6,7 @@ module ETL::Queue
   class SQS < Base
     def initialize(params = {})
       if params.empty?
-        params = ::ETL::Config.config.sqs
+        params = ::ETL.config.sqs
       end
 
       idle_timeout = params.fetch(:idle_timeout, nil)
