@@ -44,7 +44,7 @@ end
 module ETL
   # creates aws credentials to log
   def self.create_aws_credentials(region, iam_role, session_name)
-    if ENV["AWS_ACCESS_KEY_ID"].nil?
+    if ENV["TEST_AWS_ACCESS_KEY_ID"].nil?
       sts = Aws::STS::Client.new(region: region)
       session = sts.assume_role(
         role_arn: iam_role,
@@ -59,9 +59,10 @@ module ETL
     else
       # Note this branch of code is really for testing purposes
       # when running from a machine that is not an ec2 instance
+      # which is why TEST is affixed ahead of it
       creds = Aws::Credentials.new(
-         ENV["AWS_ACCESS_KEY_ID"],
-         ENV["AWS_SECRET_ACCESS_KEY"]
+         ENV["TEST_AWS_ACCESS_KEY_ID"],
+         ENV["TEST_AWS_SECRET_ACCESS_KEY"]
       )
     end
   end
