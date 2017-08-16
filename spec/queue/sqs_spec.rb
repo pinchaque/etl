@@ -1,6 +1,6 @@
 require 'etl/queue/sqs.rb'
 
-RSpec.describe "sqs-based queue" do
+RSpec.describe "sqs-based queue", skip: true  do
 
   def create_payload(id)
     ETL::Queue::Payload.new(id, ETL::Batch.new)
