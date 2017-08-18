@@ -52,6 +52,10 @@ module ETL::Input
         end
       end
     end
+
+    def slack_tags
+      {}
+    end
     
     def log_context
       { name: name, }

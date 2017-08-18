@@ -1,0 +1,13 @@
+require 'etl/migration/redshift'
+
+module Migration
+  class <%= @table %><%= @version %> < ETL::Migration::Redshift
+    def up
+      <%= @up %>
+    end
+
+    def down
+      <%= @down %>
+    end
+  end
+end

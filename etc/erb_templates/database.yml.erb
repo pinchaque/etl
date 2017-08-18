@@ -1,0 +1,27 @@
+test:
+  adapter: postgresql
+  encoding: utf8
+  reconnect: false
+  database: test
+  pool: 5
+  username: postgres
+  password: '<%= @database_password %>'
+  host: localhost
+  port: 5432
+
+influxdb:
+  port: 8086
+  host: localhost
+  database: 'test'
+  username: 'app'
+  password: '<%= @influxdb_password %>'
+
+test_mysql:
+  adapter: mysql
+  encoding: utf8
+  reconnect: false
+  database: test
+  pool: 5
+  username: root
+  password: root
+  host: localhost

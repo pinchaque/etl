@@ -1,4 +1,5 @@
 require 'etl/job/exec'
+require_relative './job_repository_helper'
 
 class SpecDefaultJob < ETL::Job::Base
   register_job
@@ -7,7 +8,7 @@ end
 
 class SpecJob < ETL::Job::Base
   register_job
-  
+
   def output
     o = super
     o.success = 34
@@ -20,7 +21,7 @@ end
 
 class SpecJobSleep < ETL::Job::Base
   register_job
-  
+
   def output
     o = super
     o.success = 35
@@ -33,7 +34,7 @@ end
 
 class SpecJobError < ETL::Job::Base
   register_job
-  
+
   def output
     o = super
     o.success = 1
@@ -47,21 +48,27 @@ end
 
 
 RSpec.describe "job" do
-  
-  before(:each) do
-    ETL::Model::JobRun.dataset.delete
+  before :all do
+    JobRunRepositoryHelper.instance.setup
   end
-  
+  before(:each) do
+    JobRunRepositoryHelper.instance.delete_all
+  end
+  after:all do
+    #JobRunRepositoryHelper.instance.teardown
+  end
+
   let(:batch) { ETL::Batch.new() }
   let(:job_id) { 'spec_job' }
   let(:payload) { ETL::Queue::Payload.new(job_id, batch) }
   let(:job) { SpecJob.new(ETL::Batch.new(payload.batch_hash)) }
   let(:job_exec) { ETL::Job::Exec.new(payload) }
-  
+  let(:jrr) { ETL::Model::JobRunRepository.new }
+
   it "has sane default settings" do
     expect(SpecDefaultJob.schedule_class).to eq(ETL::Schedule::Never)
     expect(SpecDefaultJob.batch_factory_class).to eq(ETL::BatchFactory::Base)
-    
+
     j = SpecDefaultJob.new(ETL::Batch.new)
     expect(j.id).to eq("spec_default_job")
     expect(j.to_s).to eq("spec_default_job<NO_BATCH>")
@@ -70,11 +77,11 @@ RSpec.describe "job" do
     expect(j.schedule.ready?).to be_falsy
     expect(j.log_context).to eq({ job: "spec_default_job", batch: "nil" })
   end
-  
+
   it "creates run models" do
-    jr = ETL::Model::JobRun.create_for_job(job, batch)
+    jr = jrr.create_for_job(job, batch)
     expect(jr.job_id).to eq('spec_job')
-    expect(jr.status).to eq("new")
+    expect(jr.status).to eq(:new)
     expect(jr.started_at).to be_nil
     expect(jr.batch).to eq(batch.to_json)
   end
@@ -84,7 +91,7 @@ RSpec.describe "job" do
 
     # check this object
     expect(jr.job_id).to eq(job.id)
-    expect(jr.status).to eq("success")
+    expect(jr.status).to eq(:success)
     expect(jr.queued_at).to be_nil
     expect(jr.started_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
     expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
@@ -92,13 +99,14 @@ RSpec.describe "job" do
     expect(jr.batch).to eq(batch.to_json)
     expect(jr.rows_processed).to eq(job.output.success)
     expect(jr.message).to eq(job.output.message)
-    
+
     # now check what's in the db
-    runs = ETL::Model::JobRun.where(job_id: job.id).all
+    runs = jrr.conn.exec("Select * from public.job_runs where job_id = '#{jr.job_id}'")
+
     expect(runs.count).to eq(1)
-    jr = runs[0]
+    jr = ETL::Model::JobRunRepository.build_job_run(jrr, runs[0])
     expect(jr.job_id).to eq(job.id)
-    expect(jr.status).to eq("success")
+    expect(jr.status).to eq(:success)
     expect(jr.queued_at).to be_nil
     expect(jr.started_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
     expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
@@ -115,7 +123,7 @@ RSpec.describe "job" do
     it 'sets correct result state' do
       jr = job_exec.run
       expect(jr.job_id).to eq(job.id)
-      expect(jr.status).to eq("success")
+      expect(jr.status).to eq(:success)
       expect(jr.queued_at).to be_nil
       expect(jr.started_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
@@ -123,12 +131,12 @@ RSpec.describe "job" do
       expect(jr.batch).to eq(batch.to_json)
       expect(jr.rows_processed).to eq(job.output.success)
       expect(jr.message).to eq(job.output.message)
-    
-      runs = ETL::Model::JobRun.where(job_id: job.id).all
+
+      runs = jrr.conn.exec("Select * from public.job_runs where job_id = '#{jr.job_id}'")
       expect(runs.count).to eq(1)
-      jr = runs[0]
+      jr = ETL::Model::JobRunRepository.build_job_run(jrr, runs[0])
       expect(jr.job_id).to eq(job.id)
-      expect(jr.status).to eq("success")
+      expect(jr.status).to eq(:success)
       expect(jr.queued_at).to be_nil
       expect(jr.started_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
@@ -145,21 +153,21 @@ RSpec.describe "job" do
 
     it 'sets correct result state' do
       jr = job_exec.run
-      
+
       expect(jr.job_id).to eq(job.id)
-      expect(jr.status).to eq("error")
+      expect(jr.status).to eq(:error)
       expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.started_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.batch).to eq(batch.to_json)
       expect(jr.rows_processed).to be_nil
       expect(jr.message.start_with?('abort!')).to be_truthy
       expect(jr.message.match(/null.rb:\d+:in `run_internal/)).to be_truthy
-      
-      runs = ETL::Model::JobRun.where(Sequel.expr(job_id: job.id)).all
+
+      runs = jrr.conn.exec("Select * from public.job_runs where job_id = '#{jr.job_id}'")
       expect(runs.count).to eq(1)
-      jr = runs[0]
+      jr = ETL::Model::JobRunRepository.build_job_run(jrr, runs[0])
       expect(jr.job_id).to eq(job.id)
-      expect(jr.status).to eq("error")
+      expect(jr.status).to eq(:error)
       expect(jr.ended_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.started_at.strftime('%F')).to eq(DateTime.now.strftime('%F'))
       expect(jr.batch).to eq(batch.to_json)

@@ -1,0 +1,70 @@
+version: 2
+jobs:
+  build:
+    docker:
+      # if you update this, make sure to rebuild the docker image using ./bin/docker-build-circle-image
+      # the repo and tag should match the "repo" and "version" labels in the Dockerfile
+      - image: getoutreach/etl-circle:1.1
+        environment:
+          ETL_CONFIG_DIR: "/root/config"
+          INFLUXDB_PASSWORD: "$INFLUXDB_PASSWORD"
+          DATABASE_PASSWORD: "$DATABASE_PASSWORD"
+          ODBCINI: "/root/odbc/odbc.ini"
+          AMAZONREDSHIFTODBCINI: "/root/odbc/amazon.redshiftodbc.ini"
+          ODBCSYSINI: "/root/odbc"
+          LD_LIBRARY_PATH: "/opt/amazon/redshift/lib/64"
+          ETL_CORE_ENVVARS: true
+          ETL_CLASS_DIR: /root/empty
+          ETL_DATA_DIR: /var/tmp/etl_test_output
+
+          # leaving empty for tests, another option is to 
+          # have another channel for testing to see when they fail?
+          ETL_SLACK_URL: ""
+          ETL_SLACK_CHANNEL: ""
+          ETL_SLACK_USERNAME: ""
+
+          # database replacement for core and database.yml
+          ETL_DATABASE_ENVVARS: true
+          ETL_DATABASE_DB_NAME: postgres
+          ETL_DATABASE_USER: postgres
+          ETL_DATABASE_PASSWORD: 2408unvvgv34
+          ETL_DATABASE_HOST: localhost
+          ETL_DATABASE_PORT: 5432
+
+          # aws.yml replacement
+          ETL_AWS_ENVVARS: true
+          ETL_AWS_REGION: us-west-1
+          ETL_AWS_S3_BUCKET: ss-uw1-stg.redshift-testing
+          ETL_AWS_ROLE_ARN: "arn:aws:iam::182192988802:role/ss-uw1-stg-default-redshift-testing"
+
+          # redshift.yml replacement
+          ETL_REDSHIFT_ENVVARS: true
+          ETL_REDSHIFT_DB_NAME: dev
+          ETL_REDSHIFT_USER: masteruser
+          ETL_REDSHIFT_HOST: dw-testing.outreach-staging.com
+          ETL_REDSHIFT_PORT: 5439
+
+      - image: postgres
+        environment:
+          POSTGRES_PASSWORD: "$DATABASE_PASSWORD"
+          POSTGRES_USER: postgres
+          POSTGRES_DB: test
+      - image: influxdb:1.2
+    steps:
+      - checkout
+      - run:
+          name: Install project dependencies
+          command: |
+            env | grep ETL
+            set -x
+            apt-get install tree
+            ./linux_redshift_odbc_driver_setup.sh
+            bundle install
+      - run:
+          name: Setup Database
+          command: |
+            bundle exec etl schema create
+      - run:
+          name: Run Tests
+          command: |
+            bundle exec rspec --color --require spec_helper spec --format progress --tag '~skip'

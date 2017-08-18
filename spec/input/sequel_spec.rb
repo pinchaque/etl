@@ -3,7 +3,7 @@ require 'mysql2'
 require 'etl/core'
 
 
-RSpec.describe "sequel inputs" do
+RSpec.describe "sequel inputs", skip: true do
   it "mysql input each" do
     # add data to the test db
     dbconfig = ETL.config.db[:test_mysql]
@@ -36,7 +36,7 @@ SQL
       host: dbconfig[:host],
     }
     
-    sql = "select day, attribute from test_table order by day asc"
+    sql = "select day, attribute from #{table_name} order by day asc"
     input = ETL::Input::Sequel.new(params, sql)
     expect(input.name).to eq("Sequel mysql2:dw@127.0.0.1/dw_test")
 
