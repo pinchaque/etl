@@ -42,7 +42,12 @@ module ETL::Output
     end
 
     def table_schema
-      @table_schema ||= @client.table_schema(dest_table)
+      @table_schema ||= begin
+        h = {}
+        results = @client.columns(dest_table)
+        results.each { |result| h[result["column"].to_sym] = result["type"] }
+        h
+      end
     end
 
     def schema
@@ -227,15 +232,24 @@ SQL
       # Load data into temp csv
       # If the table exists, use the order of columns. Otherwise, use @header
       ::CSV.open(csv_file.path, "w", {:col_sep => @delimiter } ) do |c|
-        reader.each_row do |row|
+        reader.each_row do |erow|
+          # Remove line break from all columns so that Redshift can detect delimiter
+          # Need this method since ESCAPE option with COPY command on Redshift does not work
+          row = erow.each_with_object({}) do |r, h|
+            v = r[1]
+            v.tr!("\n", " ") if v.is_a? String
+            h[r[0].to_s] = v
+          end
+
           if schema && !schema.columns.empty? 
-            s = schema.columns.keys.map{|k| row[k.to_s]}
+            s = schema.columns.keys.map { |k| row[k.to_s] }
             if !s.nil?
               c << s
               rows_processed += 1
             end
           else
-            c << row.values
+            s = table_schema.map { |k, v| row[k.to_s] }
+            c << s
             rows_processed += 1
           end
         end
