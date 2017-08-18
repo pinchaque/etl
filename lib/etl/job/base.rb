@@ -11,14 +11,7 @@ module ETL::Job
     
     def initialize(b)
       @batch = b
-      @notifier ||= begin 
-        if ETL.config.core[:slack]
-          slack_config = ETL.config.core[:slack]
-          if slack_config[:url] && slack_config[:channel] && id 
-            ETL::Slack::Notifier.new(slack_config[:url], slack_config[:channel], id)
-          end
-        end
-      end
+      @notifier = ::ETL::Slack::Notifier.create_instance(id)
     end
     
     # Registers a job class with the manager. This is typically called by

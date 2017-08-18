@@ -1,4 +1,5 @@
 require_relative '../command'
+require_relative '../../slack/notifier'
 require 'etl/job/exec'
 
 module ETL::Cli::Cmd
@@ -9,19 +10,33 @@ module ETL::Cli::Cmd
              attribute_name: :regex, default: // do |r| /#{r}/ end
 
       def execute
-        ETL.load_user_classes
+        notifier = ::ETL::Slack::Notifier.create_instance("etl_list")
+
+        begin
+          ETL.load_user_classes
+        rescue StandardError => e
+          @notifier.notify("Listing jobs failed: #{e.to_s}") unless notifier.nil?
+          throw
+        end
         dependencies_jobs = ETL::Job::Manager.instance.sorted_dependent_jobs
         d_jobs = dependencies_jobs.select { |id| id =~ regex }
 
         # Dependencies_jobs sorted by the order to be executed
-        puts(" *** #{d_jobs.join(' ')}") unless d_jobs.empty?
+        if !d_jobs.empty?
+          output =" *** #{d_jobs.join(' ')}"
+          puts(output)
+          notifier.add_text_to_attachments(output) unless notifier.nil?
+        end
 
-        # Independent_jobs          
+        # Independent_jobs
         ETL::Job::Manager.instance.job_classes.select do |id, klass|
           id =~ regex
         end.each do |id, klass|
-          puts(" * #{id} (#{klass.name.to_s})") unless d_jobs.include? id
+          output = " * #{id} (#{klass.name.to_s})"
+          puts(output) unless d_jobs.include? id
+          notifier.add_text_to_attachments(output) unless notifier.nil?
         end
+        notifier.notify("List ETL Jobs") unless notifier.nil?
       end
     end
 

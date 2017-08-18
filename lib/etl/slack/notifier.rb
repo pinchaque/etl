@@ -3,6 +3,18 @@ require 'slack-notifier'
 module ETL::Slack
   class Notifier 
     attr_accessor :attachments
+    def self.create_instance(id)
+      notifier ||= begin
+        if ETL.config.core[:slack]
+          slack_config = ETL.config.core[:slack]
+          if slack_config[:url] && slack_config[:channel] && id
+            ::ETL::Slack::Notifier.new(slack_config[:url], slack_config[:channel], id)
+          end
+        end
+      end
+      notifier
+    end
+
     def initialize(webhook_url, channel, username)
       @notifier = Slack::Notifier.new(webhook_url, channel: channel, username: username)
       @attachments = []
