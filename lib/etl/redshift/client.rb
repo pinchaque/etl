@@ -90,22 +90,10 @@ SQL
       execute(sql)
     end
 
-    def creds(session_name)
-      sts = Aws::STS::Client.new(region: @region)
-      session = sts.assume_role(
-        role_arn: @iam_role,
-        role_session_name: session_name 
-      )
-
-      Aws::Credentials.new(
-        session.credentials.access_key_id,
-        session.credentials.secret_access_key,
-        session.credentials.session_token
-      )
-    end
-
     def delete_object_from_s3(bucket, prefix, session_name)
-      s3 = Aws::S3::Client.new(region: @region, credentials: creds(session_name))
+      creds = ::ETL.create_aws_credentials(@region, @iam_role, session_name)
+
+      s3 = Aws::S3::Client.new(region: @region, credentials: creds)
       resp = s3.list_objects(bucket: bucket)
       keys = resp[:contents].select { |content| content.key.start_with? prefix }.map { |content| content.key }
 
