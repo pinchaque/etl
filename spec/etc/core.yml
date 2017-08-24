@@ -14,7 +14,7 @@ log:
 # connection info for database where we store jobs history
 database:
   adapter: sqlite
-  database: "data/dw_test.sqlite"
+  database: "data/dw_test.db"
 
 # connection info for jobs queue
 queue:

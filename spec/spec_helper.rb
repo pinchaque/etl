@@ -54,13 +54,15 @@ require 'etl'
 ETL.configure do |config|
   # Update config path to be our rspec directory
   config.config_dir = File.expand_path("../etc", __FILE__)
+end
 
-  # ETL system configuration
-  config.core do |c|
-    # override to write logs to file so they don't clutter up STDOUT
-    c[:log][:file] = "#{ETL.root}/log/test.log"
-    c[:class_dir] = "#{ETL.root}/spec/lib/jobs" # rspec jobs
-  end
+# Recreate the jobs database
+require 'sequel'
+require 'etl/job/schema'
+Sequel.connect(ETL.config.core[:database]) do |conn|
+  schema = ETL::Job::Schema.new(conn)
+  schema.destroy
+  schema.create
 end
 
 # Load in rest of ETL system

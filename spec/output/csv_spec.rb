@@ -50,7 +50,7 @@ RSpec.describe "csv output" do
   it "csv - overwrite" do
 
     # remove old file
-    outfile = "/var/tmp/etl_test_output/test_1/20150331.csv"
+    outfile = "data/test_1/20150331.csv"
     File.delete(outfile) if File.exist?(outfile)
     expect(File.exist?(outfile)).to be false
 
@@ -106,7 +106,7 @@ END
   it "csv - append" do
 
     # remove old file
-    outfile = "/var/tmp/etl_test_output/test_1/20150331.csv"
+    outfile = "data/test_1/20150331.csv"
     File.delete(outfile) if File.exist?(outfile)
     expect(File.exist?(outfile)).to be false
 
@@ -166,7 +166,7 @@ END
   it "psv - overwrite" do
 
     # remove old file
-    outfile = "/var/tmp/etl_test_output/test_2/20150331.csv"
+    outfile = "data/test_2/20150331.csv"
     File.delete(outfile) if File.exist?(outfile)
     expect(File.exist?(outfile)).to be false
     # file does not have headers
