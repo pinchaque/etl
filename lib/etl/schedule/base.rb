@@ -1,4 +1,4 @@
-require 'models/job_run'
+require 'etl/models/job_run'
 
 module ETL::Schedule
   

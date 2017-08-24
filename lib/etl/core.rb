@@ -1,6 +1,3 @@
-libdir = File.expand_path("..", __FILE__)
-$LOAD_PATH.unshift(libdir)
-
 # Pre-define the module so we can use simpler syntax
 module ETL
 end
@@ -19,7 +16,7 @@ require 'etl/batch'
 # Models
 # Set up the database connection that's needed for Sequel models
 # Also we can use the DB constant in the rest of the code
-DB = Sequel::Model.db = Sequel.connect(ETL.config.core[:database])
+Sequel::Model.db = Sequel.connect(ETL.config.core[:database])
 Sequel::Model.plugin :timestamps
 require 'etl/models/job_run'
 
@@ -30,6 +27,7 @@ require 'etl/job/result'
 require 'etl/job/base'
 require 'etl/job/manager'
 
+libdir = File.expand_path("..", __FILE__)
 base_file = 'base.rb'
 %w( input output transform queue batch_factory schedule ).each do |d|
   dir = "#{libdir}/#{d}"

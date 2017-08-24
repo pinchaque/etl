@@ -1,4 +1,3 @@
-require 'etl'
 require 'factory_girl'
 require 'time_warp'
 
@@ -50,23 +49,19 @@ RSpec.configure do |config|
   Kernel.srand config.seed
 end
 
-# ETL system configuration
-ETL.config.core do |c|
-  # override to write logs to file so they don't clutter up STDOUT
-  unless c[:log][:file]
-    f = "log/test.log"
-    puts("Writing rspec output to #{f}")
-    c[:log][:file] = f
+# Configure our ETL system
+require 'etl'
+ETL.configure do |config|
+  # Update config path to be our rspec directory
+  config.config_dir = File.expand_path("../etc", __FILE__)
+
+  # ETL system configuration
+  config.core do |c|
+    # override to write logs to file so they don't clutter up STDOUT
+    c[:log][:file] = "#{ETL.root}/log/test.log"
+    c[:class_dir] = "#{ETL.root}/spec/lib/jobs" # rspec jobs
   end
 end
 
-# Libraries in ETL rspec directory
-libdir = File.expand_path("../lib", __FILE__)
-$LOAD_PATH.unshift(libdir)
-%w( jobs ).each do |d|
-  dir = "#{libdir}/#{d}"
-  Dir.new(dir).each do |file|
-    next unless file =~ /\.rb$/
-    require "#{dir}/#{file}"
-  end
-end
+# Load in rest of ETL system
+ETL.bootstrap

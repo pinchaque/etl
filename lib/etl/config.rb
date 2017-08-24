@@ -42,4 +42,8 @@ module ETL
   def self.config
     Config.instance
   end
+  
+  def ETL.configure
+    yield ETL.config
+  end
 end
