@@ -1,4 +1,6 @@
 require_relative '../command'
+require 'sequel'
+require 'etl/job/schema'
 
 module ETL::Cli::Cmd
   class Schema < ETL::Cli::Command
@@ -6,16 +8,14 @@ module ETL::Cli::Cmd
     # Shared functions across all schema commands
     class Base < ETL::Cli::Command
       def connection(&block)
-        Sequel.connect(ETL.config.core[:database]) do |conn|
+        ::Sequel.connect(ETL.config.core[:database]) do |conn|
           yield conn
         end
       end
       
       def drop_tables(conn)
-        conn.tables.each do |t|
-          log.info("  * Dropping #{t}") 
-          conn.drop_table(t)
-        end
+        log.info("Dropping all tables")
+        ::ETL::Job::Schema.new(conn).destroy
       end
       
       def show_tables(conn, details = false)
@@ -46,12 +46,13 @@ module ETL::Cli::Cmd
       def execute
         log.info("Initializing schema")
         connection do |conn|
+          schema = ::ETL::Job::Schema.new(conn)
+          
           # Handle case when tables already exist
-          tables = conn.tables
-          if tables.length > 0
+          if schema.exist?
             if force?
               log.info("Forcing removal of existing tables...")
-              drop_tables(conn)
+              schema.destroy
             else
               log.info("This script is cowardly refusing to proceed because the following tables exist:")
               show_tables(conn)
@@ -61,20 +62,7 @@ module ETL::Cli::Cmd
           end
       
           log.info("Creating schema...")
-          
-          conn.create_table(:job_runs) do
-            primary_key :id
-            DateTime :created_at, null: false
-            DateTime :updated_at, null: false
-            String :job_id, :null => false, :index => true
-            String :batch, :null => false, :index => true
-            String :status, :null => false, :index => true
-            DateTime :queued_at
-            DateTime :started_at
-            DateTime :ended_at
-            Integer :rows_processed
-            String :message
-          end
+          schema.create
       
           log.info("Done! The following tables have been created:")
           show_tables(conn)
