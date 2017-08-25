@@ -1,0 +1,21 @@
+job:
+  data_dir: "data"
+  class_dir: "spec/lib/jobs"
+  retry_max: 5 # maximum times retrying jobs
+  retry_wait: 4 # seconds
+  retry_mult: 2.0 # exponential backoff multiplier
+
+# logging class that we use
+log:
+  class: ETL::Logger
+  file: "log/test.log"
+  level: info
+
+# connection info for database where we store jobs history
+database:
+  adapter: sqlite
+  database: "data/dw_test.db"
+
+# connection info for jobs queue
+queue:
+  class: ETL::Queue::File

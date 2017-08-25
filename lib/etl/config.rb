@@ -35,11 +35,19 @@ module ETL
     end
     
     def self.load_file(file)
-      ETL::HashUtil::symbolize_keys(Psych.load_file(file))
+      if File.exist?(file)
+        ETL::HashUtil::symbolize_keys(Psych.load_file(file)) || {}
+      else
+        {}
+      end
     end
   end
   
   def self.config
     Config.instance
+  end
+  
+  def ETL.configure
+    yield ETL.config
   end
 end

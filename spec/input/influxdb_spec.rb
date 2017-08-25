@@ -12,6 +12,7 @@ RSpec.describe "influxdb inputs" do
   let(:series) { 'input_test' }
   
   before do
+    skip "Missing InfluxDB config" unless dbconfig
     c = idb.conn
     
     data = [

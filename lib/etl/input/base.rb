@@ -1,4 +1,4 @@
-require 'mixins/cached_logger'
+require 'etl/mixins/cached_logger'
 
 module ETL::Input
   class Base

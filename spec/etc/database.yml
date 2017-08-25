@@ -1,0 +1,22 @@
+## Database connections for running the rspec test suite
+## Uncomment the below and fill them in with valid connection details to
+## run the full suite.
+# test:
+#   adapter: postgresql
+#   encoding: utf8
+#   reconnect: false
+#   database: db_name
+#   pool: 5
+#   username: rw_user
+#   password: 'password'
+#   host: 127.0.0.1
+# 
+# test_mysql:
+#   adapter: mysql
+#   encoding: utf8
+#   reconnect: false
+#   database: db_name
+#   pool: 5
+#   username: rw_user
+#   password: 'password'
+#   host: 127.0.0.1

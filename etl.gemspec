@@ -19,12 +19,9 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency 'clamp'
-  spec.add_dependency 'mysql2'
   spec.add_dependency 'sequel'
   spec.add_dependency 'tzinfo'
   spec.add_dependency 'tzinfo-data'
-  spec.add_dependency 'influxdb'
-  spec.add_dependency 'pg'
 
   spec.add_development_dependency 'bunny'
   spec.add_development_dependency 'factory_girl'
@@ -33,4 +30,8 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rspec-expectations'
   spec.add_development_dependency 'rspec-mocks'
   spec.add_development_dependency 'time-warp'
+  spec.add_development_dependency 'mysql2'
+  spec.add_development_dependency 'influxdb'
+  spec.add_development_dependency 'pg'
+  spec.add_development_dependency 'sqlite3'
 end

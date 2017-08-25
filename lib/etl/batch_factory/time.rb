@@ -1,5 +1,5 @@
 require 'tzinfo'
-require 'util/time_util'
+require 'etl/util/time_util'
 
 module ETL::BatchFactory
   

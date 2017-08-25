@@ -1,4 +1,4 @@
-require 'util/time_util'
+require 'etl/util/time_util'
 
 RSpec.describe "time_util" do
 

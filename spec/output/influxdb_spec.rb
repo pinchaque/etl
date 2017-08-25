@@ -25,6 +25,10 @@ RSpec.describe "influxdb output" do
     ETL::Input::Array.new(data)
   }
   
+  before do
+    skip "Missing InfluxDB config" unless dbconfig
+  end
+  
   describe 'is_numeric' do
     {
       1 => true,
