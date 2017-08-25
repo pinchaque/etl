@@ -36,7 +36,7 @@ module ETL
     
     def self.load_file(file)
       if File.exist?(file)
-        ETL::HashUtil::symbolize_keys(Psych.load_file(file)) 
+        ETL::HashUtil::symbolize_keys(Psych.load_file(file)) || {}
       else
         {}
       end

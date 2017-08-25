@@ -4,15 +4,20 @@ require 'etl/core'
 
 
 RSpec.describe "sequel inputs" do
-  it "mysql input each" do
-    # add data to the test db
-    dbconfig = ETL.config.db[:test_mysql]
-    client = Mysql2::Client.new(
+  let(:dbconfig) { ETL.config.db[:test_mysql] }
+  let(:client) { Mysql2::Client.new(
       :host => dbconfig[:host],
       :database => dbconfig[:database],
       :username => dbconfig[:username],
       :password => dbconfig[:password],
       :flags => Mysql2::Client::MULTI_STATEMENTS)
+  }
+  
+  before do
+    skip "Missing MySQL config" unless dbconfig
+  end
+  
+  it "mysql input each" do
     
     table_name = "test_table"
     
